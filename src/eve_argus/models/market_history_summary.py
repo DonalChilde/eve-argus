@@ -1,7 +1,7 @@
-from typing import TypedDict
+from pydantic import BaseModel
 
 
-class MarketHistorySummary(TypedDict):
+class MarketHistorySummary(BaseModel):
     """Market history summary data model."""
 
     region_id: int
