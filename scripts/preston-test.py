@@ -9,7 +9,11 @@ import json
 from time import perf_counter
 from pathlib import Path
 from eve_argus.models.esi_data import MarketHistory
-from eve_argus.util.esi_util import market_history_save_to_csv, market_history_summary
+from eve_argus.models.market_history_summary import MarketHistorySummary
+from eve_argus.util.esi_util import (
+    summarize_market_history_by_periods,
+)
+from eve_argus.snippets.file.csv import write_dicts_to_csv
 from typing import cast
 
 type_ids = [34, 35, 36, 37, 38, 39]
@@ -24,7 +28,7 @@ def main() -> None:
     p = preston.Preston(useragent="preston-test")
     periods = [10, 30, 60, 90]
     for type_id in type_ids:
-        print(f"Requesting type_id {type_id}")
+        print(f"Requesting ({region_id},{type_id})")
         # Get the market history for the given type_id in the Forge region (10000002)
         # This will use the cached response if available
 
@@ -34,13 +38,24 @@ def main() -> None:
             type_id=str(type_id),
         )
         cast(list[MarketHistory], data)
-        market_history_save_to_csv(region_id, type_id, data, save_path)
-        summary = market_history_summary(
+        file_name = f"{region_id}_{type_id}_market_history.csv"
+        file_path = save_path / file_name
+        write_dicts_to_csv(data=data, file_path=file_path, overwrite=True)
+        print(f"Wrote data for ({region_id},{type_id}) to {file_path}")
+
+        summary = summarize_market_history_by_periods(
             region_id=region_id, type_id=type_id, periods=periods, data=data
         )
-        summary_file = save_path / f"{region_id}-{type_id}-Market_Summary.json"
-        summary_file.write_text(json.dumps(summary, indent=2))
-        print(p.stored_headers[0])
+        summary_file = save_path / f"{region_id}-{type_id}-market_summary.csv"
+        summary_data = (MarketHistorySummary.dict(x) for x in summary)
+        summary_count = write_dicts_to_csv(
+            data=summary_data, file_path=summary_file, overwrite=True
+        )
+        # print(p.stored_headers[0])
+        print(
+            f"Wrote {summary_count} summary records for ({region_id},{type_id}) to {file_path}"
+        )
+
         print("\n")
     end = perf_counter()
     elapsed = end - start
