@@ -1,8 +1,10 @@
+"""Functions for use with Eve ESI data."""
+
 from pathlib import Path
 from typing import Any
 from collections.abc import Iterable, Sequence
-from eve_argus.models import esi_data as ED
-from eve_argus.models.market_history_summary import MarketHistorySummary
+from eve_argus.models import esi as ED
+from eve_argus.models.argus import MarketHistorySummary, MarketHistory
 import csv
 from datetime import date
 from eve_argus.snippets.datetime.date_range import date_range_days
@@ -10,9 +12,9 @@ from pydantic import BaseModel
 
 
 def summarize_market_history_by_periods(
-    region_id: int, type_id: int, periods: list[int], data: list[ED.MarketHistory]
+    region_id: int, type_id: int, periods: Sequence[int], data: Sequence[MarketHistory]
 ) -> Sequence[MarketHistorySummary]:
-    lookup = {date.fromisoformat(x["date"]): x for x in data}
+    lookup = {date.fromisoformat(x.date): x for x in data}
     result: list[MarketHistorySummary] = []
     keys = list(lookup.keys())
     keys.sort(reverse=True)  # Sort by date descending
@@ -31,7 +33,7 @@ def summarize_market_history_by_periods(
 
 
 def summarize_market_history_by_dates(
-    dates: list[date], data: dict[date, ED.MarketHistory]
+    dates: Sequence[date], data: dict[date, MarketHistory]
 ) -> MarketHistorySummary:
     missing = average = highest = lowest = order_count = volume = 0
     count = len(dates)
@@ -40,11 +42,11 @@ def summarize_market_history_by_dates(
         if item is None:
             missing += 1
             continue
-        average = average + (item["average"] * item["volume"])
-        highest = highest + (item["highest"] * item["volume"])
-        lowest = lowest + (item["lowest"] * item["volume"])
-        order_count = order_count + item["order_count"]
-        volume = volume + item["volume"]
+        average = average + (item.average * item.volume)
+        highest = highest + (item.highest * item.volume)
+        lowest = lowest + (item.lowest * item.volume)
+        order_count = order_count + item.order_count
+        volume = volume + item.volume
     result = MarketHistorySummary(
         region_id=0,
         type_id=0,

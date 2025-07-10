@@ -8,9 +8,9 @@ import preston
 import json
 from time import perf_counter
 from pathlib import Path
-from eve_argus.models.esi_data import MarketHistory
-from eve_argus.models.market_history_summary import MarketHistorySummary
-from eve_argus.util.esi_util import (
+from eve_argus.models.esi import MarketHistory
+from eve_argus.models.argus import MarketHistorySummary
+from eve_argus.util.esi import (
     summarize_market_history_by_periods,
 )
 from eve_argus.snippets.file.csv import write_dicts_to_csv
@@ -40,22 +40,8 @@ def main() -> None:
         cast(list[MarketHistory], data)
         file_name = f"{region_id}_{type_id}_market_history.csv"
         file_path = save_path / file_name
-        write_dicts_to_csv(data=data, file_path=file_path, overwrite=True)
-        print(f"Wrote data for ({region_id},{type_id}) to {file_path}")
-
-        summary = summarize_market_history_by_periods(
-            region_id=region_id, type_id=type_id, periods=periods, data=data
-        )
-        summary_file = save_path / f"{region_id}-{type_id}-market_summary.csv"
-        summary_data = (MarketHistorySummary.dict(x) for x in summary)
-        summary_count = write_dicts_to_csv(
-            data=summary_data, file_path=summary_file, overwrite=True
-        )
-        # print(p.stored_headers[0])
-        print(
-            f"Wrote {summary_count} summary records for ({region_id},{type_id}) to {file_path}"
-        )
-
+        count = write_dicts_to_csv(data=data, file_path=file_path, overwrite=True)
+        print(f"Wrote {count} records for ({region_id},{type_id}) to {file_path}")
         print("\n")
     end = perf_counter()
     elapsed = end - start
