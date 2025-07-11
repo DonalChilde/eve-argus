@@ -16,6 +16,49 @@ class ManufacturingTimeBonus(BaseModel):
     implants: float = 1.0
 
 
+class ManufacturingCostFactors(BaseModel):
+    system_cost_index: float = 0.0
+    facility_tax: float = 0.0025
+    scc_surcharge: float = 0.04
+    alpha_tax: float = 0.0025
+    structure_bonus: float = 1.0
+
+
+class ManufacturingCosts(BaseModel):
+    base_cost: int
+    facility: int
+    scc: int
+    alpha: int
+
+
+def manufacturing_job_cost(
+    eiv: float, cost_factors: ManufacturingCostFactors, isAlpha: bool = False
+) -> ManufacturingCosts:
+    """Calculate the cost of a manufacturing job based on runs, estimated item value, and cost factors.
+
+    https://wiki.eveuniversity.org/Manufacturing
+    Args:
+        eiv (float): Estimated item value.
+        cost_factors (ManufacturingCostFactors): The cost factors affecting the job cost.
+
+    Returns:
+        ManufacturingCostBreakdown: The total cost of the manufacturing job.
+    """
+    if isAlpha:
+        alpha = round(eiv * cost_factors.alpha_tax)
+    else:
+        alpha = 0
+    result = ManufacturingCosts(
+        base_cost=round(
+            eiv * (cost_factors.system_cost_index * cost_factors.structure_bonus)
+        ),
+        facility=round(eiv * cost_factors.facility_tax),
+        scc=round(eiv * cost_factors.scc_surcharge),
+        alpha=alpha,
+    )
+    return result
+
+
 def manufacturing_time_required(
     blueprint: EAM.Blueprint, runs: int, bonus: ManufacturingTimeBonus
 ) -> int:
