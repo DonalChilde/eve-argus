@@ -1,5 +1,6 @@
 """Functions for use with Eve ESI data."""
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from collections.abc import Iterable, Sequence
@@ -78,3 +79,48 @@ def import_market_prices_universe(
         )
         result.append(prices)
     return result
+
+
+def calculate_order_summary(
+    orders: dict[int, Sequence[EAM.MarketOrder]],
+) -> EAM.MarketOrderSummary:
+    """Calculate a summary of market orders."""
+    # input data is a dict of market orders for one region, grouped by type_id.
+    # Group orders by type_id -> region -> system.
+    # calculate summaries for region and system.
+    # allow restriction to a single system? Do this higher up.
+
+    # Calculate the 5% percentile for buy and sell orders.
+    # Percentile is calculated by removing outliers from the volume calculations,
+    # highest buy / 100), (lowest sell * 100) then finding the first order price that
+    # is equal or greater than the 5% of the total available volume.
+
+    highest_buy = lowest_sell = 0.0
+    total_volume = 0.0
+    for order in orders:
+        if order.is_buy_order:
+            if order.price > highest_buy:
+                highest_buy = order.price
+        else:
+            if lowest_sell == 0.0 or order.price < lowest_sell:
+                lowest_sell = order.price
+        total_volume += order.volume_remain
+    if lowest_sell == 0.0:
+        lowest_sell = highest_buy
+    summary = EAM.MarketOrderSummary(
+        highest_buy=highest_buy,
+        lowest_sell=lowest_sell,
+        total_volume=total_volume,
+        percentile_buy=highest_buy / 100,
+        percentile_sell=lowest_sell * 100,
+        buy_5=highest_buy,
+        sell_5=lowest_sell,
+        buy_5_volume=0,
+        sell_5_volume=0,
+        region_id=0,
+        system_id=0,
+        type_id=0,
+        average_price=(highest_buy + lowest_sell) / 2,
+        order_count=len(orders),
+    )
+    return summary

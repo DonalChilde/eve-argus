@@ -201,3 +201,20 @@ class MarketOrderDict(BaseModel):
     """The region ID where the market orders are located."""
     data: dict[int, list[MarketOrder]]
     """A dictionary mapping type IDs to sequences of market orders."""
+
+
+class MarketOrderSummary(BaseModel):
+    """Summary of market orders for a specific type."""
+
+    region_id: int  # The region ID where the order is placed
+    system_id: int  # The solar system ID where the order is placed
+    type_id: int  # The type ID of the item
+    highest_buy: float  # Highest buy order price
+    lowest_sell: float  # Lowest sell order price
+    average_price: float  # Average price of the orders
+    total_volume: int  # Total volume of the orders
+    order_count: int  # Total number of orders
+    buy_5: float  # Price at the 5th percentile of volume
+    sell_5: float  # Price at the 5th percentile of volume
+    buy_5_volume: int  # Volume at the 5th percentile of buy orders
+    sell_5_volume: int  # Volume at the 5th percentile of sell orders
