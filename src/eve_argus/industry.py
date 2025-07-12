@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from eve_argus.models import argus as EAM
 
 from pydantic import BaseModel
@@ -29,6 +30,17 @@ class ManufacturingCosts(BaseModel):
     facility: int
     scc: int
     alpha: int
+
+
+def calculate_eiv(
+    materials: Sequence[EAM.Material], prices: EAM.MarketPricesUniverseDict
+) -> int:
+    """Calculate the estimated item value (EIV) based on materials."""
+    # TODO test rounding behavior, is each calculation rounded or just the final result?
+    eiv = 0.0
+    for material in materials:
+        eiv += material.quantity * prices.data[material.type_id].adjusted_price
+    return round(eiv)
 
 
 def manufacturing_job_cost(
@@ -118,7 +130,7 @@ def manufacturing_materials_required(
         if qty < 1:
             qty = 1
         material_required = EAM.Material(
-            typeID=material.typeID,
+            type_id=material.type_id,
             quantity=ceil(qty * runs),
         )
         materials_required.append(material_required)

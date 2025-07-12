@@ -1,5 +1,6 @@
 """Models for the Eve Argus app."""
 
+from collections.abc import Sequence
 from enum import Enum
 from pydantic import BaseModel
 
@@ -42,12 +43,12 @@ class Activity_Name(Enum):
 
 class Material(BaseModel):
     quantity: int
-    typeID: int
+    type_id: int
 
 
 class Skill(BaseModel):
     level: int
-    typeID: int
+    type_id: int
 
 
 class Activity(BaseModel):
@@ -67,8 +68,8 @@ class Activities(BaseModel):
 
 
 class Blueprint(BaseModel):
-    blueprintTypeID: int
-    maxProductionLimit: int
+    blueprint_type_id: int
+    max_production_limit: int
     activities: Activities
 
 
@@ -80,13 +81,13 @@ class BlueprintsDict(BaseModel):
 
 class TypeInfo(BaseModel):
     name: str
-    typeID: int
-    groupID: int | None
-    marketGroupID: int | None
-    metaGroupID: int | None
-    graphicID: int | None
+    type_id: int
+    group_id: int | None
+    market_group_id: int | None
+    meta_group_id: int | None
+    graphic_id: int | None
     capacity: float | None
-    portionSize: int | None
+    portion_size: int | None
     published: bool
 
 
@@ -97,7 +98,7 @@ class TypeInfoDict(BaseModel):
 
 
 class TypeDescription(BaseModel):
-    typeID: int
+    type_id: int
     description: str
 
 
@@ -108,7 +109,7 @@ class TypeDescriptionDict(BaseModel):
 
 
 class MetaGroup(BaseModel):
-    metaID: int
+    meta_id: int
     name: str
 
 
@@ -119,15 +120,15 @@ class MetaGroupDict(BaseModel):
 
 
 class Group(BaseModel):
-    groupID: int
+    group_id: int
     anchorable: bool
     anchored: bool
-    categoryID: int
-    fittableNonSingleton: bool
-    iconID: int  # -1 if no value in sde
+    category_id: int
+    fittable_non_singleton: bool
+    icon_id: int  # -1 if no value in sde
     name: str
     published: bool
-    useBasePrice: bool
+    use_base_price: bool
 
 
 class GroupDict(BaseModel):
@@ -135,7 +136,7 @@ class GroupDict(BaseModel):
 
 
 class Category(BaseModel):
-    categoryID: int
+    category_id: int
     name: str
     published: bool
 
@@ -145,15 +146,58 @@ class CategoryDict(BaseModel):
 
 
 class MarketGroup(BaseModel):
-    groupID: int
+    group_id: int
+    """The unique identifier for the market group."""
     name: str
+    """The name of the market group."""
     description: str
-    hasTypes: bool
-    iconID: int  # -1 if no value in sde
+    """The description of the market group, empty if not available."""
+    has_types: bool
+    """True if this group contains types."""
+    icon_id: int
+    """The icon ID for the market group, -1 if not available."""
     path: tuple[int, ...]
+    """The path is a tuple of market group IDs leading to this group, including the current group."""
 
 
 class MarketGroupDict(BaseModel):
     """A collection model to make serialization faster."""
 
     data: dict[int, MarketGroup]
+
+
+class MarketPricesUniverse(BaseModel):
+    type_id: int  # The type ID of the item
+    adjusted_price: float  # The adjusted price of the item
+    average_price: float  # The average price of the item, -1.0 if not available
+
+
+class MarketPricesUniverseDict(BaseModel):
+    """A collection model to make serialization faster."""
+
+    data: dict[int, MarketPricesUniverse]
+
+
+class MarketOrder(BaseModel):
+    duration: int  # in days
+    is_buy_order: bool  # True for buy orders, False for sell orders
+    issued: str  # ISO 8601 date string
+    location_id: int  # The location ID where the order is placed
+    min_volume: int  # Minimum volume that must be bought/sold
+    order_id: int  # Unique identifier for the order
+    price: float  # Price per unit
+    range: str  # e.g., 'region', 'solar_system', 'station'
+    region_id: int  # The region ID where the order is placed
+    system_id: int  # The solar system ID where the order is placed
+    type_id: int  # The type ID of the item being ordered
+    volume_total: int  # Total volume of the order
+    volume_remain: int  # Remaining volume of the order
+
+
+class MarketOrderDict(BaseModel):
+    """A collection model to make serialization faster."""
+
+    region_id: int
+    """The region ID where the market orders are located."""
+    data: dict[int, list[MarketOrder]]
+    """A dictionary mapping type IDs to sequences of market orders."""

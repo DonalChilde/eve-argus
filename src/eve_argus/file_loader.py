@@ -95,6 +95,7 @@ class ArgusFilePaths:
     META_GROUPS = Path("meta-groups.json")
     GROUPS = Path("groups.json")
     CATEGORIES = Path("categories.json")
+    MARKET_PRICES_UNIVERSE = Path("market-prices-universe.json")
 
 
 class ArgusLoader:
@@ -179,6 +180,17 @@ class ArgusLoader:
         )
         return result
 
+    def market_prices_universe(self) -> EAM.MarketPricesUniverseDict:
+        start = perf_counter()
+        path_in = self.argus_path / ArgusFilePaths.MARKET_PRICES_UNIVERSE
+        result = EAM.MarketPricesUniverseDict.model_validate_json(path_in.read_text())
+        logger.info(
+            "Loaded data from %s in %s seconds",
+            path_in,
+            f"{perf_counter() - start:.6f}",
+        )
+        return result
+
 
 class ArgusWriter:
     def __init__(self, argus_path: Path) -> None:
@@ -187,7 +199,7 @@ class ArgusWriter:
 
     def type_info_to_csv(
         self, type_info: Iterable[EAM.TypeInfo], overwrite: bool = True
-    ) -> int:
+    ) -> tuple[int, Path]:
         """type_info_to_csv _summary_.
 
         Args:
@@ -204,11 +216,11 @@ class ArgusWriter:
         logger.info(
             "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
         )
-        return count
+        return (count, path_out)
 
     def type_info_to_json(
         self, type_info: Iterable[EAM.TypeInfo], overwrite: bool = True
-    ):
+    ) -> Path:
         """type_info_to_json _summary_.
 
         Args:
@@ -217,17 +229,18 @@ class ArgusWriter:
         """
         start = perf_counter()
         path_out = self.argus_path / ArgusFilePaths.TYPE_INFO
-        data = {x.typeID: x for x in type_info}
-        type_info_dict = EAM.TypeInfoDict(data=data)
+        data = {x.type_id: x for x in type_info}
+        data_dict = EAM.TypeInfoDict(data=data)
         validate_file_out(file_path=path_out, overwrite=overwrite)
-        path_out.write_text(type_info_dict.model_dump_json(indent=2))
+        path_out.write_text(data_dict.model_dump_json(indent=2))
         logger.info(
             "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
         )
+        return path_out
 
     def type_description_to_csv(
         self, type_description: Iterable[EAM.TypeDescription], overwrite: bool = True
-    ) -> int:
+    ) -> tuple[int, Path]:
         """type_description_to_csv _summary_.
 
         Args:
@@ -244,11 +257,11 @@ class ArgusWriter:
         logger.info(
             "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
         )
-        return count
+        return (count, path_out)
 
     def type_description_to_json(
         self, type_description: Iterable[EAM.TypeDescription], overwrite: bool = True
-    ):
+    ) -> Path:
         """type_description_to_json _summary_.
 
         Args:
@@ -257,17 +270,18 @@ class ArgusWriter:
         """
         start = perf_counter()
         path_out = self.argus_path / ArgusFilePaths.TYPE_DESCRIPTION
-        data = {x.typeID: x for x in type_description}
-        type_description_dict = EAM.TypeDescriptionDict(data=data)
+        data = {x.type_id: x for x in type_description}
+        data_dict = EAM.TypeDescriptionDict(data=data)
         validate_file_out(file_path=path_out, overwrite=overwrite)
-        path_out.write_text(type_description_dict.model_dump_json(indent=2))
+        path_out.write_text(data_dict.model_dump_json(indent=2))
         logger.info(
             "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
         )
+        return path_out
 
     def blueprints_to_json(
         self, blueprints: Iterable[EAM.Blueprint], overwrite: bool = True
-    ):
+    ) -> Path:
         """blueprints_to_json _summary_.
 
         Args:
@@ -276,17 +290,18 @@ class ArgusWriter:
         """
         start = perf_counter()
         path_out = self.argus_path / ArgusFilePaths.BLUEPRINTS
-        data = {x.blueprintTypeID: x for x in blueprints}
-        type_description_dict = EAM.BlueprintsDict(data=data)
+        data = {x.blueprint_type_id: x for x in blueprints}
+        data_dict = EAM.BlueprintsDict(data=data)
         validate_file_out(file_path=path_out, overwrite=overwrite)
-        path_out.write_text(type_description_dict.model_dump_json(indent=2))
+        path_out.write_text(data_dict.model_dump_json(indent=2))
         logger.info(
             "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
         )
+        return path_out
 
     def market_groups_to_json(
         self, market_groups: Iterable[EAM.MarketGroup], overwrite: bool = True
-    ):
+    ) -> Path:
         """market_groups_to_json.
 
         Args:
@@ -295,17 +310,18 @@ class ArgusWriter:
         """
         start = perf_counter()
         path_out = self.argus_path / ArgusFilePaths.MARKET_GROUPS
-        data = {x.groupID: x for x in market_groups}
-        type_description_dict = EAM.MarketGroupDict(data=data)
+        data = {x.group_id: x for x in market_groups}
+        data_dict = EAM.MarketGroupDict(data=data)
         validate_file_out(file_path=path_out, overwrite=overwrite)
-        path_out.write_text(type_description_dict.model_dump_json(indent=2))
+        path_out.write_text(data_dict.model_dump_json(indent=2))
         logger.info(
             "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
         )
+        return path_out
 
     def meta_groups_to_json(
         self, meta_groups: Iterable[EAM.MetaGroup], overwrite: bool = True
-    ):
+    ) -> Path:
         """meta_groups_to_json.
 
         Args:
@@ -314,15 +330,18 @@ class ArgusWriter:
         """
         start = perf_counter()
         path_out = self.argus_path / ArgusFilePaths.META_GROUPS
-        data = {x.metaID: x for x in meta_groups}
-        type_description_dict = EAM.MetaGroupDict(data=data)
+        data = {x.meta_id: x for x in meta_groups}
+        data_dict = EAM.MetaGroupDict(data=data)
         validate_file_out(file_path=path_out, overwrite=overwrite)
-        path_out.write_text(type_description_dict.model_dump_json(indent=2))
+        path_out.write_text(data_dict.model_dump_json(indent=2))
         logger.info(
             "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
         )
+        return path_out
 
-    def groups_to_json(self, groups: Iterable[EAM.Group], overwrite: bool = True):
+    def groups_to_json(
+        self, groups: Iterable[EAM.Group], overwrite: bool = True
+    ) -> Path:
         """groups_to_json.
 
         Args:
@@ -331,17 +350,18 @@ class ArgusWriter:
         """
         start = perf_counter()
         path_out = self.argus_path / ArgusFilePaths.GROUPS
-        data = {x.groupID: x for x in groups}
-        type_description_dict = EAM.GroupDict(data=data)
+        data = {x.group_id: x for x in groups}
+        data_dict = EAM.GroupDict(data=data)
         validate_file_out(file_path=path_out, overwrite=overwrite)
-        path_out.write_text(type_description_dict.model_dump_json(indent=2))
+        path_out.write_text(data_dict.model_dump_json(indent=2))
         logger.info(
             "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
         )
+        return path_out
 
     def categories_to_json(
         self, categories: Iterable[EAM.Category], overwrite: bool = True
-    ):
+    ) -> Path:
         """categories_to_json.
 
         Args:
@@ -350,10 +370,31 @@ class ArgusWriter:
         """
         start = perf_counter()
         path_out = self.argus_path / ArgusFilePaths.CATEGORIES
-        data = {x.categoryID: x for x in categories}
-        type_description_dict = EAM.CategoryDict(data=data)
+        data = {x.category_id: x for x in categories}
+        data_dict = EAM.CategoryDict(data=data)
         validate_file_out(file_path=path_out, overwrite=overwrite)
-        path_out.write_text(type_description_dict.model_dump_json(indent=2))
+        path_out.write_text(data_dict.model_dump_json(indent=2))
         logger.info(
             "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
         )
+        return path_out
+
+    def market_prices_universe_to_json(
+        self, market_prices: Iterable[EAM.MarketPricesUniverse], overwrite: bool = True
+    ) -> Path:
+        """market_prices_universe_to_json.
+
+        Args:
+            market_prices (Iterable[EAM.MarketPricesUniverse]): _description_
+            overwrite (bool, optional): _description_. Defaults to True.
+        """
+        start = perf_counter()
+        path_out = self.argus_path / ArgusFilePaths.MARKET_PRICES_UNIVERSE
+        data = {x.type_id: x for x in market_prices}
+        data_dict = EAM.MarketPricesUniverseDict(data=data)
+        validate_file_out(file_path=path_out, overwrite=overwrite)
+        path_out.write_text(data_dict.model_dump_json(indent=2))
+        logger.info(
+            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+        )
+        return path_out

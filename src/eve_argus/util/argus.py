@@ -20,4 +20,4 @@ def published_typeIDs(type_dict: EAM.TypeInfoDict) -> Iterable[int]:
     # Keep this until I figure out if any of the unpublished types are needed...
     for item in type_dict.data.values():
         if item.published:
-            yield item.typeID
+            yield item.type_id

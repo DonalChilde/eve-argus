@@ -6,16 +6,15 @@
 # ///
 """Test the esi public api interface."""
 
-from time import perf_counter
 from pathlib import Path
-from eve_argus.models.esi import MarketHistory
-from eve_argus.models.argus import MarketHistorySummary, MarketHistory
+from time import perf_counter
+
+from eve_argus.esi import EsiPublic
+from eve_argus.models import argus as EAM
+from eve_argus.snippets.file.csv import write_dicts_to_csv
 from eve_argus.util.esi import (
     summarize_market_history_by_periods,
 )
-from eve_argus.snippets.file.csv import write_dicts_to_csv
-from typing import cast
-from eve_argus.esi import EsiPublic
 
 type_ids = [34, 35, 36, 37, 38, 39]
 region_id = 10000002  # The Forge region ID
@@ -35,14 +34,14 @@ def main() -> None:
 
         file_name = f"{region_id}_{type_id}_market_history.csv"
         file_path = save_path / file_name
-        history_data = (MarketHistory.model_dump(x) for x in data)
+        history_data = (EAM.MarketHistory.model_dump(x) for x in data)
         write_dicts_to_csv(data=history_data, file_path=file_path, overwrite=True)
         print(f"Wrote data for ({region_id},{type_id}) to {file_path}")
         summary = summarize_market_history_by_periods(
             region_id=region_id, type_id=type_id, periods=periods, data=data
         )
         summary_file = save_path / f"{region_id}-{type_id}-market_summary.csv"
-        summary_data = (MarketHistorySummary.model_dump(x) for x in summary)
+        summary_data = (EAM.MarketHistorySummary.model_dump(x) for x in summary)
         summary_count = write_dicts_to_csv(
             data=summary_data, file_path=summary_file, overwrite=True
         )

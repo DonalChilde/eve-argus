@@ -40,18 +40,18 @@ def import_sde_types(
         argus_types.append(
             EAM.TypeInfo(
                 name=name,
-                typeID=key,
-                groupID=value.get("groupID", None),
-                marketGroupID=value.get("marketGroupID", None),
-                metaGroupID=value.get("metaGroupID", None),
-                graphicID=value.get("graphicID", None),
+                type_id=key,
+                group_id=value.get("groupID", None),
+                market_group_id=value.get("marketGroupID", None),
+                meta_group_id=value.get("metaGroupID", None),
+                graphic_id=value.get("graphicID", None),
                 capacity=value.get("capacity", None),
-                portionSize=value.get("portionSize", None),
+                portion_size=value.get("portionSize", None),
                 published=value.get("published", False),
             )
         )
         argus_descriptions.append(
-            EAM.TypeDescription(typeID=key, description=description)
+            EAM.TypeDescription(type_id=key, description=description)
         )
     return (argus_types, argus_descriptions)
 
@@ -59,6 +59,14 @@ def import_sde_types(
 def import_blueprints(
     sde_blueprints: dict[int, dict[str, Any]],
 ) -> Sequence[EAM.Blueprint]:
+    """Import blueprints from the SDE.
+
+    Args:
+        sde_blueprints (dict[int, dict[str, Any]]): Dictionary of blueprint data from SDE.
+
+    Returns:
+        Sequence[EAM.Blueprint]: List of validated Blueprint models.
+    """
     blueprints: Sequence[EAM.Blueprint] = []
     for sde_item in sde_blueprints.values():
         bp = EAM.Blueprint.model_validate(sde_item)
@@ -69,6 +77,15 @@ def import_blueprints(
 def import_market_groups(
     sde_market_groups: dict[int, dict[str, Any]], lang: str = "en"
 ) -> Sequence[EAM.MarketGroup]:
+    """Import market groups from the SDE.
+
+    Args:
+        sde_market_groups (dict[int, dict[str, Any]]): Dictionary of market group data from SDE.
+        lang (str, optional): Language code for names and descriptions. Defaults to "en".
+
+    Returns:
+        Sequence[EAM.MarketGroup]: List of validated MarketGroup models.
+    """
     imported_data: list[EAM.MarketGroup] = []
     for key, value in sde_market_groups.items():
         path_id = key
@@ -87,11 +104,11 @@ def import_market_groups(
         except KeyError:
             description = ""
         market_group = EAM.MarketGroup(
-            groupID=key,
+            group_id=key,
             name=value["nameID"][lang],
             description=description,
-            hasTypes=value["hasTypes"],
-            iconID=value.get("iconID", -1),
+            has_types=value["hasTypes"],
+            icon_id=value.get("iconID", -1),
             path=tuple(parent_path),
         )
         imported_data.append(market_group)
@@ -101,9 +118,18 @@ def import_market_groups(
 def import_meta_groups(
     sde_meta_groups: dict[int, dict[str, Any]], lang: str = "en"
 ) -> Sequence[EAM.MetaGroup]:
+    """Import meta groups from the SDE.
+
+    Args:
+        sde_meta_groups (dict[int, dict[str, Any]]): Dictionary of meta group data from SDE.
+        lang (str, optional): Language code for names. Defaults to "en".
+
+    Returns:
+        Sequence[EAM.MetaGroup]: List of validated MetaGroup models.
+    """
     argus_meta_groups: Sequence[EAM.MetaGroup] = []
     for key, value in sde_meta_groups.items():
-        meta_group = EAM.MetaGroup(metaID=key, name=value["nameID"][lang])
+        meta_group = EAM.MetaGroup(meta_id=key, name=value["nameID"][lang])
         argus_meta_groups.append(meta_group)
     return argus_meta_groups
 
@@ -111,18 +137,27 @@ def import_meta_groups(
 def import_groups(
     sde_groups: dict[int, dict[str, Any]], lang: str = "en"
 ) -> Sequence[EAM.Group]:
+    """Import groups from the SDE.
+
+    Args:
+        sde_groups (dict[int, dict[str, Any]]): Dictionary of group data from SDE.
+        lang (str, optional): Language code for names. Defaults to "en".
+
+    Returns:
+        Sequence[EAM.Group]: List of validated Group models.
+    """
     argus_groups: Sequence[EAM.Group] = []
     for key, value in sde_groups.items():
         group = EAM.Group(
-            groupID=key,
+            group_id=key,
             anchorable=value["anchorable"],
             anchored=value["anchored"],
-            categoryID=value["categoryID"],
-            fittableNonSingleton=value["fittableNonSingleton"],
-            iconID=value.get("iconID", -1),
+            category_id=value["categoryID"],
+            fittable_non_singleton=value["fittableNonSingleton"],
+            icon_id=value.get("iconID", -1),
             name=value["name"][lang],
             published=value["published"],
-            useBasePrice=value["useBasePrice"],
+            use_base_price=value["useBasePrice"],
         )
         argus_groups.append(group)
     return argus_groups
@@ -131,10 +166,19 @@ def import_groups(
 def import_categories(
     sde_categories: dict[int, dict[str, Any]], lang: str = "en"
 ) -> Sequence[EAM.Category]:
+    """Import categories from the SDE.
+
+    Args:
+        sde_categories (dict[int, dict[str, Any]]): Dictionary of category data from SDE.
+        lang (str, optional): Language code for names. Defaults to "en".
+
+    Returns:
+        Sequence[EAM.Category]: List of validated Category models.
+    """
     argus_categories: Sequence[EAM.Category] = []
     for key, value in sde_categories.items():
         category = EAM.Category(
-            categoryID=key, name=value["name"][lang], published=value["published"]
+            category_id=key, name=value["name"][lang], published=value["published"]
         )
         argus_categories.append(category)
     return argus_categories
