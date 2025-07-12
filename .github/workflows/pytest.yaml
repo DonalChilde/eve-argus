@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -26,8 +26,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install flake8 pytest
           python -m pip install -e .[testing]
+          python -m pip install --group '.:dev'
           # base project uses pyproject.yaml for dependencies
           # if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Lint with flake8
@@ -39,4 +39,3 @@ jobs:
       - name: Test with pytest
         run: |
           pytest
-
