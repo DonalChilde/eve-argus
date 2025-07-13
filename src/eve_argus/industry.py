@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from uuid import UUID
 from eve_argus.models import argus as EAM
 
 from pydantic import BaseModel
@@ -26,10 +27,81 @@ class ManufacturingCostFactors(BaseModel):
 
 
 class ManufacturingCosts(BaseModel):
+    # TODO can this be generalized for other jobs like invention and copying?
+
     base_cost: int
     facility: int
     scc: int
     alpha: int
+
+
+class MaterialsCost(BaseModel):
+    """Represents the cost of a material for a job.
+
+    Specifer is used to indicate the source of the cost, e.g. "jita_buy_5" or "built"
+    """
+
+    type_id: int
+    cost: float
+    specifier: str
+
+
+class MaterialsCostsDict(BaseModel):
+    data: dict[int, MaterialsCost]
+
+
+class ManufacturingJob(BaseModel):
+    """The minimum information required to describe the result of a manufacturing job.
+
+    job costs, materials required, and time required will vary based on system, skills,
+    implants, and station.
+    """
+
+    job_uuid: UUID
+    blueprint_type_id: int
+    runs: int
+    me: int
+    te: int
+    result_type_id: int
+    result_qty: int
+    # TODO split these off to represent the variable nature of information?
+    job_costs: ManufacturingCosts
+    materials_required: list[EAM.Material] = []
+    time_required: int
+
+
+def calculate_copy_cost(blueprint: EAM.Blueprint, runs: int) -> float:
+    """Calculate the cost of copying a blueprint based on runs and cost factors."""
+    # WARNING: This is a generated stub, and the formula is not accurate.
+    # Need to check for modifiers, like skills and implants.
+    if (
+        blueprint.activities.copying is None
+        or blueprint.activities.copying.cost is None
+    ):
+        raise ValueError("Blueprint does not have copying activities or cost defined.")
+    base_cost = blueprint.activities.copying.cost
+    return base_cost * runs
+
+
+def calculate_invention_materials(blueprint: EAM.Blueprint) -> list[EAM.Material]:
+    """Calculate the materials required for invention based on the blueprint."""
+    # WARNING: This is a generated stub, and the formula is not accurate.
+    # Need to check for modifiers, like skills and implants.
+    materials_required: list[EAM.Material] = []
+    if (
+        blueprint.activities.invention is None
+        or blueprint.activities.invention.materials is None
+    ):
+        raise ValueError(
+            "Blueprint does not have invention activities or materials defined."
+        )
+    for material in blueprint.activities.invention.materials:
+        material_required = EAM.Material(
+            type_id=material.type_id,
+            quantity=ceil(material.quantity),
+        )
+        materials_required.append(material_required)
+    return materials_required
 
 
 def calculate_eiv(
