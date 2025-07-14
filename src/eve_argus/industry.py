@@ -36,22 +36,54 @@ class ManufacturingCosts(BaseModel):
 
 
 class MaterialsCost(BaseModel):
-    """Represents the cost of a material for a job.
-
-    Specifer is used to indicate the source of the cost, e.g. "jita_buy_5" or "built"
-    """
+    """Represents the cost of a material for a job."""
 
     type_id: int
     cost: float
-    specifier: str
 
 
-class MaterialsCostsDict(BaseModel):
+class JobCostProfile(BaseModel):
+    profile_id: UUID
+    description: str
     data: dict[int, MaterialsCost]
 
 
-class ManufacturingJob(BaseModel):
-    """The minimum information required to describe the result of a manufacturing job.
+class JobCostProfiles(BaseModel):
+    """Collection of item cost profiles used by Jobs.
+
+    e.g. jits_buy_5, "job_unit_cost", etc.
+    """
+
+    data: dict[str, JobCostProfile]
+
+
+class JobMaterial(BaseModel):
+    type_id: int
+    quantity: int
+    price: float
+
+
+# TODO decide wether to use UUID or str for ids. UUIDs seem fine for dict keys and pydantic. And should be smaller in memory than strings.
+class LocationProfile(BaseModel):
+    """Location information for industry jobs.
+
+    eg, region, station, system cost indexes, rigs, security, etc.
+    """
+
+    profile_id: UUID
+
+
+class CharacterProfile(BaseModel):
+    """Character based information for industry jobs.
+
+    eg, skills, implants
+    """
+
+    profile_id: UUID
+
+
+class IndustryJob(BaseModel):
+    """The minimum information required to describe the result of an industry job.
 
     job costs, materials required, and time required will vary based on system, skills,
     implants, and station.
@@ -64,10 +96,19 @@ class ManufacturingJob(BaseModel):
     te: int
     result_type_id: int
     result_qty: int
-    # TODO split these off to represent the variable nature of information?
+    activity_type: str
+    unit_cost: float
     job_costs: ManufacturingCosts
-    materials_required: list[EAM.Material] = []
+    materials_cost: float
+    eiv: float
+    location_profile: UUID
+    character_profile: UUID
+    cost_profile: UUID
+    materials_required: list[JobMaterial] = []
     time_required: int
+
+
+# TODO use CharacterProfile and LocationProfile to pass infomation to functions.
 
 
 def calculate_copy_cost(blueprint: EAM.Blueprint, runs: int) -> float:
