@@ -96,6 +96,7 @@ class ArgusFilePaths:
     GROUPS = Path("groups.json")
     CATEGORIES = Path("categories.json")
     MARKET_PRICES_UNIVERSE = Path("market-prices-universe.json")
+    ESI_DATA = Path("esi-data")
 
 
 class ArgusLoader:
@@ -379,6 +380,7 @@ class ArgusWriter:
         )
         return path_out
 
+    # TODO standardized file out formats, dicts or list?
     def market_prices_universe_to_json(
         self, market_prices: Iterable[EAM.MarketPricesUniverse], overwrite: bool = True
     ) -> Path:
@@ -389,11 +391,78 @@ class ArgusWriter:
             overwrite (bool, optional): _description_. Defaults to True.
         """
         start = perf_counter()
-        path_out = self.argus_path / ArgusFilePaths.MARKET_PRICES_UNIVERSE
+        path_out = (
+            self.argus_path
+            / ArgusFilePaths.ESI_DATA
+            / ArgusFilePaths.MARKET_PRICES_UNIVERSE
+        )
         data = {x.type_id: x for x in market_prices}
         data_dict = EAM.MarketPricesUniverseDict(data=data)
         validate_file_out(file_path=path_out, overwrite=overwrite)
         path_out.write_text(data_dict.model_dump_json(indent=2))
+        logger.info(
+            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+        )
+        return path_out
+
+    def market_history_to_json(
+        self, market_history: EAM.MarketHistoryDict, overwrite: bool = True
+    ) -> Path:
+        """market_history_to_json.
+
+        Args:
+            market_history (EAM.MarketHistoryDict): _description_
+            overwrite (bool, optional): _description_. Defaults to True.
+        """
+        start = perf_counter()
+        path_out = (
+            self.argus_path
+            / ArgusFilePaths.ESI_DATA
+            / f"{market_history.region_id}-{market_history.type_id}-market-history.json"
+        )
+        validate_file_out(file_path=path_out, overwrite=overwrite)
+        path_out.write_text(market_history.model_dump_json(indent=2))
+        logger.info(
+            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+        )
+        return path_out
+
+    def region_market_types_to_json(
+        self,
+        region_market_types: Iterable[int],
+        region_id: int,
+        overwrite: bool = True,
+    ):
+        """region_market_types_to_json."""
+        # TODO does this deserve an Argus model?
+        start = perf_counter()
+        path_out = (
+            self.argus_path
+            / ArgusFilePaths.ESI_DATA
+            / f"{region_id}-region-market-types.json"
+        )
+        validate_file_out(file_path=path_out, overwrite=overwrite)
+        data = {"region_id": region_id, "type_ids": list(region_market_types)}
+        path_out.write_text(json.dumps(data, indent=2))
+        logger.info(
+            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+        )
+        return path_out
+
+    def market_orders_to_json(
+        self,
+        market_orders: EAM.MarketOrderDict,
+        overwrite: bool = True,
+    ):
+        """market_orders_to_json."""
+        start = perf_counter()
+        path_out = (
+            self.argus_path
+            / ArgusFilePaths.ESI_DATA
+            / f"{market_orders.region_id}-region-market-orders.json"
+        )
+        validate_file_out(file_path=path_out, overwrite=overwrite)
+        path_out.write_text(market_orders.model_dump_json(indent=2))
         logger.info(
             "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
         )

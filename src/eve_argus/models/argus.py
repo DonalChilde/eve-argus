@@ -16,6 +16,17 @@ class MarketHistory(BaseModel):
     volume: int
 
 
+class MarketHistoryDict(BaseModel):
+    """A collection model to make serialization faster."""
+
+    region_id: int
+    """The region ID where the market history is located."""
+    type_id: int
+    """The type ID of the item."""
+    data: Sequence[MarketHistory]
+    """A sequence of market history records for the specified type in the specified region."""
+
+
 class MarketHistorySummary(BaseModel):
     """Market history summary data model."""
 
@@ -176,6 +187,7 @@ class MarketPricesUniverseDict(BaseModel):
     """A collection model to make serialization faster."""
 
     data: dict[int, MarketPricesUniverse]
+    """A dictionary mapping type IDs to adjusted and average market prices for the universe."""
 
 
 class MarketOrder(BaseModel):
@@ -199,8 +211,10 @@ class MarketOrderDict(BaseModel):
 
     region_id: int
     """The region ID where the market orders are located."""
-    data: dict[int, list[MarketOrder]]
-    """A dictionary mapping type IDs to sequences of market orders."""
+    buy_orders: dict[int, list[MarketOrder]] = {}
+    """A dictionary mapping type IDs to sequences of market buy orders."""
+    sell_orders: dict[int, list[MarketOrder]] = {}
+    """A dictionary mapping type IDs to sequences of market sell orders."""
 
 
 class MarketOrderSummary(BaseModel):

@@ -23,7 +23,7 @@ save_path = Path.home() / "projects" / "tmp" / "eve-argus" / "argus-esi-public-t
 
 def main() -> None:
     start = perf_counter()
-    esi = EsiPublic()
+    esi = EsiPublic(debug=True, debug_path=save_path)
     periods = [10, 30, 60, 90]
     for type_id in type_ids:
         print(f"Requesting ({region_id},{type_id})")

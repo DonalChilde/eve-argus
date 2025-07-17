@@ -1,14 +1,20 @@
 """ESI return data models."""
 
-from typing import TypedDict
+from dataclasses import dataclass, field
+from typing import Any, TypedDict
 
 
-class MarketHistory(TypedDict):
-    """Market history data model."""
+@dataclass(slots=True)
+class EsiRequest:
+    """Base class for ESI requests."""
 
-    date: str
-    highest: float
-    average: float
-    lowest: float
-    order_count: float
-    volume: int
+    op_id: str
+    arguments: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(slots=True)
+class EsiResponse:
+    """Base class for ESI responses."""
+
+    headers: dict[str, Any] = field(default_factory=dict)
+    data: Any = None

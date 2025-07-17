@@ -66,21 +66,6 @@ def summarize_market_history_by_dates(
     return result
 
 
-def import_market_prices_universe(
-    data: Sequence[dict[str, Any]],
-) -> Sequence[EAM.MarketPricesUniverse]:
-    """Import market prices for the universe from a sequence of dictionaries."""
-    result: list[EAM.MarketPricesUniverse] = []
-    for item in data:
-        prices = EAM.MarketPricesUniverse(
-            type_id=item["type_id"],
-            adjusted_price=item["adjusted_price"],
-            average_price=item.get("average_price", -1.0),
-        )
-        result.append(prices)
-    return result
-
-
 def calculate_order_summary(
     orders: dict[int, Sequence[EAM.MarketOrder]],
 ) -> EAM.MarketOrderSummary:

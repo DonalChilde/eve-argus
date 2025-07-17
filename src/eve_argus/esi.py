@@ -1,118 +1,186 @@
 """API for retrieving public data from Eve ESI."""
 
+from dataclasses import field, dataclass, asdict, astuple
 import logging
 from collections.abc import Sequence
+from pathlib import Path
 from time import perf_counter
 from typing import Any
 from itertools import chain
+from datetime import datetime, UTC
+import json
 
 import preston
 
 from eve_argus.models import argus as EAM
-from eve_argus.util.esi import import_market_prices_universe
+from eve_argus import data_import as DI
+from eve_argus.models.esi import EsiRequest, EsiResponse
+from eve_argus.snippets.file.datetime_filename import file_safe_datetime_string
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-class EsiPublic:
-    def __init__(self, user_agent: str = "Eve Argus testing") -> None:
-        self.preston = preston.Preston(user_agent=user_agent)
+def _get_esi_data(
+    preston_client: preston.Preston,
+    esi_request: EsiRequest,
+    debug_save: bool = False,
+    debug_path: Path | None = None,
+) -> EsiResponse:
+    """Helper function to get data from ESI using a Preston client."""
+    start = perf_counter()
+    logger.info(
+        f"Requesting ESI operation {esi_request.op_id} with arguments {esi_request.arguments}"
+    )
+    data = preston_client.get_op(esi_request.op_id, **esi_request.arguments)
+    response = EsiResponse(headers=dict(preston_client.stored_headers[0]), data=data)
 
-    def get_market_history(
-        self, region_id: int, type_id: int
-    ) -> Sequence[EAM.MarketHistory]:
-        start = perf_counter()
-        logger.info(f"Requesting market history for region {region_id}, type {type_id}")
-        # Get the market history for the given type_id in the specified region
-        data = self.preston.get_op(
-            "get_markets_region_id_history",
-            region_id=str(region_id),
-            type_id=str(type_id),
+    logger.info(
+        f"ESI operation {esi_request.op_id} completed in {perf_counter() - start:.6f} seconds"
+    )
+    if debug_save:
+        if debug_path is None:
+            raise ValueError("debug_path must be provided when debug_save is True")
+        _debug_save_esi_data(esi_request, response, debug_path)
+    return response
+
+
+def _debug_save_esi_data(
+    esi_request: EsiRequest,
+    esi_response: EsiResponse | Sequence[EsiResponse],
+    debug_path: Path,
+) -> None:
+    """Save ESI request and response data for debugging."""
+    debug_save_start = perf_counter()
+    debug_path.mkdir(parents=True, exist_ok=True)
+    file_name = (
+        f"{file_safe_datetime_string(datetime.now(UTC))}_{esi_request.op_id}.json"
+    )
+    file_path = debug_path / file_name
+    logger.info(f"Saving debug data to {file_path}")
+    with open(file_path, "w", encoding="utf-8") as file_out:
+        if isinstance(esi_response, Sequence):
+            # If response is a sequence, convert each item to a dict
+            file_data = {
+                "request": asdict(esi_request),
+                "response": [asdict(item) for item in esi_response],
+            }
+        elif isinstance(esi_response, EsiResponse):
+            # Otherwise, convert the single response to a dict
+            file_data = {
+                "request": asdict(esi_request),
+                "response": asdict(esi_response),
+            }
+        else:
+            raise TypeError("esi_response must be EsiResponse or Sequence[EsiResponse]")
+        json.dump(file_data, file_out, indent=2)
+    logger.info(
+        f"Debug data saved to {file_path} in {perf_counter() - debug_save_start:.6f} seconds."
+    )
+
+
+def _get_paged_esi_data(
+    preston_client: preston.Preston,
+    esi_request: EsiRequest,
+    debug_save: bool = False,
+    debug_path: Path | None = None,
+) -> Sequence[EsiResponse]:
+    """Helper function to get paged data from ESI."""
+    start = perf_counter()
+    logger.info(
+        f"Requesting paged ESI operation {esi_request.op_id} with arguments {esi_request.arguments}"
+    )
+
+    paged_data: Sequence[EsiResponse] = []
+    first_page = _get_esi_data(preston_client, esi_request)
+    paged_data.append(first_page)
+    page_count = int(first_page.headers.get("x-pages", 1))
+    logger.info(f"Retrieved page 1 of {page_count} for operation {esi_request.op_id}")
+    for page in range(2, page_count + 1):
+        esi_request.arguments["page"] = str(page)
+        page_data = _get_esi_data(preston_client, esi_request)
+        paged_data.append(page_data)
+        logger.info(
+            f"Retrieved page {page} of {page_count} for operation {esi_request.op_id}"
+        )
+    logger.info(
+        f"Total pages retrieved for operation {esi_request.op_id}: {len(paged_data)} in {perf_counter() - start:.6f} seconds."
+    )
+    if debug_save:
+        if debug_path is None:
+            raise ValueError("debug_path must be provided when debug_save is True")
+        _debug_save_esi_data(esi_request, paged_data, debug_path)
+    return paged_data
+
+
+class EsiPublic:
+    def __init__(
+        self,
+        user_agent: str = "Eve Argus testing",
+        debug: bool = False,
+        debug_path: Path | None = None,
+    ) -> None:
+        self.preston = preston.Preston(user_agent=user_agent)
+        self.debug = debug
+        self.debug_path = debug_path
+
+    def get_market_history(self, region_id: int, type_id: int) -> EAM.MarketHistoryDict:
+        """Get market history for a specific region and type."""
+        request = EsiRequest(
+            op_id="get_markets_region_id_history",
+            arguments={
+                "region_id": str(region_id),
+                "type_id": str(type_id),
+            },
+        )
+        response = _get_esi_data(
+            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
+        )
+        result = DI.market_history_from_esi(
+            region_id=region_id, type_id=type_id, response=response
         )
         logger.info(
-            f"Retrieved {len(data)} market history records for region {region_id}, "
-            f"type {type_id} in {perf_counter() - start:.6f} seconds."
+            f"Retrieved {len(result.data)} market history records for {request!r}."
         )
-        return [EAM.MarketHistory(**x) for x in data]
+        return result
 
     def get_market_prices_universe(self) -> Sequence[EAM.MarketPricesUniverse]:
         """Get market prices for the entire universe."""
-        start = perf_counter()
-        logger.info("Requesting market prices for the universe.")
-        data: Sequence[dict[str, Any]] = self.preston.get_op("get_markets_prices")  # type: ignore
-        logger.info(
-            f"Retrieved {len(data)} market prices for the universe in "
-            f"{perf_counter() - start:.6f} seconds."
+        request = EsiRequest(op_id="get_markets_prices")
+        response = _get_esi_data(
+            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
         )
-        return import_market_prices_universe(data)
+        result = DI.market_prices_universe_from_esi(response.data)
+        logger.info(f"Retrieved {len(result)} market prices for {request!r}.")
+        return result
 
     def get_region_market_types(self, region_id: int) -> Sequence[int]:
         """Get type ids with active market orders for a specific region."""
-        start = perf_counter()
-        paged_data: Sequence[Sequence[int]] = []
-        logger.info(f"Requesting market types for region {region_id}")
-        data = self.preston.get_op(
-            "get_markets_region_id_types", region_id=str(region_id)
+        request = EsiRequest(
+            op_id="get_markets_region_id_types", arguments={"region_id": str(region_id)}
         )
-        page_count = int(self.preston.stored_headers[0].get("x-pages", 1))
-        paged_data.append(data)  # type: ignore
-        logger.info(
-            f"Retrieved {len(data)} market types for region {region_id}, "
-            f"page 1 of {page_count}"
+        response = _get_paged_esi_data(
+            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
         )
-        for page in range(2, page_count + 1):
-            data = self.preston.get_op(
-                "get_markets_region_id_types", region_id=str(region_id), page=str(page)
-            )
-            logger.info(
-                f"Retrieved {len(data)} market types for region "
-                f"{region_id}, page {page} of {page_count}"
-            )
-            paged_data.append(data)  # type: ignore
-        logger.info(
-            f"Total market types retrieved for region {region_id}: "
-            f"{sum(len(page) for page in paged_data)} in {perf_counter() - start:.6f} seconds."
-        )
-        # Flatten the list of lists into a single list of type IDs
-        flat_data = list(chain(*paged_data))
-        return flat_data
+        paged_data: Sequence[Sequence[int]] = [x.data for x in response]
+        result = DI.region_market_types_from_esi(paged_data)
+        logger.info(f"Retrieved {len(result)} market types for {request!r}.")
+        return result
 
-    def get_market_orders(self, region_id: int) -> EAM.MarketOrderDict:
+    def get_market_orders(
+        self, region_id: int, order_type: str = "all"
+    ) -> EAM.MarketOrderDict:
         """Get market orders for a specific region."""
-        start = perf_counter()
-        result = EAM.MarketOrderDict(region_id=region_id, data={})
-        paged_data: Sequence[Sequence[dict[str, Any]]] = []
-        logger.info(f"Requesting all market orders for region {region_id}.")
-        request_start = perf_counter()
-        data = self.preston.get_op(
-            "get_markets_region_id_orders", region_id=str(region_id)
+        request = EsiRequest(
+            op_id="get_markets_region_id_orders",
+            arguments={"region_id": str(region_id), "order_type": order_type},
         )
-        page_count = int(self.preston.stored_headers[0].get("x-pages", 1))
-        paged_data.append(data)  # type: ignore
+        response = _get_paged_esi_data(
+            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
+        )
+        paged_data: Sequence[Sequence[dict[str, Any]]] = [x.data for x in response]
+        result = DI.region_market_orders_from_esi(region_id, paged_data)
         logger.info(
-            f"Retrieved {len(data)} market orders on page 1 of {page_count} for "
-            f"region {region_id} in {perf_counter() - request_start:.6f} seconds."
+            f"Retrieved {sum(len(page) for page in paged_data)} for {request!r}."
         )
-        for page in range(2, page_count + 1):
-            request_start = perf_counter()
-            data = self.preston.get_op(
-                "get_markets_region_id_orders", region_id=str(region_id), page=str(page)
-            )
-            paged_data.append(data)  # type: ignore
-            logger.info(
-                f"Retrieved {len(data)} market orders on page {page} of {page_count} "
-                f"for region {region_id} in {perf_counter() - request_start:.6f} seconds."
-            )
-        logger.info(
-            f"Total market orders retrieved for region {region_id}: "
-            f"{sum(len(page) for page in paged_data)} in "
-            f"{perf_counter() - start:.6f} seconds."
-        )
-        flat_data = chain(*paged_data)
-        for item in flat_data:
-            order = EAM.MarketOrder(region_id=region_id, **item)
-            if order.type_id not in result.data:
-                result.data[order.type_id] = []
-            result.data[order.type_id].append(order)
         return result
