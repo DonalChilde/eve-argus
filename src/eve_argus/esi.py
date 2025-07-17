@@ -94,7 +94,9 @@ def _get_paged_esi_data(
     paged_data: Sequence[EsiResponse] = []
     first_page = _get_esi_data(preston_client, esi_request)
     paged_data.append(first_page)
-    page_count = int(first_page.headers.get("x-pages", 1))
+    # TODO check to see if there is a page header if only one page available
+    # TODO consider an error if 'X-Pages' key not found when expected.
+    page_count = int(first_page.headers.get("X-Pages", 1))
     logger.info(f"Retrieved page 1 of {page_count} for operation {esi_request.op_id}")
     for page in range(2, page_count + 1):
         esi_request.arguments["page"] = str(page)
