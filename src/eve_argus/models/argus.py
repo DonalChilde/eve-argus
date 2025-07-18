@@ -54,12 +54,12 @@ class Activity_Name(Enum):
 
 class Material(BaseModel):
     quantity: int
-    type_id: int
+    typeID: int
 
 
 class Skill(BaseModel):
     level: int
-    type_id: int
+    typeID: int
 
 
 class Activity(BaseModel):
@@ -79,8 +79,8 @@ class Activities(BaseModel):
 
 
 class Blueprint(BaseModel):
-    blueprint_type_id: int
-    max_production_limit: int
+    blueprintTypeID: int
+    maxProductionLimit: int
     activities: Activities
 
 
@@ -217,18 +217,36 @@ class MarketOrderDict(BaseModel):
     """A dictionary mapping type IDs to sequences of market sell orders."""
 
 
+class MarketOrderSummaryDetails(BaseModel):
+    five_price: float
+    """The price at which five percent of the available items can be transacted."""
+    five_orders: int
+    """The number of orders availablee at the five percent price."""
+    five_items: int
+    """The number of items available at the five percent price."""
+    lowest: float
+    """The lowest price."""
+    highest: float
+    """The highest price."""
+    total_items: int
+    """The total number of items available."""
+    total_orders: int
+    """The total number of orders."""
+    avg_price: float
+    """The average price of the available items."""
+    filtered_items: int
+    """The number of items that did not meet the threshold."""
+    filtered_orders: int
+    """The number of orders that did not meet the threshold."""
+
+
 class MarketOrderSummary(BaseModel):
     """Summary of market orders for a specific type."""
 
+    # FIXME location spec should be one of region, system, or location
     region_id: int  # The region ID where the order is placed
     system_id: int  # The solar system ID where the order is placed
     type_id: int  # The type ID of the item
-    highest_buy: float  # Highest buy order price
-    lowest_sell: float  # Lowest sell order price
-    average_price: float  # Average price of the orders
-    total_volume: int  # Total volume of the orders
-    order_count: int  # Total number of orders
-    buy_5: float  # Price at the 5th percentile of volume
-    sell_5: float  # Price at the 5th percentile of volume
-    buy_5_volume: int  # Volume at the 5th percentile of buy orders
-    sell_5_volume: int  # Volume at the 5th percentile of sell orders
+    location: int
+    buy: MarketOrderSummaryDetails
+    sell: MarketOrderSummaryDetails
