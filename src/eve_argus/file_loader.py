@@ -289,9 +289,10 @@ class ArgusWriter:
             blueprints (Iterable[EAM.Blueprint]): _description_
             overwrite (bool, optional): _description_. Defaults to True.
         """
+        # TODO does json automatically force keys to be str?
         start = perf_counter()
         path_out = self.argus_path / ArgusFilePaths.BLUEPRINTS
-        data = {x.blueprint_type_id: x for x in blueprints}
+        data = {x.blueprintTypeID: x for x in blueprints}
         data_dict = EAM.BlueprintsDict(data=data)
         validate_file_out(file_path=path_out, overwrite=overwrite)
         path_out.write_text(data_dict.model_dump_json(indent=2))

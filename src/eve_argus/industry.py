@@ -138,7 +138,7 @@ def calculate_invention_materials(blueprint: EAM.Blueprint) -> list[EAM.Material
         )
     for material in blueprint.activities.invention.materials:
         material_required = EAM.Material(
-            type_id=material.type_id,
+            typeID=material.typeID,
             quantity=ceil(material.quantity),
         )
         materials_required.append(material_required)
@@ -152,7 +152,7 @@ def calculate_eiv(
     # TODO test rounding behavior, is each calculation rounded or just the final result?
     eiv = 0.0
     for material in materials:
-        eiv += material.quantity * prices.data[material.type_id].adjusted_price
+        eiv += material.quantity * prices.data[material.typeID].adjusted_price
     return round(eiv)
 
 
@@ -243,7 +243,7 @@ def manufacturing_materials_required(
         if qty < 1:
             qty = 1
         material_required = EAM.Material(
-            type_id=material.type_id,
+            typeID=material.typeID,
             quantity=ceil(qty * runs),
         )
         materials_required.append(material_required)

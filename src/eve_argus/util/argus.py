@@ -1,6 +1,6 @@
 """Utility functions for working with argus models."""
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from eve_argus.models import argus as EAM
 
 
@@ -21,3 +21,29 @@ def published_typeIDs(type_dict: EAM.TypeInfoDict) -> Iterable[int]:
     for item in type_dict.data.values():
         if item.published:
             yield item.type_id
+
+
+def get_type_ids_used_in_blueprints(blueprints: EAM.BlueprintsDict) -> Sequence[int]:
+    type_ids: set[int] = set()
+    for blueprint in blueprints.data.values():
+        if blueprint.activities.copying:
+            for material in blueprint.activities.copying.materials:
+                type_ids.add(material.typeID)
+        if blueprint.activities.invention:
+            for material in blueprint.activities.invention.materials:
+                type_ids.add(material.typeID)
+            for material in blueprint.activities.invention.products:
+                type_ids.add(material.typeID)
+        if blueprint.activities.manufacturing:
+            for material in blueprint.activities.manufacturing.materials:
+                type_ids.add(material.typeID)
+            for material in blueprint.activities.manufacturing.products:
+                type_ids.add(material.typeID)
+        if blueprint.activities.research_material:
+            for material in blueprint.activities.research_material.materials:
+                type_ids.add(material.typeID)
+        if blueprint.activities.research_time:
+            for material in blueprint.activities.research_time.materials:
+                type_ids.add(material.typeID)
+
+    return list(type_ids)
