@@ -2,6 +2,7 @@
 
 from collections.abc import Sequence
 from enum import Enum
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -219,6 +220,14 @@ class MarketOrderDict(BaseModel):
 
 
 class MarketOrderSummaryDetails(BaseModel):
+    type_id: int
+    """The type ID of the item."""
+    is_buy_order: bool
+    """True if this summary is for buy orders, False for sell orders."""
+    location_id: int
+    """The location ID of the order summary."""
+    location_spec: Literal["region", "system", "station"] = "region"
+    """The location specification for the order summary."""
     five_price: float
     """The price at which five percent of the available items can be transacted."""
     five_orders: int
@@ -244,10 +253,17 @@ class MarketOrderSummaryDetails(BaseModel):
 class MarketOrderSummary(BaseModel):
     """Summary of market orders for a specific type."""
 
-    # FIXME location spec should be one of region, system, or location
-    region_id: int  # The region ID where the order is placed
-    system_id: int  # The solar system ID where the order is placed
     type_id: int  # The type ID of the item
-    location: int
     buy: MarketOrderSummaryDetails
     sell: MarketOrderSummaryDetails
+
+
+class MarketOrderSummaryDict(BaseModel):
+    """A collection model to make serialization faster."""
+
+    location_spec: Literal["region", "system", "station"] = "region"
+    """The location specification for the order summaries."""
+    location_id: int
+    """The location ID of the order summaries."""
+    data: dict[int, MarketOrderSummary]
+    """A dictionary mapping type IDs to market order summaries."""
