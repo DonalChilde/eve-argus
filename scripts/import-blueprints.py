@@ -39,7 +39,7 @@ def main() -> None:
     load_bp_start = perf_counter()
     loaded_bp = argus_reader.blueprints()
     print(
-        f"Loaded {len(loaded_bp.data)} Argus blueprints in {perf_counter() - bp_write_start:.6f} seconds."
+        f"Loaded {len(loaded_bp.data)} Argus blueprints in {perf_counter() - load_bp_start:.6f} seconds."
     )
     unpublished_bp = 0
     published_ids = published_typeIDs(type_dict=type_info)
