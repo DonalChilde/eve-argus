@@ -6,7 +6,7 @@ from time import perf_counter
 from pathlib import Path
 from eve_argus.file_loader import SdeLoader, ArgusLoader, ArgusWriter
 from eve_argus.util.sde import import_blueprints
-from eve_argus.util.argus import published_typeIDs
+from eve_argus.util.argus import published_type_ids, get_type_ids_used_in_blueprints
 
 
 SDE_ROOT = Path.home() / "projects" / "eve-sde"
@@ -42,11 +42,20 @@ def main() -> None:
         f"Loaded {len(loaded_bp.data)} Argus blueprints in {perf_counter() - load_bp_start:.6f} seconds."
     )
     unpublished_bp = 0
-    published_ids = published_typeIDs(type_dict=type_info)
+    published_ids = published_type_ids(type_dict=type_info)
+    print(f"Found {len(published_ids)} in type info.")
     for key in loaded_bp.data.keys():
         if key not in published_ids:
             unpublished_bp += 1
     print(f"Found {unpublished_bp} unpublished blueprints.")
+    used_type_ids = get_type_ids_used_in_blueprints(loaded_bp)
+    unpublished_types = 0
+    for type_id in used_type_ids:
+        if type_id not in published_ids:
+            unpublished_types += 1
+    print(
+        f"Found {len(used_type_ids)} type_ids in blueprints, {unpublished_types} are unpublished."
+    )
 
 
 if __name__ == "__main__":
