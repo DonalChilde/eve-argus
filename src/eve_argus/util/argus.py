@@ -4,7 +4,7 @@ from collections.abc import Iterable, Sequence
 from eve_argus.models import argus as EAM
 
 
-def published_typeIDs(type_dict: EAM.TypeInfoDict) -> Iterable[int]:
+def published_typeIDs(type_dict: EAM.TypeInfoDict) -> Sequence[int]:
     """published_typeIDs .
 
     Args:
@@ -18,9 +18,11 @@ def published_typeIDs(type_dict: EAM.TypeInfoDict) -> Iterable[int]:
     """
     # A bit of unnecessary right now, as unpublished types are filtered by default.
     # Keep this until I figure out if any of the unpublished types are needed...
+    published: list[int] = []
     for item in type_dict.data.values():
         if item.published:
-            yield item.type_id
+            published.append(item.type_id)
+    return published
 
 
 def get_type_ids_used_in_blueprints(blueprints: EAM.BlueprintsDict) -> Sequence[int]:
