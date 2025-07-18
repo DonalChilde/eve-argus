@@ -3,10 +3,11 @@
 Check for older version of csv util. Consolidate.
 """
 
-from collections.abc import Iterable
 import csv
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, Optional
+
 from .validate_file_out import validate_file_out
 
 

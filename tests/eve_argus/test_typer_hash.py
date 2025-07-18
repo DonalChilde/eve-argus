@@ -2,9 +2,10 @@
 from importlib import resources
 
 import pytest
-from tests.resources import RESOURCES_ANCHOR
 from typer.testing import CliRunner
+
 from eve_argus.cli.main_typer import app
+from tests.resources import RESOURCES_ANCHOR
 
 DATA_FILE_NAME = "ipsum_1.txt"
 DATA_FILE_PATH = "files_1"

@@ -6,6 +6,7 @@ from time import perf_counter_ns
 from typing import Annotated
 
 import typer
+
 from eve_argus.snippets.hash.file_hash import hash_file
 
 
@@ -15,7 +16,6 @@ def default_options(
     verbosity: Annotated[int, typer.Option("-v", help="Verbosity.", count=True)] = 1,
 ):
     """Hash a file."""
-
     ctx.ensure_object(dict)
     ctx.obj["START_TIME"] = perf_counter_ns()
     ctx.obj["DEBUG"] = debug

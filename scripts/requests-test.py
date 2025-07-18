@@ -4,8 +4,10 @@
 #     "requests",
 # ]
 # ///
-import requests
 from time import perf_counter
+
+import requests
+
 type_ids = [34, 35, 36, 37, 38, 39]
 # The Forge region ID 10000002
 def main() -> None:

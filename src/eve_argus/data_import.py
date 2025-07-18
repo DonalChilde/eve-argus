@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 from itertools import chain
 from typing import Any
+
 from eve_argus.models import argus as EAM
 from eve_argus.models.esi import EsiResponse
 

@@ -2,6 +2,7 @@
 
 from collections.abc import Sequence
 from enum import Enum
+
 from pydantic import BaseModel
 
 

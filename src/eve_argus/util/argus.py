@@ -1,6 +1,7 @@
 """Utility functions for working with argus models."""
 
 from collections.abc import Iterable, Sequence
+
 from eve_argus.models import argus as EAM
 
 

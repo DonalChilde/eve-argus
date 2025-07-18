@@ -9,9 +9,10 @@
 # Source: https://github.com/DonalChilde/snippets  #
 ####################################################
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, BinaryIO, Callable, Protocol
+from typing import TYPE_CHECKING, BinaryIO, Protocol
 
 if TYPE_CHECKING:
     from hashlib import _Hash
@@ -20,8 +21,7 @@ if TYPE_CHECKING:
 def hash_binary_file(
     file_handle: BinaryIO, hasher: "_Hash", block_size: int = 2**10 * 64
 ) -> str:
-    """
-    Calculate the hash digest for a file as a hexidecimal string.
+    """Calculate the hash digest for a file as a hexidecimal string.
 
     https://stackoverflow.com/a/3431835/105844
     https://www.pythonmorsels.com/reading-binary-files-in-python/
@@ -43,8 +43,7 @@ def hash_binary_file(
 
 
 def hash_file(file_path: Path, hasher: "_Hash", block_size: int = 2**10 * 64) -> str:
-    """
-    Calculate the hash digest for a file as a hexidecimal string.
+    """Calculate the hash digest for a file as a hexidecimal string.
 
     https://stackoverflow.com/a/3431835/105844
     https://www.pythonmorsels.com/reading-binary-files-in-python/

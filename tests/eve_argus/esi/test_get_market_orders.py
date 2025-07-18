@@ -1,6 +1,7 @@
-from time import perf_counter
-from eve_argus.esi import EsiPublic
 import logging
+from time import perf_counter
+
+from eve_argus.esi import EsiPublic
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

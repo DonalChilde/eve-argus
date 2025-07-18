@@ -9,7 +9,8 @@
 # Source: https://github.com/DonalChilde/snippets  #
 ####################################################
 
-from typing import TYPE_CHECKING, Iterator
+from collections.abc import Iterator
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from hashlib import _Hash
@@ -19,8 +20,7 @@ def bytes_iterator_hash(
     bytes_iterator: Iterator[bytes],
     hasher: "_Hash",
 ) -> str:
-    """
-    Get the hash digest of a bytes iterator as a hexidecimal string.
+    """Get the hash digest of a bytes iterator as a hexidecimal string.
 
     https://stackoverflow.com/a/3431835/105844
 
@@ -32,7 +32,6 @@ def bytes_iterator_hash(
     Returns:
          The hexidecimal str from `hexdigest()`
     """
-
     for block in bytes_iterator:
         hasher.update(block)
     return hasher.hexdigest()

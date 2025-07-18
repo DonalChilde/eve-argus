@@ -9,8 +9,8 @@
 # Source: https://github.com/DonalChilde/pfmsoft_snippets  #
 ####################################################
 
-from datetime import date, timedelta
 from collections.abc import Iterator
+from datetime import date, timedelta
 
 
 def date_range(start_date: date, end_date: date) -> Iterator[date]:

@@ -4,9 +4,10 @@
 # ///
 
 
-from time import perf_counter
 from pathlib import Path
-from eve_argus.file_loader import SdeLoader, ArgusLoader, ArgusWriter
+from time import perf_counter
+
+from eve_argus.file_loader import ArgusLoader, ArgusWriter, SdeLoader
 from eve_argus.util.sde import import_categories
 
 SDE_ROOT = Path.home() / "projects" / "eve-sde"

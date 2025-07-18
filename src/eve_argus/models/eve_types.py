@@ -1,7 +1,8 @@
 from collections.abc import Set
 from pathlib import Path
 from typing import Any
-from yaml import safe_load, safe_dump
+
+from yaml import safe_dump, safe_load
 
 
 class EveTypes:

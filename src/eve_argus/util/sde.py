@@ -2,6 +2,7 @@
 
 from collections.abc import Sequence
 from typing import Any
+
 from eve_argus.models import argus as EAM
 
 

@@ -1,15 +1,17 @@
 """File loaders for data sets."""
 
+import json
+import logging
 from collections.abc import Iterable
 from pathlib import Path
 from time import perf_counter
 from typing import Any
+
 from yaml import safe_load
+
 from eve_argus.models import argus as EAM
 from eve_argus.snippets.file.csv import write_dicts_to_csv
-import json
 from eve_argus.snippets.file.validate_file_out import validate_file_out
-import logging
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

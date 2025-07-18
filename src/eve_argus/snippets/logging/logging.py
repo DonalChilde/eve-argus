@@ -8,8 +8,7 @@
 # Last Modified: 2022-12-04T01:11:10.071840+00:00  #
 # Source: https://github.com/DonalChilde/snippets  #
 ####################################################
-"""
-Convenience functions for logging.
+"""Convenience functions for logging.
 
 """
 import logging
@@ -30,8 +29,7 @@ def rotating_file_handler(
     log_level: int,
     formater: logging.Formatter | None = None,
 ) -> RotatingFileHandler:
-    """
-    Convenience function to init a rotating file handler.
+    """Convenience function to init a rotating file handler.
 
     Ensures log directory exists, and enforces .log file suffix.
     If no format string is provided, uses a default format.
@@ -45,7 +43,6 @@ def rotating_file_handler(
     Returns:
         RotatingFileHandler: The confgured RotatingFileHandler.
     """
-
     log_dir.mkdir(parents=True, exist_ok=True)
     if file_name.endswith(".log"):
         log_file = log_dir / Path(file_name)
@@ -66,8 +63,7 @@ def rotating_file_logger(
     logfile_name: str | None = None,
     formater: logging.Formatter | None = None,
 ):
-    """
-    Configures a logger with a rotating file handler.
+    """Configures a logger with a rotating file handler.
 
     Convenience method with useful defaults.
 

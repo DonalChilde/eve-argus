@@ -1,19 +1,19 @@
 """API for retrieving public data from Eve ESI."""
 
-from dataclasses import field, dataclass, asdict, astuple
+import json
 import logging
 from collections.abc import Sequence
+from dataclasses import asdict, astuple, dataclass, field
+from datetime import UTC, datetime
+from itertools import chain
 from pathlib import Path
 from time import perf_counter
 from typing import Any
-from itertools import chain
-from datetime import datetime, UTC
-import json
 
 import preston
 
-from eve_argus.models import argus as EAM
 from eve_argus import data_import as DI
+from eve_argus.models import argus as EAM
 from eve_argus.models.esi import EsiRequest, EsiResponse
 from eve_argus.snippets.file.datetime_filename import file_safe_datetime_string
 

@@ -1,9 +1,10 @@
 from collections.abc import Sequence
+from math import ceil
 from uuid import UUID
-from eve_argus.models import argus as EAM
 
 from pydantic import BaseModel
-from math import ceil
+
+from eve_argus.models import argus as EAM
 
 
 class ManufacturingMaterialsBonus(BaseModel):

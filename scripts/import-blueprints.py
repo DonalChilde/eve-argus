@@ -2,12 +2,12 @@
 # requires-python = ">=3.13"
 # dependencies = []
 # ///
-from time import perf_counter
 from pathlib import Path
-from eve_argus.file_loader import SdeLoader, ArgusLoader, ArgusWriter
-from eve_argus.util.sde import import_blueprints
-from eve_argus.util.argus import published_type_ids, get_type_ids_used_in_blueprints
+from time import perf_counter
 
+from eve_argus.file_loader import ArgusLoader, ArgusWriter, SdeLoader
+from eve_argus.util.argus import get_type_ids_used_in_blueprints, published_type_ids
+from eve_argus.util.sde import import_blueprints
 
 SDE_ROOT = Path.home() / "projects" / "eve-sde"
 EVE_ARGUS_DATA = Path.home() / "projects" / "eve-argus-data"
