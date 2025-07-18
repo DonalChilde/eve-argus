@@ -4,7 +4,7 @@ from collections.abc import Iterable, Sequence
 from eve_argus.models import argus as EAM
 
 
-def published_typeIDs(type_dict: EAM.TypeInfoDict) -> Sequence[int]:
+def published_type_ids(type_dict: EAM.TypeInfoDict) -> Sequence[int]:
     """published_typeIDs .
 
     Args:
