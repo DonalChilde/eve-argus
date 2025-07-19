@@ -22,7 +22,7 @@ argus_writer = ArgusWriter(argus_path=EVE_ARGUS_DATA)
 def localize_sde_types():
     """Localize SDE types and split out descriptions."""
     start = perf_counter()
-    print("Localizing SDE types, and splitting out descriptions.")
+    print("\nLocalizing SDE types, and splitting out descriptions.")
     print(f"Loading SDE type data.")
     sde_types = sde_loader.load_types()
     print(f"Data loaded in {perf_counter() - start:.6f} seconds")
@@ -54,7 +54,7 @@ def localize_sde_types():
 def import_blueprints():
     """Import blueprints from SDE."""
     start = perf_counter()
-    print("Importing blueprints from SDE.")
+    print("\nImporting blueprints from SDE.")
     blueprints = sde_loader.load_blueprints()
     print(
         f"Loaded {len(blueprints)} blueprints in {perf_counter() - start:.6f} seconds."
@@ -79,7 +79,7 @@ def import_blueprints():
 def import_categories():
     """Import categories from SDE."""
     start = perf_counter()
-    print("Importing categories from SDE.")
+    print("\nImporting categories from SDE.")
     sde_categories = sde_loader.load_categories()
     print(
         f"Loaded {len(sde_categories)} categories in {perf_counter() - start:.6f} seconds."
@@ -104,7 +104,7 @@ def import_categories():
 def import_groups():
     """Import groups from SDE."""
     start = perf_counter()
-    print("Importing groups from SDE.")
+    print("\nImporting groups from SDE.")
     sde_groups = sde_loader.load_groups()
     print(f"Loaded {len(sde_groups)} groups in {perf_counter() - start:.6f} seconds.")
 
@@ -127,7 +127,7 @@ def import_groups():
 def import_market_groups():
     """Import market groups from SDE."""
     start = perf_counter()
-    print("Importing market groups from SDE.")
+    print("\nImporting market groups from SDE.")
     sde_market_groups = sde_loader.load_market_groups()
     print(
         f"Loaded {len(sde_market_groups)} market groups in {perf_counter() - start:.6f} seconds."
@@ -154,7 +154,7 @@ def import_market_groups():
 def import_meta_groups():
     """Import meta groups from SDE."""
     start = perf_counter()
-    print("Importing meta groups from SDE.")
+    print("\nImporting meta groups from SDE.")
     sde_meta_groups = sde_loader.load_meta_groups()
     print(
         f"Loaded {len(sde_meta_groups)} meta groups in {perf_counter() - start:.6f} seconds."
@@ -176,7 +176,117 @@ def import_meta_groups():
     )
 
 
+def get_published_type_ids():
+    """Get type IDs that are published."""
+    start = perf_counter()
+    print("\nGetting published type IDs from Argus data.")
+    type_dict = argus_loader.type_info()
+    print(
+        f"Loaded {len(type_dict.data)} type entries in {perf_counter() - start:.6f} seconds."
+    )
+
+    conversion_start = perf_counter()
+    print("Filtering published type IDs.")
+    published_type_ids = ARGUS_UTIL.published_type_ids(type_dict=type_dict)
+    print(
+        f"Found {len(published_type_ids.type_ids)} published type IDs in {perf_counter() - conversion_start:.6f} seconds."
+    )
+
+    save_start = perf_counter()
+    print("Saving published type IDs to JSON.")
+    path_out = argus_writer.type_ids_published_to_json(type_ids=published_type_ids)
+    print(
+        f"Published type IDs saved to {path_out} in {perf_counter() - save_start:.6f} seconds."
+    )
+
+
+def get_type_ids_used_in_blueprints():
+    """Get published type IDs used in blueprints."""
+    start = perf_counter()
+    print("\nGetting type IDs used in blueprints from Argus data.")
+    blueprints = argus_loader.blueprints()
+    print(
+        f"Loaded {len(blueprints.data)} blueprints in {perf_counter() - start:.6f} seconds."
+    )
+
+    print("Getting published type IDs for filtering.")
+    published_type_ids = argus_loader.type_ids_published()
+    print(
+        f"Loaded {len(published_type_ids.type_ids)} published type IDs in {perf_counter() - start:.6f} seconds."
+    )
+
+    conversion_start = perf_counter()
+    print("Filtering for published type IDs used in blueprints.")
+    type_ids_used = ARGUS_UTIL.get_type_ids_used_in_blueprints(blueprints=blueprints)
+    print(
+        f"Found {len(type_ids_used.type_ids)} type IDs used in blueprints in {perf_counter() - conversion_start:.6f} seconds."
+    )
+
+    save_start = perf_counter()
+    print("Saving type IDs used in blueprints to JSON.")
+    path_out = argus_writer.type_ids_in_blueprints_to_json(type_ids=type_ids_used)
+    print(
+        f"Type IDs used in blueprints saved to {path_out} in {perf_counter() - save_start:.6f} seconds."
+    )
+
+
+def get_published_type_ids_possible_in_market():
+    """Get type IDs that are possible in the market."""
+    start = perf_counter()
+    print("\nGetting type IDs possible in the market from Argus data.")
+    eve_types = argus_loader.type_info()
+    print(
+        f"Loaded {len(eve_types.data)} type entries in {perf_counter() - start:.6f} seconds."
+    )
+
+    conversion_start = perf_counter()
+    print("Filtering for type IDs possible in the market.")
+    type_ids_possible = ARGUS_UTIL.get_type_ids_possible_in_market(
+        eve_types=eve_types, filter_published=True
+    )
+    print(
+        f"Found {len(type_ids_possible.type_ids)} type IDs possible in the market in {perf_counter() - conversion_start:.6f} seconds."
+    )
+
+    save_start = perf_counter()
+    print("Saving type IDs possible in the market to JSON.")
+    path_out = argus_writer.type_ids_in_market_to_json(type_ids=type_ids_possible)
+    print(
+        f"Type IDs possible in the market saved to {path_out} in {perf_counter() - save_start:.6f} seconds."
+    )
+
+
+def get_type_ids_needed_for_industry_pricing():
+    """Get type IDs needed for industry pricing."""
+    start = perf_counter()
+    print("\nGetting type IDs needed for industry pricing from Argus data.")
+    market_type_ids = argus_loader.type_ids_in_market()
+    blueprint_type_ids = argus_loader.type_ids_in_blueprints()
+    print(
+        f"Loaded {len(market_type_ids.type_ids)} market type IDs and {len(blueprint_type_ids.type_ids)} blueprint type IDs in {perf_counter() - start:.6f} seconds."
+    )
+
+    conversion_start = perf_counter()
+    print("Filtering for type IDs needed for industry pricing.")
+    type_ids_needed = ARGUS_UTIL.get_type_ids_needed_for_industry_pricing(
+        market_type_ids=market_type_ids, blueprint_type_ids=blueprint_type_ids
+    )
+    print(
+        f"Found {len(type_ids_needed.type_ids)} type IDs needed for industry pricing in {perf_counter() - conversion_start:.6f} seconds."
+    )
+
+    save_start = perf_counter()
+    print("Saving type IDs needed for industry pricing to JSON.")
+    path_out = argus_writer.type_ids_for_industry_pricing_to_json(
+        type_ids=type_ids_needed
+    )
+    print(
+        f"Type IDs needed for industry pricing saved to {path_out} in {perf_counter() - save_start:.6f} seconds."
+    )
+
+
 def main() -> None:
+    start = perf_counter()
     print("Rebuilding datasets from SDE data")
     localize_sde_types()
     import_blueprints()
@@ -184,6 +294,11 @@ def main() -> None:
     import_categories()
     import_market_groups()
     import_meta_groups()
+    get_published_type_ids()
+    get_type_ids_used_in_blueprints()
+    get_published_type_ids_possible_in_market()
+    get_type_ids_needed_for_industry_pricing()
+    print(f"All datasets rebuilt successfully in {perf_counter() - start:.6f} seconds.")
 
 
 if __name__ == "__main__":
