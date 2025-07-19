@@ -127,7 +127,7 @@ class EsiPublic:
         self.debug_path = debug_path
         start = perf_counter()
         # TODO trap server down error.
-
+        # Do this to trigger download of swagger.json
         status = self.preston.get_op("get_status")
         logger.info(
             f"Initialized EsiPublic client in {perf_counter() - start:.6f} seconds. server status: {status!r}"
