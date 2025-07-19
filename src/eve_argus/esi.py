@@ -125,6 +125,13 @@ class EsiPublic:
         self.preston = preston.Preston(user_agent=user_agent)
         self.debug = debug
         self.debug_path = debug_path
+        start = perf_counter()
+        # TODO trap server down error.
+
+        status = self.preston.get_op("get_status")
+        logger.info(
+            f"Initialized EsiPublic client in {perf_counter() - start:.6f} seconds. server status: {status!r}"
+        )
 
     def get_market_history(self, region_id: int, type_id: int) -> EAM.MarketHistoryDict:
         """Get market history for a specific region and type."""
