@@ -12,6 +12,7 @@ save_path = Path.home() / "projects" / "tmp" / "eve-argus" / "sample-data"
 
 
 def get_market_history(esi: EsiPublic, region_id: int, type_id: int):
+    print(f"\nGetting market history for region {region_id}, type {type_id}.")
     start = perf_counter()
     data = esi.get_market_history(region_id=region_id, type_id=type_id)
     writer = ArgusWriter(argus_path=save_path)
@@ -24,6 +25,7 @@ def get_market_history(esi: EsiPublic, region_id: int, type_id: int):
 
 
 def get_market_prices_universe(esi: EsiPublic):
+    print("\nGetting market prices for the entire universe.")
     start = perf_counter()
     data = esi.get_market_prices_universe()
     writer = ArgusWriter(argus_path=save_path)
@@ -34,6 +36,7 @@ def get_market_prices_universe(esi: EsiPublic):
 
 
 def get_region_market_types(esi: EsiPublic, region_id: int):
+    print(f"\nGetting market types for region {region_id}.")
     start = perf_counter()
     data = esi.get_region_market_types(region_id=region_id)
     writer = ArgusWriter(argus_path=save_path)
@@ -44,18 +47,23 @@ def get_region_market_types(esi: EsiPublic, region_id: int):
 
 
 def get_market_orders(esi: EsiPublic, region_id: int):
+    print(f"\nGetting market orders for region {region_id}.")
     start = perf_counter()
     data = esi.get_market_orders(region_id=region_id)
     writer = ArgusWriter(argus_path=save_path)
-    writer.market_orders_to_json(data, overwrite=True)
+    writer.market_orders_to_json(
+        region_id=region_id, market_orders=data, overwrite=True
+    )
     print(
         f"Wrote market orders for {region_id} to {save_path} in {perf_counter() - start:.6f} seconds."
     )
 
 
 def main() -> None:
+    start = perf_counter()
     print("Hello from sample-data.py!")
     esi = EsiPublic(debug=True, debug_path=save_path)
+    print(f"Initialized EsiPublic client in {perf_counter() - start:.6f} seconds.")
 
     region_id = 10000002  # The Forge region ID
     type_id = 34
@@ -63,6 +71,8 @@ def main() -> None:
     get_market_prices_universe(esi)
     get_region_market_types(esi, region_id)
     get_market_orders(esi, region_id)
+
+    print(f"Total execution time: {perf_counter() - start:.6f} seconds.")
 
 
 if __name__ == "__main__":
