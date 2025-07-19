@@ -106,6 +106,7 @@ class ArgusFilePaths:
     TYPE_IDS_FOR_INDUSTRY_PRICING = Path("type-ids-for-industry-pricing.json")
     # Template strings
     MARKET_HISTORY = "${region_id}-${type_id}-market-history.json"
+    MARKET_ORDERS = "${region_id}-market-orders.json"
 
 
 class ArgusLoader:
@@ -260,6 +261,22 @@ class ArgusLoader:
             )
         )
         result = EAM.MarketHistoryDict.model_validate_json(path_in.read_text())
+        logger.info(
+            "Loaded data from %s in %s seconds",
+            path_in,
+            f"{perf_counter() - start:.6f}",
+        )
+        return result
+
+    def market_orders(self, region_id: int) -> EAM.MarketOrderDict:
+        """Load market orders for a specific region."""
+        start = perf_counter()
+        path_in = (
+            self.argus_path
+            / ArgusFilePaths.ESI_DATA
+            / Template(ArgusFilePaths.MARKET_ORDERS).substitute(region_id=region_id)
+        )
+        result = EAM.MarketOrderDict.model_validate_json(path_in.read_text())
         logger.info(
             "Loaded data from %s in %s seconds",
             path_in,
@@ -534,6 +551,7 @@ class ArgusWriter:
 
     def market_orders_to_json(
         self,
+        region_id: int,
         market_orders: EAM.MarketOrderDict,
         overwrite: bool = True,
     ):
@@ -542,7 +560,7 @@ class ArgusWriter:
         path_out = (
             self.argus_path
             / ArgusFilePaths.ESI_DATA
-            / f"{market_orders.region_id}-region-market-orders.json"
+            / Template(ArgusFilePaths.MARKET_ORDERS).substitute(region_id=region_id)
         )
         validate_file_out(file_path=path_out, overwrite=overwrite)
         path_out.write_text(market_orders.model_dump_json(indent=2))
