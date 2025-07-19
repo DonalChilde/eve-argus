@@ -4,6 +4,7 @@ import json
 import logging
 from collections.abc import Iterable
 from pathlib import Path
+from string import Template
 from time import perf_counter
 from typing import Any
 
@@ -99,6 +100,12 @@ class ArgusFilePaths:
     CATEGORIES = Path("categories.json")
     MARKET_PRICES_UNIVERSE = Path("market-prices-universe.json")
     ESI_DATA = Path("esi-data")
+    TYPE_IDS_PUBLISHED = Path("type-ids-published.json")
+    TYPE_IDS_IN_BLUEPRINTS = Path("type-ids-in-blueprints.json")
+    TYPE_IDS_IN_MARKET = Path("type-ids-in-market.json")
+    TYPE_IDS_FOR_INDUSTRY_PRICING = Path("type-ids-for-industry-pricing.json")
+    # Template strings
+    MARKET_HISTORY = "${region_id}-${type_id}-market-history.json"
 
 
 class ArgusLoader:
@@ -187,6 +194,72 @@ class ArgusLoader:
         start = perf_counter()
         path_in = self.argus_path / ArgusFilePaths.MARKET_PRICES_UNIVERSE
         result = EAM.MarketPricesUniverseDict.model_validate_json(path_in.read_text())
+        logger.info(
+            "Loaded data from %s in %s seconds",
+            path_in,
+            f"{perf_counter() - start:.6f}",
+        )
+        return result
+
+    def type_ids_published(self) -> EAM.TypeIDSubset:
+        """Load type IDs that are published."""
+        start = perf_counter()
+        path_in = self.argus_path / ArgusFilePaths.TYPE_IDS_PUBLISHED
+        result = EAM.TypeIDSubset.model_validate_json(path_in.read_text())
+        logger.info(
+            "Loaded data from %s in %s seconds",
+            path_in,
+            f"{perf_counter() - start:.6f}",
+        )
+        return result
+
+    def type_ids_in_blueprints(self) -> EAM.TypeIDSubset:
+        """Load type IDs that are used in blueprints."""
+        start = perf_counter()
+        path_in = self.argus_path / ArgusFilePaths.TYPE_IDS_IN_BLUEPRINTS
+        result = EAM.TypeIDSubset.model_validate_json(path_in.read_text())
+        logger.info(
+            "Loaded data from %s in %s seconds",
+            path_in,
+            f"{perf_counter() - start:.6f}",
+        )
+        return result
+
+    def type_ids_in_market(self) -> EAM.TypeIDSubset:
+        """Load type IDs that are possible in the market."""
+        start = perf_counter()
+        path_in = self.argus_path / ArgusFilePaths.TYPE_IDS_IN_MARKET
+        result = EAM.TypeIDSubset.model_validate_json(path_in.read_text())
+        logger.info(
+            "Loaded data from %s in %s seconds",
+            path_in,
+            f"{perf_counter() - start:.6f}",
+        )
+        return result
+
+    def type_ids_for_industry_pricing(self) -> EAM.TypeIDSubset:
+        """Load type IDs that are needed for industry pricing."""
+        start = perf_counter()
+        path_in = self.argus_path / ArgusFilePaths.TYPE_IDS_FOR_INDUSTRY_PRICING
+        result = EAM.TypeIDSubset.model_validate_json(path_in.read_text())
+        logger.info(
+            "Loaded data from %s in %s seconds",
+            path_in,
+            f"{perf_counter() - start:.6f}",
+        )
+        return result
+
+    def market_history(self, region_id: int, type_id: int) -> EAM.MarketHistoryDict:
+        """Load market history for a specific region and type."""
+        start = perf_counter()
+        path_in = (
+            self.argus_path
+            / ArgusFilePaths.ESI_DATA
+            / Template(ArgusFilePaths.MARKET_HISTORY).substitute(
+                region_id=region_id, type_id=type_id
+            )
+        )
+        result = EAM.MarketHistoryDict.model_validate_json(path_in.read_text())
         logger.info(
             "Loaded data from %s in %s seconds",
             path_in,
@@ -409,7 +482,11 @@ class ArgusWriter:
         return path_out
 
     def market_history_to_json(
-        self, market_history: EAM.MarketHistoryDict, overwrite: bool = True
+        self,
+        region_id: int,
+        type_id: int,
+        market_history: EAM.MarketHistoryDict,
+        overwrite: bool = True,
     ) -> Path:
         """market_history_to_json.
 
@@ -421,8 +498,11 @@ class ArgusWriter:
         path_out = (
             self.argus_path
             / ArgusFilePaths.ESI_DATA
-            / f"{market_history.region_id}-{market_history.type_id}-market-history.json"
+            / Template(ArgusFilePaths.MARKET_HISTORY).substitute(
+                region_id=region_id, type_id=type_id
+            )
         )
+
         validate_file_out(file_path=path_out, overwrite=overwrite)
         path_out.write_text(market_history.model_dump_json(indent=2))
         logger.info(
@@ -437,7 +517,7 @@ class ArgusWriter:
         overwrite: bool = True,
     ):
         """region_market_types_to_json."""
-        # TODO does this deserve an Argus model?
+        # TODO change this to type_ids: EAM.TypeIDSubset
         start = perf_counter()
         path_out = (
             self.argus_path
@@ -466,6 +546,58 @@ class ArgusWriter:
         )
         validate_file_out(file_path=path_out, overwrite=overwrite)
         path_out.write_text(market_orders.model_dump_json(indent=2))
+        logger.info(
+            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+        )
+        return path_out
+
+    def type_ids_published_to_json(
+        self, type_ids: EAM.TypeIDSubset, overwrite: bool = True
+    ) -> Path:
+        """type_ids_published_to_json."""
+        start = perf_counter()
+        path_out = self.argus_path / ArgusFilePaths.TYPE_IDS_PUBLISHED
+        validate_file_out(file_path=path_out, overwrite=overwrite)
+        path_out.write_text(type_ids.model_dump_json(indent=2))
+        logger.info(
+            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+        )
+        return path_out
+
+    def type_ids_in_blueprints_to_json(
+        self, type_ids: EAM.TypeIDSubset, overwrite: bool = True
+    ) -> Path:
+        """type_ids_in_blueprints_to_json."""
+        start = perf_counter()
+        path_out = self.argus_path / ArgusFilePaths.TYPE_IDS_IN_BLUEPRINTS
+        validate_file_out(file_path=path_out, overwrite=overwrite)
+        path_out.write_text(type_ids.model_dump_json(indent=2))
+        logger.info(
+            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+        )
+        return path_out
+
+    def type_ids_in_market_to_json(
+        self, type_ids: EAM.TypeIDSubset, overwrite: bool = True
+    ) -> Path:
+        """type_ids_in_market_to_json."""
+        start = perf_counter()
+        path_out = self.argus_path / ArgusFilePaths.TYPE_IDS_IN_MARKET
+        validate_file_out(file_path=path_out, overwrite=overwrite)
+        path_out.write_text(type_ids.model_dump_json(indent=2))
+        logger.info(
+            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+        )
+        return path_out
+
+    def type_ids_for_industry_pricing_to_json(
+        self, type_ids: EAM.TypeIDSubset, overwrite: bool = True
+    ) -> Path:
+        """type_ids_for_industry_pricing_to_json."""
+        start = perf_counter()
+        path_out = self.argus_path / ArgusFilePaths.TYPE_IDS_FOR_INDUSTRY_PRICING
+        validate_file_out(file_path=path_out, overwrite=overwrite)
+        path_out.write_text(type_ids.model_dump_json(indent=2))
         logger.info(
             "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
         )
