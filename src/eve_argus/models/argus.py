@@ -7,6 +7,14 @@ from typing import Literal
 from pydantic import BaseModel
 
 
+class TypeIDSubset(BaseModel):
+    """A subset of type IDs."""
+
+    description: str
+    type_ids: set[int]
+    """A set of type IDs."""
+
+
 class MarketHistory(BaseModel):
     """Market history data model."""
 

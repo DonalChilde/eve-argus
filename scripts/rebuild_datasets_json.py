@@ -1,0 +1,190 @@
+# /// script
+# requires-python = ">=3.13"
+# dependencies = []
+# ///
+
+from pathlib import Path
+from time import perf_counter
+
+from eve_argus.esi import EsiPublic
+from eve_argus.file_loader import ArgusLoader, ArgusWriter, SdeLoader
+from eve_argus.util import argus as ARGUS_UTIL
+from eve_argus.util import sde as SDE_UTIL
+
+SDE_ROOT = Path.home() / "projects" / "eve-sde"
+EVE_ARGUS_DATA = Path.home() / "projects" / "eve-argus-data"
+
+sde_loader = SdeLoader(sde_path=SDE_ROOT)
+argus_loader = ArgusLoader(argus_path=EVE_ARGUS_DATA)
+argus_writer = ArgusWriter(argus_path=EVE_ARGUS_DATA)
+
+
+def localize_sde_types():
+    """Localize SDE types and split out descriptions."""
+    start = perf_counter()
+    print("Localizing SDE types, and splitting out descriptions.")
+    print(f"Loading SDE type data.")
+    sde_types = sde_loader.load_types()
+    print(f"Data loaded in {perf_counter() - start:.6f} seconds")
+    print(f"Found {len(sde_types)} type entries in SDE.")
+
+    conversion_start = perf_counter()
+    types, descriptions = SDE_UTIL.import_sde_types(sde_types=sde_types)
+    print(f"Imported {len(types)} types.")
+    print(f"Imported {len(descriptions)} type descriptions.")
+    print(
+        f"Conversion to Argus models completed in {perf_counter() - conversion_start:.6f} seconds."
+    )
+
+    convert_csv = perf_counter()
+    path_out = argus_writer.type_info_to_csv(type_info=types)
+    print(f"Type info written to CSV at {path_out}.")
+    path_out = argus_writer.type_description_to_csv(type_description=descriptions)
+    print(f"Type description written to CSV at {path_out}.")
+    print(f"Data written to CSV in {perf_counter() - convert_csv:.6f} seconds.")
+
+    convert_json = perf_counter()
+    path_out = argus_writer.type_info_to_json(type_info=types)
+    print(f"Type info written to JSON at {path_out}.")
+    path_out = argus_writer.type_description_to_json(type_description=descriptions)
+    print(f"Type description written to JSON at {path_out}.")
+    print(f"Data written to JSON in {perf_counter() - convert_json:.6f} seconds.")
+
+
+def import_blueprints():
+    """Import blueprints from SDE."""
+    start = perf_counter()
+    print("Importing blueprints from SDE.")
+    blueprints = sde_loader.load_blueprints()
+    print(
+        f"Loaded {len(blueprints)} blueprints in {perf_counter() - start:.6f} seconds."
+    )
+
+    conversion_start = perf_counter()
+    print("Converting SDE blueprints to Argus models.")
+    argus_blueprints = SDE_UTIL.import_blueprints(sde_blueprints=blueprints)
+    print(
+        f"Converted {len(argus_blueprints)} blueprints in {perf_counter() - conversion_start:.6f} seconds."
+    )
+
+    write_start = perf_counter()
+    print("Writing blueprints to JSON.")
+    path_out = argus_writer.blueprints_to_json(blueprints=argus_blueprints)
+    print(f"Blueprints written to {path_out}.")
+    print(
+        f"Wrote {len(argus_blueprints)} blueprints to JSON in {perf_counter() - write_start:.6f} seconds."
+    )
+
+
+def import_categories():
+    """Import categories from SDE."""
+    start = perf_counter()
+    print("Importing categories from SDE.")
+    sde_categories = sde_loader.load_categories()
+    print(
+        f"Loaded {len(sde_categories)} categories in {perf_counter() - start:.6f} seconds."
+    )
+
+    conversion_start = perf_counter()
+    print("Converting SDE categories to Argus models.")
+    argus_categories = SDE_UTIL.import_categories(sde_categories=sde_categories)
+    print(
+        f"Converted {len(argus_categories)} categories in {perf_counter() - conversion_start:.6f} seconds."
+    )
+
+    write_start = perf_counter()
+    print("Writing categories to JSON.")
+    path_out = argus_writer.categories_to_json(categories=argus_categories)
+    print(f"Categories written to {path_out}.")
+    print(
+        f"Wrote {len(argus_categories)} categories to JSON in {perf_counter() - write_start:.6f} seconds."
+    )
+
+
+def import_groups():
+    """Import groups from SDE."""
+    start = perf_counter()
+    print("Importing groups from SDE.")
+    sde_groups = sde_loader.load_groups()
+    print(f"Loaded {len(sde_groups)} groups in {perf_counter() - start:.6f} seconds.")
+
+    conversion_start = perf_counter()
+    print("Converting SDE groups to Argus models.")
+    argus_groups = SDE_UTIL.import_groups(sde_groups=sde_groups)
+    print(
+        f"Converted {len(argus_groups)} groups in {perf_counter() - conversion_start:.6f} seconds."
+    )
+
+    write_start = perf_counter()
+    print("Writing groups to JSON.")
+    path_out = argus_writer.groups_to_json(groups=argus_groups)
+    print(f"Groups written to {path_out}.")
+    print(
+        f"Wrote {len(argus_groups)} groups to JSON in {perf_counter() - write_start:.6f} seconds."
+    )
+
+
+def import_market_groups():
+    """Import market groups from SDE."""
+    start = perf_counter()
+    print("Importing market groups from SDE.")
+    sde_market_groups = sde_loader.load_market_groups()
+    print(
+        f"Loaded {len(sde_market_groups)} market groups in {perf_counter() - start:.6f} seconds."
+    )
+
+    conversion_start = perf_counter()
+    print("Converting SDE market groups to Argus models.")
+    argus_market_groups = SDE_UTIL.import_market_groups(
+        sde_market_groups=sde_market_groups
+    )
+    print(
+        f"Converted {len(argus_market_groups)} market groups in {perf_counter() - conversion_start:.6f} seconds."
+    )
+
+    write_start = perf_counter()
+    print("Writing market groups to JSON.")
+    path_out = argus_writer.market_groups_to_json(market_groups=argus_market_groups)
+    print(f"Market groups written to {path_out}.")
+    print(
+        f"Wrote {len(argus_market_groups)} market groups to JSON in {perf_counter() - write_start:.6f} seconds."
+    )
+
+
+def import_meta_groups():
+    """Import meta groups from SDE."""
+    start = perf_counter()
+    print("Importing meta groups from SDE.")
+    sde_meta_groups = sde_loader.load_meta_groups()
+    print(
+        f"Loaded {len(sde_meta_groups)} meta groups in {perf_counter() - start:.6f} seconds."
+    )
+
+    conversion_start = perf_counter()
+    print("Converting SDE meta groups to Argus models.")
+    argus_meta_groups = SDE_UTIL.import_meta_groups(sde_meta_groups=sde_meta_groups)
+    print(
+        f"Converted {len(argus_meta_groups)} meta groups in {perf_counter() - conversion_start:.6f} seconds."
+    )
+
+    write_start = perf_counter()
+    print("Writing meta groups to JSON.")
+    path_out = argus_writer.meta_groups_to_json(meta_groups=argus_meta_groups)
+    print(f"Meta groups written to {path_out}.")
+    print(
+        f"Wrote {len(argus_meta_groups)} meta groups to JSON in {perf_counter() - write_start:.6f} seconds."
+    )
+
+
+def main() -> None:
+    print("Rebuilding datasets from SDE data")
+    localize_sde_types()
+    import_blueprints()
+    import_groups()
+    import_categories()
+    import_market_groups()
+    import_meta_groups()
+
+
+if __name__ == "__main__":
+    main()

@@ -15,7 +15,9 @@ def get_market_history(esi: EsiPublic, region_id: int, type_id: int):
     start = perf_counter()
     data = esi.get_market_history(region_id=region_id, type_id=type_id)
     writer = ArgusWriter(argus_path=save_path)
-    writer.market_history_to_json(data, overwrite=True)
+    writer.market_history_to_json(
+        region_id=region_id, type_id=type_id, market_history=data, overwrite=True
+    )
     print(
         f"Wrote market history for ({region_id}, {type_id}) to {save_path} in {perf_counter() - start:.6f} seconds."
     )
