@@ -105,8 +105,14 @@ class ArgusFilePaths:
     TYPE_IDS_IN_MARKET = Path("type-ids-in-market.json")
     TYPE_IDS_FOR_INDUSTRY_PRICING = Path("type-ids-for-industry-pricing.json")
     # Template strings
-    MARKET_HISTORY = "${region_id}-${type_id}-market-history.json"
-    MARKET_ORDERS = "${region_id}-market-orders.json"
+    MARKET_HISTORY_BY_TYPE = "${region_id}-${type_id}-market-history.json"
+    MARKET_HISTORY_BY_REGION = "${region_id}-market-history.json"
+    MARKET_ORDERS_BY_REGION = "${region_id}-market-orders.json"
+    MARKET_ORDERS_BY_TYPE = "${region_id}-${type_id}-market-orders.json"
+    MARKET_HISTORY_SUMMARIES_BY_REGION = (
+        "${region_id}-${tag}-market-history-summaries.json"
+    )
+    MARKET_ORDER_SUMMARIES_BY_REGION = "${region_id}-${tag}-market-order-summaries.json"
 
 
 class ArgusLoader:
@@ -250,17 +256,19 @@ class ArgusLoader:
         )
         return result
 
-    def market_history(self, region_id: int, type_id: int) -> EAM.MarketHistoryDict:
+    def market_history_by_type(
+        self, region_id: int, type_id: int
+    ) -> EAM.MarketHistoryByType:
         """Load market history for a specific region and type."""
         start = perf_counter()
         path_in = (
             self.argus_path
             / ArgusFilePaths.ESI_DATA
-            / Template(ArgusFilePaths.MARKET_HISTORY).substitute(
+            / Template(ArgusFilePaths.MARKET_HISTORY_BY_TYPE).substitute(
                 region_id=region_id, type_id=type_id
             )
         )
-        result = EAM.MarketHistoryDict.model_validate_json(path_in.read_text())
+        result = EAM.MarketHistoryByType.model_validate_json(path_in.read_text())
         logger.info(
             "Loaded data from %s in %s seconds",
             path_in,
@@ -268,15 +276,97 @@ class ArgusLoader:
         )
         return result
 
-    def market_orders(self, region_id: int) -> EAM.MarketOrderDict:
+    def market_history_by_region(self, region_id: int) -> EAM.MarketHistoryByRegion:
+        """Load market history for a specific region."""
+        start = perf_counter()
+        path_in = (
+            self.argus_path
+            / ArgusFilePaths.ESI_DATA
+            / Template(ArgusFilePaths.MARKET_HISTORY_BY_REGION).substitute(
+                region_id=region_id
+            )
+        )
+        result = EAM.MarketHistoryByRegion.model_validate_json(path_in.read_text())
+        logger.info(
+            "Loaded data from %s in %s seconds",
+            path_in,
+            f"{perf_counter() - start:.6f}",
+        )
+        return result
+
+    def market_orders_by_region(self, region_id: int) -> EAM.MarketOrdersByRegion:
         """Load market orders for a specific region."""
         start = perf_counter()
         path_in = (
             self.argus_path
             / ArgusFilePaths.ESI_DATA
-            / Template(ArgusFilePaths.MARKET_ORDERS).substitute(region_id=region_id)
+            / Template(ArgusFilePaths.MARKET_ORDERS_BY_REGION).substitute(
+                region_id=region_id
+            )
         )
-        result = EAM.MarketOrderDict.model_validate_json(path_in.read_text())
+        result = EAM.MarketOrdersByRegion.model_validate_json(path_in.read_text())
+        logger.info(
+            "Loaded data from %s in %s seconds",
+            path_in,
+            f"{perf_counter() - start:.6f}",
+        )
+        return result
+
+    def market_orders_by_region_and_type(
+        self, region_id: int, type_id: int
+    ) -> EAM.MarketOrdersByType:
+        """Load market orders for a specific region and type."""
+        start = perf_counter()
+        path_in = (
+            self.argus_path
+            / ArgusFilePaths.ESI_DATA
+            / Template(ArgusFilePaths.MARKET_ORDERS_BY_TYPE).substitute(
+                region_id=region_id, type_id=type_id
+            )
+        )
+        result = EAM.MarketOrdersByType.model_validate_json(path_in.read_text())
+        logger.info(
+            "Loaded data from %s in %s seconds",
+            path_in,
+            f"{perf_counter() - start:.6f}",
+        )
+        return result
+
+    def market_history_summaries_by_region(
+        self, region_id: int, tag: str = "all"
+    ) -> EAM.MarketHistorySummariesByRegion:
+        """Load market order summaries for a specific region."""
+        start = perf_counter()
+        path_in = (
+            self.argus_path
+            / ArgusFilePaths.ESI_DATA
+            / Template(ArgusFilePaths.MARKET_HISTORY_SUMMARIES_BY_REGION).substitute(
+                region_id=region_id, tag=tag
+            )
+        )
+        result = EAM.MarketHistorySummariesByRegion.model_validate_json(
+            path_in.read_text()
+        )
+        logger.info(
+            "Loaded data from %s in %s seconds",
+            path_in,
+            f"{perf_counter() - start:.6f}",
+        )
+        return result
+
+    def market_order_summaries_by_region(
+        self, region_id: int, tag: str = "all"
+    ) -> EAM.MarketOrderSummaries:
+        """Load market order summaries for a specific region."""
+        start = perf_counter()
+        path_in = (
+            self.argus_path
+            / ArgusFilePaths.ESI_DATA
+            / Template(ArgusFilePaths.MARKET_ORDER_SUMMARIES_BY_REGION).substitute(
+                region_id=region_id, tag=tag
+            )
+        )
+        result = EAM.MarketOrderSummaries.model_validate_json(path_in.read_text())
         logger.info(
             "Loaded data from %s in %s seconds",
             path_in,
@@ -498,25 +588,50 @@ class ArgusWriter:
         )
         return path_out
 
-    def market_history_to_json(
+    def market_history_by_type_to_json(
         self,
         region_id: int,
         type_id: int,
-        market_history: EAM.MarketHistoryDict,
+        market_history: EAM.MarketHistoryByType,
         overwrite: bool = True,
     ) -> Path:
         """market_history_to_json.
 
         Args:
             market_history (EAM.MarketHistoryDict): _description_
+            region_id (int): _description_
+            type_id (int): _description_
             overwrite (bool, optional): _description_. Defaults to True.
         """
         start = perf_counter()
         path_out = (
             self.argus_path
             / ArgusFilePaths.ESI_DATA
-            / Template(ArgusFilePaths.MARKET_HISTORY).substitute(
+            / Template(ArgusFilePaths.MARKET_HISTORY_BY_TYPE).substitute(
                 region_id=region_id, type_id=type_id
+            )
+        )
+
+        validate_file_out(file_path=path_out, overwrite=overwrite)
+        path_out.write_text(market_history.model_dump_json(indent=2))
+        logger.info(
+            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+        )
+        return path_out
+
+    def market_history_by_region_to_json(
+        self,
+        market_history: EAM.MarketHistoryByRegion,
+        overwrite: bool = True,
+    ) -> Path:
+        """market_history_by_region_to_json."""
+        start = perf_counter()
+        region_id = market_history.region_id
+        path_out = (
+            self.argus_path
+            / ArgusFilePaths.ESI_DATA
+            / Template(ArgusFilePaths.MARKET_HISTORY_BY_REGION).substitute(
+                region_id=region_id
             )
         )
 
@@ -549,21 +664,46 @@ class ArgusWriter:
         )
         return path_out
 
-    def market_orders_to_json(
+    def market_orders_by_region_to_json(
         self,
-        region_id: int,
-        market_orders: EAM.MarketOrderDict,
+        market_orders_by_region: EAM.MarketOrdersByRegion,
         overwrite: bool = True,
     ):
         """market_orders_to_json."""
         start = perf_counter()
+        region_id = market_orders_by_region.region_id
         path_out = (
             self.argus_path
             / ArgusFilePaths.ESI_DATA
-            / Template(ArgusFilePaths.MARKET_ORDERS).substitute(region_id=region_id)
+            / Template(ArgusFilePaths.MARKET_ORDERS_BY_REGION).substitute(
+                region_id=region_id
+            )
         )
         validate_file_out(file_path=path_out, overwrite=overwrite)
-        path_out.write_text(market_orders.model_dump_json(indent=2))
+        path_out.write_text(market_orders_by_region.model_dump_json(indent=2))
+        logger.info(
+            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+        )
+        return path_out
+
+    def market_orders_by_region_and_type_to_json(
+        self,
+        market_orders_by_type: EAM.MarketOrdersByType,
+        overwrite: bool = True,
+    ) -> Path:
+        """market_orders_by_region_and_type_to_json."""
+        start = perf_counter()
+        region_id = market_orders_by_type.region_id
+        type_id = market_orders_by_type.type_id
+        path_out = (
+            self.argus_path
+            / ArgusFilePaths.ESI_DATA
+            / Template(ArgusFilePaths.MARKET_ORDERS_BY_TYPE).substitute(
+                region_id=region_id, type_id=type_id
+            )
+        )
+        validate_file_out(file_path=path_out, overwrite=overwrite)
+        path_out.write_text(market_orders_by_type.model_dump_json(indent=2))
         logger.info(
             "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
         )
@@ -616,6 +756,53 @@ class ArgusWriter:
         path_out = self.argus_path / ArgusFilePaths.TYPE_IDS_FOR_INDUSTRY_PRICING
         validate_file_out(file_path=path_out, overwrite=overwrite)
         path_out.write_text(type_ids.model_dump_json(indent=2))
+        logger.info(
+            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+        )
+        return path_out
+
+    def market_history_summaries_by_region_to_json(
+        self,
+        market_history_summaries: EAM.MarketHistorySummariesByRegion,
+        tag: str = "all",
+        overwrite: bool = True,
+    ) -> Path:
+        """market_history_summaries_by_region_to_json."""
+        start = perf_counter()
+        region_id = market_history_summaries.region_id
+        path_out = (
+            self.argus_path
+            / ArgusFilePaths.ESI_DATA
+            / Template(ArgusFilePaths.MARKET_HISTORY_SUMMARIES_BY_REGION).substitute(
+                region_id=region_id, tag=tag
+            )
+        )
+        validate_file_out(file_path=path_out, overwrite=overwrite)
+        path_out.write_text(market_history_summaries.model_dump_json(indent=2))
+        logger.info(
+            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+        )
+        return path_out
+
+    def market_order_summaries_by_region_to_json(
+        self,
+        market_order_summaries: EAM.MarketOrderSummaries,
+        region_id: int,
+        tag: str = "all",
+        overwrite: bool = True,
+    ) -> Path:
+        """Save market order summaries for a specific region to JSON."""
+        start = perf_counter()
+
+        path_out = (
+            self.argus_path
+            / ArgusFilePaths.ESI_DATA
+            / Template(ArgusFilePaths.MARKET_ORDER_SUMMARIES_BY_REGION).substitute(
+                region_id=region_id, tag=tag
+            )
+        )
+        validate_file_out(file_path=path_out, overwrite=overwrite)
+        path_out.write_text(market_order_summaries.model_dump_json(indent=2))
         logger.info(
             "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
         )

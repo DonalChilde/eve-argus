@@ -12,7 +12,7 @@ from time import perf_counter
 from eve_argus.esi import EsiPublic
 from eve_argus.models import argus as EAM
 from eve_argus.snippets.file.csv import write_dicts_to_csv
-from eve_argus.util.esi import (
+from eve_argus.util.market_history import (
     summarize_market_history_by_periods,
 )
 
@@ -34,7 +34,7 @@ def main() -> None:
 
         file_name = f"{region_id}_{type_id}_market_history.csv"
         file_path = save_path / file_name
-        history_data = (EAM.MarketHistory.model_dump(x) for x in data)
+        history_data = (EAM.MarketHistoryDetail.model_dump(x) for x in data)
         write_dicts_to_csv(data=history_data, file_path=file_path, overwrite=True)
         print(f"Wrote data for ({region_id},{type_id}) to {file_path}")
         summary = summarize_market_history_by_periods(

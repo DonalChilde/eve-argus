@@ -15,7 +15,7 @@ class TypeIDSubset(BaseModel):
     """A set of type IDs."""
 
 
-class MarketHistory(BaseModel):
+class MarketHistoryDetail(BaseModel):
     """Market history data model."""
 
     date: str
@@ -26,15 +26,24 @@ class MarketHistory(BaseModel):
     volume: int
 
 
-class MarketHistoryDict(BaseModel):
+class MarketHistoryByType(BaseModel):
     """A collection model to make serialization faster."""
 
     region_id: int
     """The region ID where the market history is located."""
     type_id: int
     """The type ID of the item."""
-    data: Sequence[MarketHistory]
+    data: Sequence[MarketHistoryDetail]
     """A sequence of market history records for the specified type in the specified region."""
+
+
+class MarketHistoryByRegion(BaseModel):
+    """A collection model for market history by region."""
+
+    region_id: int
+    """The region ID where the market history is located."""
+    data: dict[int, MarketHistoryByType] = {}
+    """A dictionary mapping type IDs to sequences of market history records."""
 
 
 class MarketHistorySummary(BaseModel):
@@ -51,6 +60,15 @@ class MarketHistorySummary(BaseModel):
     lowest: float
     order_count: int
     volume: float
+
+
+class MarketHistorySummariesByRegion(BaseModel):
+    """A collection model to make serialization faster."""
+
+    region_id: int
+    """The region ID where the market history summaries are located."""
+    data: dict[int, dict[int, MarketHistorySummary]] = {}
+    """A dictionary mapping type IDs to market history summaries."""
 
 
 class Activity_Name(Enum):
@@ -201,6 +219,8 @@ class MarketPricesUniverseDict(BaseModel):
 
 
 class MarketOrder(BaseModel):
+    """A market order data model."""
+
     duration: int  # in days
     is_buy_order: bool  # True for buy orders, False for sell orders
     issued: str  # ISO 8601 date string
@@ -216,18 +236,41 @@ class MarketOrder(BaseModel):
     volume_remain: int  # Remaining volume of the order
 
 
-class MarketOrderDict(BaseModel):
-    """A collection model to make serialization faster."""
+# class MarketOrderDict(BaseModel):
+#     """A collection model to make serialization faster."""
+
+#     region_id: int
+#     """The region ID where the market orders are located."""
+#     buy_orders: dict[int, list[MarketOrder]] = {}
+#     """A dictionary mapping type IDs to sequences of market buy orders."""
+#     sell_orders: dict[int, list[MarketOrder]] = {}
+#     """A dictionary mapping type IDs to sequences of market sell orders."""
+
+
+class MarketOrdersByType(BaseModel):
+    """A collection model for buy and sell market orders grouped by type and region."""
 
     region_id: int
     """The region ID where the market orders are located."""
-    buy_orders: dict[int, list[MarketOrder]] = {}
-    """A dictionary mapping type IDs to sequences of market buy orders."""
-    sell_orders: dict[int, list[MarketOrder]] = {}
-    """A dictionary mapping type IDs to sequences of market sell orders."""
+    type_id: int
+    """The type ID of the market orders."""
+    buy_orders: list[MarketOrder] = []
+    """A list of market buy orders for the specified type."""
+    sell_orders: list[MarketOrder] = []
+    """A list of market sell orders for the specified type."""
+
+
+class MarketOrdersByRegion(BaseModel):
+    """A collection model for market orders in a specific region."""
+
+    region_id: int
+    """The region ID where the market orders are located."""
+    orders: dict[int, MarketOrdersByType] = {}
 
 
 class MarketOrderSummaryDetails(BaseModel):
+    """Details of a market order summary for a specific type and location."""
+
     type_id: int
     """The type ID of the item."""
     is_buy_order: bool
@@ -261,12 +304,17 @@ class MarketOrderSummaryDetails(BaseModel):
 class MarketOrderSummary(BaseModel):
     """Summary of market orders for a specific type."""
 
-    type_id: int  # The type ID of the item
+    type_id: int
+    """The type ID of the item for which the summary is calculated."""
+    location_spec: Literal["region", "system", "station"] = "region"
+    """The location specification for the order summaries."""
+    location_id: int
+    """The location ID of the order summaries."""
     buy: MarketOrderSummaryDetails
     sell: MarketOrderSummaryDetails
 
 
-class MarketOrderSummaryDict(BaseModel):
+class MarketOrderSummaries(BaseModel):
     """A collection model to make serialization faster."""
 
     location_spec: Literal["region", "system", "station"] = "region"

@@ -40,39 +40,10 @@ Issues = "https://github.com/DonalChilde/eve-argus/issues"
 Source = "https://github.com/DonalChilde/eve-argus"
 
 
-# [project.optional-dependencies]
-# dev = [
-
-#     # Automation
-#     "nox",
-#     "pre-commit",
-
-#     # Linting and Formatting
-#     "black",
-#     "isort",
-
-#     # Tools
-#     "pysnooper",
-#     "scriv",
-# ]
-# lint = ["pylint", "mypy"]
-# doc = [
-#     # Documentation
-#     "Sphinx",
-#     "sphinx-autobuild",
-#     "sphinx-autodoc-typehints",
-#     "sphinx_rtd_theme",
-#     "myst-parser",
-#     "sphinxcontrib-typer",
-# ]
-# vscode = ["esbonio", "rst2html", "rstcheck"]
-# testing = ["pytest", "coverage[toml]", "pytest-cov"]
-
-
 [tool.ruff.lint]
 select = ["B", "UP", "D", "DOC"]
 # non-imperative-mood (D401)
-exclude = ["D401"]
+exclude = ["D401", "D101"]
 extend-select = ["I"]
 
 

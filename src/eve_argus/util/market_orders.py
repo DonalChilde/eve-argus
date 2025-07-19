@@ -1,8 +1,7 @@
-"""Functions for use with Eve ESI data."""
-
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import date
+from itertools import chain
 from pathlib import Path
 from typing import Any, Literal, TypedDict
 
@@ -11,61 +10,6 @@ from pydantic import BaseModel
 from eve_argus.models import argus as EAM
 from eve_argus.models import esi as ED
 from eve_argus.snippets.datetime.date_range import date_range_days
-
-
-def summarize_market_history_by_periods(
-    region_id: int,
-    type_id: int,
-    periods: Sequence[int],
-    data: Sequence[EAM.MarketHistory],
-) -> Sequence[EAM.MarketHistorySummary]:
-    lookup = {date.fromisoformat(x.date): x for x in data}
-    result: list[EAM.MarketHistorySummary] = []
-    keys = list(lookup.keys())
-    keys.sort(reverse=True)  # Sort by date descending
-    most_recent = keys[0]
-    for period in periods:
-        dates = list(date_range_days(start_date=most_recent, days=period, past=True))
-        end = dates[-1]
-        summary = summarize_market_history_by_dates(dates=dates, data=lookup)
-        summary.region_id = region_id
-        summary.type_id = type_id
-        summary.period = period
-        summary.start = most_recent.isoformat()
-        summary.end = end.isoformat()
-        result.append(summary)
-    return result
-
-
-def summarize_market_history_by_dates(
-    dates: Sequence[date], data: dict[date, EAM.MarketHistory]
-) -> EAM.MarketHistorySummary:
-    missing = average = highest = lowest = order_count = volume = 0
-    count = len(dates)
-    for key in dates:
-        item = data.get(key, None)
-        if item is None:
-            missing += 1
-            continue
-        average = average + (item.average * item.volume)
-        highest = highest + (item.highest * item.volume)
-        lowest = lowest + (item.lowest * item.volume)
-        order_count = order_count + item.order_count
-        volume = volume + item.volume
-    result = EAM.MarketHistorySummary(
-        region_id=0,
-        type_id=0,
-        period=0,
-        start="",
-        end="",
-        missing=missing,
-        highest=highest / volume,
-        average=average / volume,
-        lowest=lowest / volume,
-        order_count=int(order_count / count),
-        volume=volume / count,
-    )
-    return result
 
 
 def filter_orders(
@@ -115,6 +59,8 @@ def filter_orders(
 
 
 class OrderSummaryTD(TypedDict):
+    """TypedDict for order summary details."""
+
     five_price: float
     """The price at which five percent of the available items can be transacted."""
     five_orders: int
@@ -225,7 +171,7 @@ def _calculate_order_summary_TD(
 
 
 def calculate_order_summary(
-    orders: list[EAM.MarketOrder],
+    orders: Iterable[EAM.MarketOrder],
     filter_factor: float,
     type_id: int,
     location_id: int,
@@ -267,6 +213,8 @@ def calculate_order_summary(
 
     summary = EAM.MarketOrderSummary(
         type_id=type_id,
+        location_spec=location_spec,
+        location_id=location_id,
         buy=EAM.MarketOrderSummaryDetails(
             type_id=type_id,
             is_buy_order=True,
@@ -283,3 +231,31 @@ def calculate_order_summary(
         ),
     )
     return summary
+
+
+def calculate_order_summaries(
+    orders: EAM.MarketOrdersByRegion,
+    location_id: int,
+    location_spec: Literal["region", "system", "station"] = "region",
+    type_ids: Iterable[int] | None = None,
+    filter_factor: float = 100.0,
+) -> EAM.MarketOrderSummaries:
+    result = EAM.MarketOrderSummaries(
+        location_spec=location_spec, location_id=location_id, data={}
+    )
+    if type_ids is None:
+        type_ids = orders.orders.keys()
+    for type_id in type_ids:
+        market_orders = orders.orders.get(type_id, None)
+        if market_orders is None:
+            continue
+        summary = calculate_order_summary(
+            orders=chain(market_orders.buy_orders, market_orders.sell_orders),
+            filter_factor=filter_factor,
+            type_id=type_id,
+            location_id=location_id,
+            location_spec=location_spec,
+        )
+        result.data[type_id] = summary
+
+    return result

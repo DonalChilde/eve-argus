@@ -133,7 +133,9 @@ class EsiPublic:
             f"Initialized EsiPublic client in {perf_counter() - start:.6f} seconds. server status: {status!r}"
         )
 
-    def get_market_history(self, region_id: int, type_id: int) -> EAM.MarketHistoryDict:
+    def get_market_history(
+        self, region_id: int, type_id: int
+    ) -> EAM.MarketHistoryByType:
         """Get market history for a specific region and type."""
         request = EsiRequest(
             op_id="get_markets_region_id_history",
@@ -176,9 +178,9 @@ class EsiPublic:
         logger.info(f"Retrieved {len(result)} market types for {request!r}.")
         return result
 
-    def get_market_orders(
+    def get_market_orders_by_region(
         self, region_id: int, order_type: str = "all"
-    ) -> EAM.MarketOrderDict:
+    ) -> EAM.MarketOrdersByRegion:
         """Get market orders for a specific region."""
         request = EsiRequest(
             op_id="get_markets_region_id_orders",
@@ -191,5 +193,29 @@ class EsiPublic:
         result = DI.region_market_orders_from_esi(region_id, paged_data)
         logger.info(
             f"Retrieved {sum(len(page) for page in paged_data)} for {request!r}."
+        )
+        return result
+
+    def get_market_orders_by_region_and_type(
+        self, region_id: int, type_id: int, order_type: str = "all"
+    ) -> EAM.MarketOrdersByType:
+        """Get market orders for a specific type in a region."""
+        request = EsiRequest(
+            op_id="get_markets_region_id_orders",
+            arguments={
+                "region_id": str(region_id),
+                "type_id": str(type_id),
+                "order_type": order_type,
+            },
+        )
+        response = _get_paged_esi_data(
+            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
+        )
+        paged_data: Sequence[Sequence[dict[str, Any]]] = [x.data for x in response]
+        result = DI.region_and_type_market_orders_from_esi(
+            region_id, type_id, paged_data
+        )
+        logger.info(
+            f"Retrieved {sum(len(page) for page in paged_data)} orders for {request!r}."
         )
         return result
