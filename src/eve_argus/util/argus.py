@@ -98,6 +98,23 @@ def get_type_ids_needed_for_industry_pricing(
     )
 
 
+def get_type_ids_of_blueprints(
+    type_info: EAM.TypeInfoDict, groups: EAM.Groups
+) -> EAM.TypeIDSubset:
+    """Get type IDs of blueprints."""
+    type_ids = set()
+    for info in type_info.data.values():
+        if info.group_id is not None:
+            group = groups.data.get(info.group_id)
+            if group is not None and group.category_id == 9:
+                type_ids.add(info.type_id)
+
+    return EAM.TypeIDSubset(
+        description="Type IDs of blueprints.",
+        type_ids=type_ids,
+    )
+
+
 def type_info_table(
     type_info: EAM.TypeInfoDict,
     meta_levels: EAM.MetaGroups,
@@ -111,7 +128,7 @@ def type_info_table(
     if type_ids is None:
         type_ids = type_info.data.keys()
     for type_id in type_ids:
-        info = type_info.data.get(type_id)
+        info = type_info.data[type_id]
         meta = meta_levels.data.get(info.meta_group_id)
         group = groups.data.get(info.group_id)
         if group is not None:
