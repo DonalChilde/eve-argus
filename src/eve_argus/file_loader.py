@@ -153,10 +153,10 @@ class ArgusLoader:
         )
         return result
 
-    def market_groups(self) -> EAM.MarketGroupDict:
+    def market_groups(self) -> EAM.MarketGroups:
         start = perf_counter()
         path_in = self.argus_path / ArgusFilePaths.MARKET_GROUPS
-        result = EAM.MarketGroupDict.model_validate_json(path_in.read_text())
+        result = EAM.MarketGroups.model_validate_json(path_in.read_text())
         logger.info(
             "Loaded data from %s in %s seconds",
             path_in,
@@ -164,10 +164,10 @@ class ArgusLoader:
         )
         return result
 
-    def meta_groups(self) -> EAM.MetaGroupDict:
+    def meta_groups(self) -> EAM.MetaGroups:
         start = perf_counter()
         path_in = self.argus_path / ArgusFilePaths.META_GROUPS
-        result = EAM.MetaGroupDict.model_validate_json(path_in.read_text())
+        result = EAM.MetaGroups.model_validate_json(path_in.read_text())
         logger.info(
             "Loaded data from %s in %s seconds",
             path_in,
@@ -175,10 +175,10 @@ class ArgusLoader:
         )
         return result
 
-    def groups(self) -> EAM.GroupDict:
+    def groups(self) -> EAM.Groups:
         start = perf_counter()
         path_in = self.argus_path / ArgusFilePaths.GROUPS
-        result = EAM.GroupDict.model_validate_json(path_in.read_text())
+        result = EAM.Groups.model_validate_json(path_in.read_text())
         logger.info(
             "Loaded data from %s in %s seconds",
             path_in,
@@ -186,10 +186,10 @@ class ArgusLoader:
         )
         return result
 
-    def categories(self) -> EAM.CategoryDict:
+    def categories(self) -> EAM.Categories:
         start = perf_counter()
         path_in = self.argus_path / ArgusFilePaths.CATEGORIES
-        result = EAM.CategoryDict.model_validate_json(path_in.read_text())
+        result = EAM.Categories.model_validate_json(path_in.read_text())
         logger.info(
             "Loaded data from %s in %s seconds",
             path_in,
@@ -495,7 +495,7 @@ class ArgusWriter:
         start = perf_counter()
         path_out = self.argus_path / ArgusFilePaths.MARKET_GROUPS
         data = {x.group_id: x for x in market_groups}
-        data_dict = EAM.MarketGroupDict(data=data)
+        data_dict = EAM.MarketGroups(data=data)
         validate_file_out(file_path=path_out, overwrite=overwrite)
         path_out.write_text(data_dict.model_dump_json(indent=2))
         logger.info(
@@ -515,7 +515,7 @@ class ArgusWriter:
         start = perf_counter()
         path_out = self.argus_path / ArgusFilePaths.META_GROUPS
         data = {x.meta_id: x for x in meta_groups}
-        data_dict = EAM.MetaGroupDict(data=data)
+        data_dict = EAM.MetaGroups(data=data)
         validate_file_out(file_path=path_out, overwrite=overwrite)
         path_out.write_text(data_dict.model_dump_json(indent=2))
         logger.info(
@@ -535,7 +535,7 @@ class ArgusWriter:
         start = perf_counter()
         path_out = self.argus_path / ArgusFilePaths.GROUPS
         data = {x.group_id: x for x in groups}
-        data_dict = EAM.GroupDict(data=data)
+        data_dict = EAM.Groups(data=data)
         validate_file_out(file_path=path_out, overwrite=overwrite)
         path_out.write_text(data_dict.model_dump_json(indent=2))
         logger.info(
@@ -555,7 +555,7 @@ class ArgusWriter:
         start = perf_counter()
         path_out = self.argus_path / ArgusFilePaths.CATEGORIES
         data = {x.category_id: x for x in categories}
-        data_dict = EAM.CategoryDict(data=data)
+        data_dict = EAM.Categories(data=data)
         validate_file_out(file_path=path_out, overwrite=overwrite)
         path_out.write_text(data_dict.model_dump_json(indent=2))
         logger.info(
