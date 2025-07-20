@@ -127,7 +127,7 @@ class TypeInfo(BaseModel):
     meta_group_id: int | None
     graphic_id: int | None
     capacity: float | None
-    portion_size: int | None
+    portion_size: int
     published: bool
 
 
@@ -153,7 +153,7 @@ class MetaGroup(BaseModel):
     name: str
 
 
-class MetaGroupDict(BaseModel):
+class MetaGroups(BaseModel):
     """A collection model to make serialization faster."""
 
     data: dict[int, MetaGroup]
@@ -171,7 +171,7 @@ class Group(BaseModel):
     use_base_price: bool
 
 
-class GroupDict(BaseModel):
+class Groups(BaseModel):
     data: dict[int, Group]
 
 
@@ -181,7 +181,7 @@ class Category(BaseModel):
     published: bool
 
 
-class CategoryDict(BaseModel):
+class Categories(BaseModel):
     data: dict[int, Category]
 
 
@@ -200,10 +200,18 @@ class MarketGroup(BaseModel):
     """The path is a tuple of market group IDs leading to this group, including the current group."""
 
 
-class MarketGroupDict(BaseModel):
+class MarketGroups(BaseModel):
     """A collection model to make serialization faster."""
 
     data: dict[int, MarketGroup]
+
+    def path_string(self, group_ids: Sequence[int], separator: str = r"\\") -> str:
+        """Create a string representation of the market group path."""
+        return f"{separator}".join(
+            str(self.data[group_id].name)
+            for group_id in group_ids
+            if group_id in self.data
+        )
 
 
 class UniverseMarketPrice(BaseModel):
