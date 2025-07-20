@@ -3,6 +3,7 @@
 from collections.abc import Sequence
 from enum import Enum
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -205,16 +206,24 @@ class MarketGroupDict(BaseModel):
     data: dict[int, MarketGroup]
 
 
-class MarketPricesUniverse(BaseModel):
-    type_id: int  # The type ID of the item
-    adjusted_price: float  # The adjusted price of the item
-    average_price: float  # The average price of the item, -1.0 if not available
+class UniverseMarketPrice(BaseModel):
+    """Universe Market prices data model."""
+
+    type_id: int
+    """The type ID of the item."""
+    adjusted_price: float
+    """The adjusted price of the item, -1.0 if not available."""
+    average_price: float
+    """The average price of the item, -1.0 if not available."""
 
 
-class MarketPricesUniverseDict(BaseModel):
-    """A collection model to make serialization faster."""
+class UniverseMarketPrices(BaseModel):
+    """A collection of universe pricing."""
 
-    data: dict[int, MarketPricesUniverse]
+    price_profile_id: UUID
+    date: str = ""
+    """The date the prices were downloaded from ESI, in ISO 8601 format."""
+    data: dict[int, UniverseMarketPrice]
     """A dictionary mapping type IDs to adjusted and average market prices for the universe."""
 
 

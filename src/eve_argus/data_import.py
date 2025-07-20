@@ -8,11 +8,11 @@ from eve_argus.models.esi import EsiResponse
 
 def market_prices_universe_from_esi(
     data: Sequence[dict[str, Any]],
-) -> Sequence[EAM.MarketPricesUniverse]:
+) -> Sequence[EAM.UniverseMarketPrice]:
     """Import market prices for the universe from a sequence of dictionaries."""
-    result: list[EAM.MarketPricesUniverse] = []
+    result: list[EAM.UniverseMarketPrice] = []
     for item in data:
-        prices = EAM.MarketPricesUniverse(
+        prices = EAM.UniverseMarketPrice(
             type_id=item["type_id"],
             adjusted_price=item["adjusted_price"],
             average_price=item.get("average_price", -1.0),

@@ -9,6 +9,7 @@ from itertools import chain
 from pathlib import Path
 from time import perf_counter
 from typing import Any
+from uuid import UUID, uuid4
 
 import preston
 
@@ -155,14 +156,19 @@ class EsiPublic:
         )
         return result
 
-    def get_market_prices_universe(self) -> Sequence[EAM.MarketPricesUniverse]:
+    def get_market_prices_universe(self) -> EAM.UniverseMarketPrices:
         """Get market prices for the entire universe."""
         request = EsiRequest(op_id="get_markets_prices")
         response = _get_esi_data(
             self.preston, request, debug_save=self.debug, debug_path=self.debug_path
         )
-        result = DI.market_prices_universe_from_esi(response.data)
-        logger.info(f"Retrieved {len(result)} market prices for {request!r}.")
+        data = DI.market_prices_universe_from_esi(response.data)
+        logger.info(f"Retrieved {len(data)} market prices for {request!r}.")
+        result = EAM.UniverseMarketPrices(
+            price_profile_id=uuid4(),
+            date=datetime.now(UTC).isoformat(),
+            data={item.type_id: item for item in data},
+        )
         return result
 
     def get_region_market_types(self, region_id: int) -> Sequence[int]:

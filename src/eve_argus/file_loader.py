@@ -197,10 +197,10 @@ class ArgusLoader:
         )
         return result
 
-    def market_prices_universe(self) -> EAM.MarketPricesUniverseDict:
+    def market_prices_universe(self) -> EAM.UniverseMarketPrices:
         start = perf_counter()
         path_in = self.argus_path / ArgusFilePaths.MARKET_PRICES_UNIVERSE
-        result = EAM.MarketPricesUniverseDict.model_validate_json(path_in.read_text())
+        result = EAM.UniverseMarketPrices.model_validate_json(path_in.read_text())
         logger.info(
             "Loaded data from %s in %s seconds",
             path_in,
@@ -565,7 +565,7 @@ class ArgusWriter:
 
     # TODO standardized file out formats, dicts or list?
     def market_prices_universe_to_json(
-        self, market_prices: Iterable[EAM.MarketPricesUniverse], overwrite: bool = True
+        self, market_prices: Iterable[EAM.UniverseMarketPrice], overwrite: bool = True
     ) -> Path:
         """market_prices_universe_to_json.
 
@@ -580,7 +580,7 @@ class ArgusWriter:
             / ArgusFilePaths.MARKET_PRICES_UNIVERSE
         )
         data = {x.type_id: x for x in market_prices}
-        data_dict = EAM.MarketPricesUniverseDict(data=data)
+        data_dict = EAM.UniverseMarketPrices(data=data)
         validate_file_out(file_path=path_out, overwrite=overwrite)
         path_out.write_text(data_dict.model_dump_json(indent=2))
         logger.info(
