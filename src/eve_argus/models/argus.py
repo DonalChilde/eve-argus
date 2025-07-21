@@ -16,6 +16,36 @@ class TypeIDSubset(BaseModel):
     """A set of type IDs."""
 
 
+class SystemCostIndex(BaseModel):
+    """System cost index data model."""
+
+    system_id: int
+    """The solar system ID."""
+    manufacturing: float
+    """The manufacturing cost index."""
+    research_material: float
+    """The research material cost index."""
+    research_time: float
+    """The research time cost index."""
+    copying: float
+    """The copying cost index."""
+    invention: float
+    """The invention cost index."""
+    reaction: float
+    """The reaction cost index."""
+
+
+class SystemCostIndices(BaseModel):
+    """The cost indices for all solar systems."""
+
+    data_set_id: UUID
+    """The unique identifier for the data set."""
+    date: str
+    """The date the cost indices were recorded, in ISO 8601 format."""
+    data: dict[int, SystemCostIndex]
+    """A dictionary mapping solar system IDs to their cost indices."""
+
+
 class MarketHistoryDetail(BaseModel):
     """Market history data model."""
 
