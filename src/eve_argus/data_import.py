@@ -1,6 +1,8 @@
 from collections.abc import Sequence
+from datetime import UTC, datetime
 from itertools import chain
 from typing import Any
+from uuid import UUID, uuid4
 
 from eve_argus.models import argus as EAM
 from eve_argus.models.esi import EsiResponse
@@ -78,4 +80,28 @@ def region_and_type_market_orders_from_esi(
             result.buy_orders.append(order)
         else:
             result.sell_orders.append(order)
+    return result
+
+
+def system_cost_indices_from_esi(
+    data: Sequence[dict[str, Any]],
+) -> EAM.SystemCostIndices:
+    """Import system cost indices from a sequence of dictionaries."""
+    result = EAM.SystemCostIndices(
+        data_set_id=uuid4(),
+        date=datetime.now(UTC).isoformat(),
+        data={},
+    )
+
+    for item in data:
+        system_id = item["solar_system_id"]
+        result.data[system_id] = EAM.SystemCostIndex(
+            system_id=system_id,
+            manufacturing=item["manufacturing"],
+            research_material=item["researching_material_efficiency"],
+            research_time=item["researching_time_efficiency"],
+            copying=item["copying"],
+            invention=item["invention"],
+            reaction=item["reaction"],
+        )
     return result

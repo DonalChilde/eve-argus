@@ -104,6 +104,7 @@ class ArgusFilePaths:
     TYPE_IDS_IN_BLUEPRINTS = Path("type-ids-in-blueprints.json")
     TYPE_IDS_IN_MARKET = Path("type-ids-in-market.json")
     TYPE_IDS_FOR_INDUSTRY_PRICING = Path("type-ids-for-industry-pricing.json")
+    SYSTEM_COST_INDICES = Path("system-cost-indices.json")
     # Template strings
     MARKET_HISTORY_BY_TYPE = "${region_id}-${type_id}-market-history.json"
     MARKET_HISTORY_BY_REGION = "${region_id}-market-history.json"
@@ -119,6 +120,17 @@ class ArgusLoader:
     def __init__(self, argus_path: Path) -> None:
         """API to load Argus specific data files."""
         self.argus_path = argus_path
+
+    def system_cost_indices(self) -> EAM.SystemCostIndices:
+        start = perf_counter()
+        path_in = self.argus_path / ArgusFilePaths.SYSTEM_COST_INDICES
+        result = EAM.SystemCostIndices.model_validate_json(path_in.read_text())
+        logger.info(
+            "Loaded data from %s in %s seconds",
+            path_in,
+            f"{perf_counter() - start:.6f}",
+        )
+        return result
 
     def type_info(self) -> EAM.TypeInfoDict:
         start = perf_counter()
@@ -379,6 +391,19 @@ class ArgusWriter:
     def __init__(self, argus_path: Path) -> None:
         """API to save Argus specific data files."""
         self.argus_path = argus_path
+
+    def system_cost_indices_to_json(
+        self, system_cost_indices: EAM.SystemCostIndices, overwrite: bool = True
+    ) -> Path:
+        """Save system cost indices to JSON."""
+        start = perf_counter()
+        path_out = self.argus_path / ArgusFilePaths.SYSTEM_COST_INDICES
+        validate_file_out(file_path=path_out, overwrite=overwrite)
+        path_out.write_text(system_cost_indices.model_dump_json(indent=2))
+        logger.info(
+            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+        )
+        return path_out
 
     def type_info_to_csv(
         self, type_info: Iterable[EAM.TypeInfo], overwrite: bool = True

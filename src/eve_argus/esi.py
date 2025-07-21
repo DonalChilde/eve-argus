@@ -225,3 +225,14 @@ class EsiPublic:
             f"Retrieved {sum(len(page) for page in paged_data)} orders for {request!r}."
         )
         return result
+
+    def get_system_cost_indices(self) -> EAM.SystemCostIndices:
+        """Get system cost indices."""
+        request = EsiRequest(op_id="get_industry_systems")
+        response = _get_esi_data(
+            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
+        )
+        paged_data: Sequence[Sequence[dict[str, Any]]] = [x.data for x in response]
+        result = DI.system_cost_indices_from_esi(paged_data)
+        logger.info(f"Retrieved {len(result)} system cost indices for {request!r}.")
+        return result
