@@ -41,10 +41,10 @@ Source = "https://github.com/DonalChilde/eve-argus"
 
 
 [tool.ruff.lint]
-select = ["B", "UP", "D", "DOC"]
+select = ["B", "UP", "D", "DOC", "FIX", "I"]
 # non-imperative-mood (D401)
 exclude = ["D401", "D101"]
-extend-select = ["I"]
+# extend-select = ["I"]
 
 
 [tool.ruff.lint.pydocstyle]
