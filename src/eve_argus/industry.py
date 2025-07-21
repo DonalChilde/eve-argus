@@ -20,85 +20,85 @@ RESEARCH_TIME_MULTIPLIER = [
 ]
 
 
-class JobMaterialsPrice(BaseModel):
-    """Represents the material requirements and pricing for a job."""
+# class JobMaterialsPrice(BaseModel):
+#     """Represents the material requirements and pricing for a job."""
 
-    type_id: int
-    quantity: int
-    price: float
-
-
-class JobMaterialsPriceProfile(BaseModel):
-    """Collection of prices for materials.
-
-    Can be used to calculate the ptv, eiv, and manufacturing materials costs for a job,
-    depending on the profile used.
-
-    """
-
-    profile_id: UUID
-    price_source: UUID
-    description: str
-    data: dict[int, JobMaterialsPrice]
-
-    def total_price(self) -> float:
-        """Calculate the total price of all materials in the profile."""
-        return sum(
-            job_materials.price * job_materials.quantity
-            for job_materials in self.data.values()
-        )
+#     type_id: int
+#     quantity: int
+#     price: float
 
 
-class ManufacturingMaterialsBonus(BaseModel):
-    me: float = 1.0
-    facility: float = 1.0
+# class JobMaterialsPriceProfile(BaseModel):
+#     """Collection of prices for materials.
+
+#     Can be used to calculate the ptv, eiv, and manufacturing materials costs for a job,
+#     depending on the profile used.
+
+#     """
+
+#     profile_id: UUID
+#     price_source: UUID
+#     description: str
+#     data: dict[int, JobMaterialsPrice]
+
+#     def total_price(self) -> float:
+#         """Calculate the total price of all materials in the profile."""
+#         return sum(
+#             job_materials.price * job_materials.quantity
+#             for job_materials in self.data.values()
+#         )
 
 
-class ManufacturingTimeBonus(BaseModel):
-    te: float = 1.0
-    facility: float = 1.0
-    skills: float = 1.0
-    implants: float = 1.0
+# class ManufacturingMaterialsBonus(BaseModel):
+#     me: float = 1.0
+#     facility: float = 1.0
 
 
-class ResearchTimeBonus(BaseModel):
-    facility: float = 1.0
-    skills: float = 1.0
-    implants: float = 1.0
+# class ManufacturingTimeBonus(BaseModel):
+#     te: float = 1.0
+#     facility: float = 1.0
+#     skills: float = 1.0
+#     implants: float = 1.0
 
 
-class ResearchCostFactors(BaseModel):
-    system_cost_index: float = 0.0
-    facility_tax: float = 0.0025
-    scc_surcharge: float = 0.04
-    alpha_tax: float = 0.0025
-    structure_bonus: float = 1.0
+# class ResearchTimeBonus(BaseModel):
+#     facility: float = 1.0
+#     skills: float = 1.0
+#     implants: float = 1.0
 
 
-class ManufacturingCostFactors(BaseModel):
-    system_cost_index: float = 0.0
-    facility_tax: float = 0.0025
-    scc_surcharge: float = 0.04
-    alpha_tax: float = 0.0025
-    structure_bonus: float = 1.0
+# class ResearchCostFactors(BaseModel):
+#     system_cost_index: float = 0.0
+#     facility_tax: float = 0.0025
+#     scc_surcharge: float = 0.04
+#     alpha_tax: float = 0.0025
+#     structure_bonus: float = 1.0
 
 
-class ManufacturingCosts(BaseModel):
-    # TODO can this be generalized for other jobs like invention and copying?
+# class ManufacturingCostFactors(BaseModel):
+#     system_cost_index: float = 0.0
+#     facility_tax: float = 0.0025
+#     scc_surcharge: float = 0.04
+#     alpha_tax: float = 0.0025
+#     structure_bonus: float = 1.0
 
-    job_cost: float
-    facility: float
-    scc: float
-    alpha: float
+
+# class ManufacturingCosts(BaseModel):
+#     # TODO can this be generalized for other jobs like invention and copying?
+
+#     job_cost: float
+#     facility: float
+#     scc: float
+#     alpha: float
 
 
-class ResearchCosts(BaseModel):
-    """Represents the cost breakdown of a research job."""
+# class ResearchCosts(BaseModel):
+#     """Represents the cost breakdown of a research job."""
 
-    job_cost: float
-    facility: float
-    scc: float
-    alpha: float
+#     job_cost: float
+#     facility: float
+#     scc: float
+#     alpha: float
 
 
 # class MaterialsCost(BaseModel):
@@ -129,49 +129,48 @@ class ResearchCosts(BaseModel):
 #     price: float
 
 
-# TODO decide wether to use UUID or str for ids. UUIDs seem fine for dict keys and pydantic. And should be smaller in memory than strings.
-class LocationProfile(BaseModel):
-    """Location information for industry jobs.
+# class LocationProfile(BaseModel):
+#     """Location information for industry jobs.
 
-    eg, region, station, system cost indexes, rigs, security, etc.
-    """
+#     eg, region, station, system cost indexes, rigs, security, etc.
+#     """
 
-    profile_id: UUID
-
-
-class CharacterProfile(BaseModel):
-    """Character based information for industry jobs.
-
-    eg, skills, implants
-    """
-
-    profile_id: UUID
+#     profile_id: UUID
 
 
-class IndustryJob(BaseModel):
-    """The minimum information required to describe the result of an industry job.
+# class CharacterProfile(BaseModel):
+#     """Character based information for industry jobs.
 
-    job costs, materials required, and time required will vary based on system, skills,
-    implants, and station.
-    """
+#     eg, skills, implants
+#     """
 
-    job_uuid: UUID
-    blueprint_type_id: int
-    runs: int
-    me: int
-    te: int
-    result_type_id: int
-    result_qty: int
-    activity_type: str
-    unit_cost: float
-    job_costs: ManufacturingCosts
-    materials_cost: float
-    eiv: float
-    location_profile: UUID
-    character_profile: UUID
-    cost_profile: UUID
-    materials_required: list[JobMaterial] = []
-    time_required: int
+#     profile_id: UUID
+
+
+# class IndustryJob(BaseModel):
+#     """The minimum information required to describe the result of an industry job.
+
+#     job costs, materials required, and time required will vary based on system, skills,
+#     implants, and station.
+#     """
+
+#     job_uuid: UUID
+#     blueprint_type_id: int
+#     runs: int
+#     me: int
+#     te: int
+#     result_type_id: int
+#     result_qty: int
+#     activity_type: str
+#     unit_cost: float
+#     job_costs: ManufacturingCosts
+#     materials_cost: float
+#     eiv: float
+#     location_profile: UUID
+#     character_profile: UUID
+#     cost_profile: UUID
+#     materials_required: list[JobMaterial] = []
+#     time_required: int
 
 
 # TODO use CharacterProfile and LocationProfile to pass infomation to functions.
