@@ -1,7 +1,7 @@
 """Industry calculations using the most basic inputs."""
 
 from math import ceil, floor
-from typing import TypedDict
+from typing import Any, TypedDict
 
 RESEARCH_TIME_MULTIPLIER = [
     1,
@@ -18,6 +18,15 @@ RESEARCH_TIME_MULTIPLIER = [
 
 
 # TODO at this level, can one cost dict cover all the actions?
+class JobCosts(TypedDict):
+    """TypedDict for job costs."""
+
+    job_cost: float
+    facility_tax: float
+    scc: float
+    alpha: float
+
+
 class ManufacturingCosts(TypedDict):
     """TypedDict for manufacturing costs."""
 
@@ -63,30 +72,6 @@ class ReactionCosts(TypedDict):
     alpha: float
 
 
-def copy_cost() -> float:
-    """Returns the cost of copying a blueprint."""
-    # TODO stub
-    return 0.0
-
-
-def invention_cost() -> float:
-    """Returns the cost of inventing a blueprint."""
-    # TODO stub
-    return 0.0
-
-
-def reaction_cost() -> float:
-    """Returns the cost of reacting a blueprint."""
-    # TODO stub
-    return 0.0
-
-
-def research_cost() -> float:
-    """Returns the cost of researching a blueprint."""
-    # TODO stub
-    return 0.0
-
-
 def eiv(materials: dict[int, int], adjusted_prices: dict[int, float]) -> float:
     """Calculates the estimated industry value (EIV) of a set of materials."""
     total_value = 0.0
@@ -123,7 +108,7 @@ def manufacturing_materials_required(
     return required_materials
 
 
-def manufacturing_job_cost(
+def manufacturing_cost(
     eiv: float,
     system_cost_index: float,
     structure_bonus: float = 0.0,
@@ -131,21 +116,18 @@ def manufacturing_job_cost(
     scc: float = 0.04,
     alpha_rate: float = 0.0025,
     is_alpha: bool = False,
-) -> ManufacturingCosts:
+) -> JobCosts:
     """Calculates the cost of a manufacturing job."""
+    # TODO validate math and inputs
     if eiv < 0:
         raise ValueError("Estimated Industry Value (EIV) must be non-negative.")
 
     job_cost = round(eiv * (system_cost_index * structure_bonus))
-    if is_alpha:
-        alpha = round(eiv * alpha_rate)
-    else:
-        alpha = 0
-    facility = round(eiv * facility_tax)
-    scc = round(eiv * scc)
-
-    result = ManufacturingCosts(
-        job_cost=job_cost, facility_tax=facility, scc=scc, alpha=alpha
+    result = JobCosts(
+        job_cost=job_cost,
+        facility_tax=round(eiv * facility_tax),
+        scc=round(eiv * scc),
+        alpha=round(job_cost * alpha_rate) if is_alpha else 0.0,
     )
 
     return result
@@ -154,22 +136,30 @@ def manufacturing_job_cost(
 def manufacturing_time(
     base_time: int,
     te: float,
-    facility: float,
-    skills: float,
-    implants: float,
     runs: int,
+    structure: float = 0.0,
+    rigs: float = 0.0,
+    skills: float = 0.0,
+    implants: float = 0.0,
 ) -> int:
     """Calculates the manufacturing time for a job."""
     if runs < 1:
         raise ValueError("Runs must be one or greater.")
-    # TODO see if math checks out, add note that zero tax rate can be used if missing value.
-    elapsed = base_time / (1 + te) / (1 + facility) / (1 + skills) / (1 + implants)
+    # TODO see if math checks out, add note that zero can be used if missing value.
+    elapsed = (
+        base_time
+        / (1 + te)
+        / (1 + structure)
+        / (1 + skills)
+        / (1 + implants)
+        / (1 + rigs)
+    )
     elapsed = ceil(elapsed * runs)
 
     return elapsed
 
 
-def research_te_time(
+def research_time(
     base_time: int,
     runs_completed: int,
     runs: int,
@@ -187,25 +177,112 @@ def research_te_time(
     time_required = (
         base_required / (1 + skills) / (1 + implants) / (1 + facility) / (1 + rigs)
     )
-    time_required = ceil(time_required * runs)
+    time_required = ceil(time_required)
 
     return time_required
 
 
-def research_me_time() -> int:
-    """Returns the time required for a material efficiency research job."""
+# def research_me_time() -> int:
+#     """Returns the time required for a material efficiency research job."""
+#     # TODO stub
+#     return 0
+
+
+def research_cost(
+    ptv: float,
+    system_cost_index: float,
+    structure_bonus: float,
+    facility_tax: float = 0.0,
+    scc: float = 0.04,
+    alpha_rate: float = 0.0025,
+    is_alpha: bool = False,
+) -> JobCosts:
+    """Returns the cost of a research job."""
+    # TODO validate math and inputs esp. rounding vs ceil vs nothing.
+    job_cost = ptv * (system_cost_index * structure_bonus)
+    result = JobCosts(
+        job_cost=job_cost,
+        facility_tax=round(job_cost * facility_tax),
+        scc=round(job_cost * scc),
+        alpha=round(job_cost * alpha_rate) if is_alpha else 0.0,
+    )
+    return result
+
+
+def invention_time(
+    FOO: Any,
+    base_time: int,
+    runs: int,
+    skills: float,
+    structure: float,
+    rigs: float,
+) -> int:
+    """Returns the time required for an invention job."""
     # TODO stub
     return 0
+
+
+def invention_cost(
+    FOO: Any,
+    runs: int,
+    structure: float,
+    rigs: float,
+) -> JobCosts:
+    """Returns the cost of an invention job."""
+    # TODO stub
+    result = JobCosts(
+        job_cost=0.0,
+        facility_tax=0.0,
+        scc=0.0,
+        alpha=0.0,
+    )
+    return result
+
+
+def copy_time() -> int:
+    """Returns the time required for a copy job."""
+    # TODO stub
+    return 0
+
+
+def copy_cost() -> JobCosts:
+    """Returns the cost of a copy job."""
+    # TODO stub
+    result = JobCosts(
+        job_cost=0.0,
+        facility_tax=0.0,
+        scc=0.0,
+        alpha=0.0,
+    )
+    return result
+
+
+def reaction_time() -> int:
+    """Returns the time required for a reaction job."""
+    # TODO stub
+    return 0
+
+
+def reaction_cost() -> JobCosts:
+    """Returns the cost of a reaction job."""
+    # TODO stub
+    result = JobCosts(
+        job_cost=0.0,
+        facility_tax=0.0,
+        scc=0.0,
+        alpha=0.0,
+    )
+    return result
 
 
 def base_research_time(
     bp_time: int, beginning_runs: int = 0, desired_runs: int = 10
 ) -> int:
-    """Calculate the base time for research based on the blueprint time and runs.
+    """Calculate the base time for research based on the blueprint time, already completed runs, and desired runs.
 
     Args:
         bp_time (int): The base time for the blueprint.
-        beginning_runs (int): The number of beginning runs, runs already done.
+        beginning_runs (int): The number of already completed runs.
         desired_runs (int): The desired number of runs for the research job.
 
     Returns:
