@@ -15,4 +15,4 @@ def test_get_market_orders():
     logger.info("Should hit cache")
     market_orders = esi.get_market_orders_by_region(region_id=region_id)
 
-    assert len(market_orders.data) > 0, "Expected at least one market order"
+    assert len(market_orders.orders) > 0, "Expected at least one market order"

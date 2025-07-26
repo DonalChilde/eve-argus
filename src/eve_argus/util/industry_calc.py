@@ -27,57 +27,93 @@ class JobCosts(TypedDict):
     alpha: float
 
 
-class ManufacturingCosts(TypedDict):
-    """TypedDict for manufacturing costs."""
+# class ManufacturingCosts(TypedDict):
+#     """TypedDict for manufacturing costs."""
 
-    job_cost: float
-    facility_tax: float
-    scc: float
-    alpha: float
-
-
-class ResearchCosts(TypedDict):
-    """TypedDict for research costs."""
-
-    job_cost: float
-    facility_tax: float
-    scc: float
-    alpha: float
+#     job_cost: float
+#     facility_tax: float
+#     scc: float
+#     alpha: float
 
 
-class CopyCosts(TypedDict):
-    """TypedDict for copy costs."""
+# class ResearchCosts(TypedDict):
+#     """TypedDict for research costs."""
 
-    job_cost: float
-    facility_tax: float
-    scc: float
-    alpha: float
-
-
-class InventionCosts(TypedDict):
-    """TypedDict for invention costs."""
-
-    job_cost: float
-    facility_tax: float
-    scc: float
-    alpha: float
+#     job_cost: float
+#     facility_tax: float
+#     scc: float
+#     alpha: float
 
 
-class ReactionCosts(TypedDict):
-    """TypedDict for reaction costs."""
+# class CopyCosts(TypedDict):
+#     """TypedDict for copy costs."""
 
-    job_cost: float
-    facility_tax: float
-    scc: float
-    alpha: float
+#     job_cost: float
+#     facility_tax: float
+#     scc: float
+#     alpha: float
 
 
-def eiv(materials: dict[int, int], adjusted_prices: dict[int, float]) -> float:
-    """Calculates the estimated industry value (EIV) of a set of materials."""
+# class InventionCosts(TypedDict):
+#     """TypedDict for invention costs."""
+
+#     job_cost: float
+#     facility_tax: float
+#     scc: float
+#     alpha: float
+
+
+# class ReactionCosts(TypedDict):
+#     """TypedDict for reaction costs."""
+
+#     job_cost: float
+#     facility_tax: float
+#     scc: float
+#     alpha: float
+
+
+# def materials_for_manufacturing_eiv(
+#     base_materials: dict[int, int], runs: int
+# ) -> dict[int, int]:
+#     """Calculates the materials required for manufacturing based on base materials and runs."""
+#     required_materials: dict[int, int] = {}
+#     for material_id, quantity in base_materials.items():
+#         required_materials[material_id] = quantity * runs
+#     return required_materials
+
+
+# def materials_for_copy_invention_eiv(
+#     base_materials: dict[int, int],
+# ) -> dict[int, int]:
+#     """Calculates the materials required for copy and invention based on base materials."""
+
+#     # Copy and invention use the base materials directly, no runs multiplier.
+#     # This is different from manufacturing where runs are applied.
+#     required_materials: dict[int, int] = base_materials.copy()
+
+#     return required_materials
+
+
+def eiv(
+    base_materials: dict[int, int], adjusted_prices: dict[int, float], runs: int = 1
+) -> float:
+    """Calculates the estimated item value (EIV) of a set of materials.
+
+    EIV is calculated from the base materials of a blueprint, with no ME correction.
+    For manufacturing and copy jobs, supply the number of runs to get the total EIV.
+
+    Args:
+        base_materials (dict[int, int]): A dictionary of material IDs and their quantities.
+        adjusted_prices (dict[int, float]): A dictionary of material IDs and their adjusted prices.
+        runs (int): The number of runs for the job. Defaults to 1.
+
+    Returns:
+        float: The estimated item value of the materials.
+    """
     total_value = 0.0
-    for material_id, quantity in materials.items():
+    for material_id, quantity in base_materials.items():
         if material_id in adjusted_prices:
-            total_value += adjusted_prices[material_id] * quantity
+            total_value += adjusted_prices[material_id] * quantity * runs
         else:
             raise ValueError(
                 f"Material ID {material_id} not found in adjusted_prices dictionary."
@@ -85,30 +121,52 @@ def eiv(materials: dict[int, int], adjusted_prices: dict[int, float]) -> float:
     return total_value
 
 
-def process_time_value(time_required: int, eiv: float) -> int:
-    """Calculates the process time value (PTV) based on the time required and EIV."""
-    ptv = ceil(time_required * (0.02 / 105) * eiv)
+def process_time_value(time_required: int, eiv: float, base_time: int) -> int:
+    """Calculates the process time value (PTV) based on the time required and EIV.
+
+    Required for researching ME and TE.
+
+    Args:
+        time_required (int): The time required for the process in seconds.
+        eiv (float): The estimated item value of blueprint product.
+        base_time (int): The base time for the process in seconds.
+    """
+    ptv = ceil(time_required * (0.02 / base_time) * eiv)
     return ptv
 
 
 def manufacturing_materials_required(
-    materials: dict[int, int], runs: int, me: float, facility: float, rig: float
+    base_materials: dict[int, int],
+    runs: int,
+    me: float,
+    structure: float = 0.0,
+    rig: float = 0.0,
 ) -> dict[int, int]:
-    """Calculates the materials required for a manufacturing job."""
-    # TODO validate math
+    """Calculates the materials required for a manufacturing job.
+
+    Args:
+        base_materials (dict[int, int]): The base materials required for the job.
+        runs (int): The number of runs for the job.
+        me (float): Material efficiency factor.
+        structure (float): Structure bonus factor.
+        rig (float): Rig bonus factor.
+
+    Returns:
+        dict[int, int]: A dictionary of required materials with their quantities.
+    """
     if runs < 1:
         raise ValueError("Runs must be one or greater.")
 
     required_materials = {}
-    for material_id, quantity in materials.items():
-        req_mats = quantity * (1 - me) * (1 - facility) * (1 - rig)
+    for material_id, quantity in base_materials.items():
+        req_mats = quantity * (1 - me) * (1 - structure) * (1 - rig)
         if req_mats < 0:
             req_mats = 1
         required_materials[material_id] = ceil(req_mats * runs)
     return required_materials
 
 
-def manufacturing_cost(
+def manufacturing_job_cost(
     eiv: float,
     system_cost_index: float,
     structure_bonus: float = 0.0,
@@ -117,19 +175,140 @@ def manufacturing_cost(
     alpha_rate: float = 0.0025,
     is_alpha: bool = False,
 ) -> JobCosts:
-    """Calculates the cost of a manufacturing job."""
-    # TODO validate math and inputs
-    if eiv < 0:
-        raise ValueError("Estimated Industry Value (EIV) must be non-negative.")
+    """Calculates the cost of a manufacturing job.
 
-    job_cost = round(eiv * (system_cost_index * structure_bonus))
+    There is still some question about rounding vs ceil behavior, but this
+    should be within a couple of isk of the actual cost.
+
+    Args:
+        eiv (float): Estimated Industry Value of the job.
+        system_cost_index (float): Cost index of the system.
+        structure_bonus (float): Bonus from the structure used.
+        facility_tax (float): Tax applied by the facility.
+        scc (float): Standard Concord Charge.
+        alpha_rate (float): Alpha clone rate.
+        is_alpha (bool): Whether the job is being run by an alpha clone.
+
+    Returns:
+        JobCosts: A dictionary containing the job cost, facility tax, SCC, and alpha cost.
+    """
+    job_cost = round(eiv * system_cost_index * (1 - structure_bonus))
     result = JobCosts(
         job_cost=job_cost,
         facility_tax=round(eiv * facility_tax),
         scc=round(eiv * scc),
-        alpha=round(job_cost * alpha_rate) if is_alpha else 0.0,
+        alpha=round(eiv * alpha_rate) if is_alpha else 0.0,
     )
+    return result
 
+
+def research_job_cost(
+    ptv: float,
+    system_cost_index: float,
+    structure_bonus: float = 0.0,
+    facility_tax: float = 0.0,
+    scc: float = 0.04,
+    alpha_rate: float = 0.0025,
+    is_alpha: bool = False,
+) -> JobCosts:
+    """Calculates the cost of a research ME or TE job.
+
+    There is still some question about rounding vs ceil behavior, but this
+    should be within a couple of isk of the actual cost.
+
+    Args:
+        ptv (float): Process Time Value of the job.
+        system_cost_index (float): Cost index of the system.
+        structure_bonus (float): Bonus from the structure used.
+        facility_tax (float): Tax applied by the facility.
+        scc (float): Standard Concord Charge.
+        alpha_rate (float): Alpha clone rate.
+        is_alpha (bool): Whether the job is being run by an alpha clone.
+
+    Returns:
+        JobCosts: A dictionary containing the job cost, facility tax, SCC, and alpha cost.
+    """
+    job_cost = round(ptv * system_cost_index * (1 - structure_bonus))
+    result = JobCosts(
+        job_cost=job_cost,
+        facility_tax=round(ptv * facility_tax),
+        scc=round(ptv * scc),
+        alpha=round(ptv * alpha_rate) if is_alpha else 0.0,
+    )
+    return result
+
+
+def invention_job_cost(
+    eiv: float,
+    system_cost_index: float,
+    structure_bonus: float = 0.0,
+    facility_tax: float = 0.0,
+    scc: float = 0.04,
+    alpha_rate: float = 0.0025,
+    is_alpha: bool = False,
+) -> JobCosts:
+    """Calculates the cost of a research ME or TE job.
+
+    There is still some question about rounding vs ceil behavior, but this
+    should be within a couple of isk of the actual cost.
+
+    Args:
+        eiv (float): Estimated Industry Value of the job.
+        system_cost_index (float): Cost index of the system.
+        structure_bonus (float): Bonus from the structure used.
+        facility_tax (float): Tax applied by the facility.
+        scc (float): Standard Concord Charge.
+        alpha_rate (float): Alpha clone rate.
+        is_alpha (bool): Whether the job is being run by an alpha clone.
+
+    Returns:
+        JobCosts: A dictionary containing the job cost, facility tax, SCC, and alpha cost.
+    """
+    job_cost_base = eiv * 0.02
+    job_cost = round(job_cost_base * system_cost_index * (1 - structure_bonus))
+    result = JobCosts(
+        job_cost=job_cost,
+        facility_tax=round(job_cost_base * facility_tax),
+        scc=round(job_cost_base * scc),
+        alpha=round(job_cost_base * alpha_rate) if is_alpha else 0.0,
+    )
+    return result
+
+
+def copy_job_cost(
+    eiv: float,
+    system_cost_index: float,
+    structure_bonus: float = 0.0,
+    facility_tax: float = 0.0,
+    scc: float = 0.04,
+    alpha_rate: float = 0.0025,
+    is_alpha: bool = False,
+) -> JobCosts:
+    """Calculates the cost of a copy job.
+
+    There is still some question about rounding vs ceil behavior, but this
+    should be within a couple of isk of the actual cost.
+
+    Args:
+        eiv (float): Estimated Industry Value of the job.
+        system_cost_index (float): Cost index of the system.
+        structure_bonus (float): Bonus from the structure used.
+        facility_tax (float): Tax applied by the facility.
+        scc (float): Standard Concord Charge.
+        alpha_rate (float): Alpha clone rate.
+        is_alpha (bool): Whether the job is being run by an alpha clone.
+
+    Returns:
+        JobCosts: A dictionary containing the job cost, facility tax, SCC, and alpha cost.
+    """
+    job_cost_base = eiv * 0.02
+    job_cost = round(job_cost_base * system_cost_index * (1 - structure_bonus))
+    result = JobCosts(
+        job_cost=job_cost,
+        facility_tax=round(job_cost_base * facility_tax),
+        scc=round(job_cost_base * scc),
+        alpha=round(job_cost_base * alpha_rate) if is_alpha else 0.0,
+    )
     return result
 
 
@@ -143,16 +322,13 @@ def manufacturing_time(
     implants: float = 0.0,
 ) -> int:
     """Calculates the manufacturing time for a job."""
-    if runs < 1:
-        raise ValueError("Runs must be one or greater.")
-    # TODO see if math checks out, add note that zero can be used if missing value.
     elapsed = (
         base_time
-        / (1 + te)
-        / (1 + structure)
-        / (1 + skills)
-        / (1 + implants)
-        / (1 + rigs)
+        * (1 - te)
+        * (1 - structure)
+        * (1 - skills)
+        * (1 - implants)
+        * (1 - rigs)
     )
     elapsed = ceil(elapsed * runs)
 
@@ -161,52 +337,23 @@ def manufacturing_time(
 
 def research_time(
     base_time: int,
-    runs_completed: int,
-    runs: int,
+    beginning_runs: int,
+    desired_runs: int,
     skills: float,
     implants: float,
-    facility: float,
+    structure: float,
     rigs: float,
 ) -> int:
     """Calculates the time required for a research job."""
-    # TODO validate math and inputs
     base_required = base_research_time(
-        bp_time=base_time, beginning_runs=runs_completed, desired_runs=runs
+        bp_time=base_time, beginning_runs=beginning_runs, desired_runs=desired_runs
     )
-
     time_required = (
-        base_required / (1 + skills) / (1 + implants) / (1 + facility) / (1 + rigs)
+        base_required * (1 - skills) * (1 - implants) * (1 - structure) * (1 - rigs)
     )
     time_required = ceil(time_required)
 
     return time_required
-
-
-# def research_me_time() -> int:
-#     """Returns the time required for a material efficiency research job."""
-#     # TODO stub
-#     return 0
-
-
-def research_cost(
-    ptv: float,
-    system_cost_index: float,
-    structure_bonus: float,
-    facility_tax: float = 0.0,
-    scc: float = 0.04,
-    alpha_rate: float = 0.0025,
-    is_alpha: bool = False,
-) -> JobCosts:
-    """Returns the cost of a research job."""
-    # TODO validate math and inputs esp. rounding vs ceil vs nothing.
-    job_cost = ptv * (system_cost_index * structure_bonus)
-    result = JobCosts(
-        job_cost=job_cost,
-        facility_tax=round(job_cost * facility_tax),
-        scc=round(job_cost * scc),
-        alpha=round(job_cost * alpha_rate) if is_alpha else 0.0,
-    )
-    return result
 
 
 def invention_time(
@@ -222,57 +369,10 @@ def invention_time(
     return 0
 
 
-def invention_cost(
-    FOO: Any,
-    runs: int,
-    structure: float,
-    rigs: float,
-) -> JobCosts:
-    """Returns the cost of an invention job."""
-    # TODO stub
-    result = JobCosts(
-        job_cost=0.0,
-        facility_tax=0.0,
-        scc=0.0,
-        alpha=0.0,
-    )
-    return result
-
-
 def copy_time() -> int:
     """Returns the time required for a copy job."""
     # TODO stub
     return 0
-
-
-def copy_cost() -> JobCosts:
-    """Returns the cost of a copy job."""
-    # TODO stub
-    result = JobCosts(
-        job_cost=0.0,
-        facility_tax=0.0,
-        scc=0.0,
-        alpha=0.0,
-    )
-    return result
-
-
-def reaction_time() -> int:
-    """Returns the time required for a reaction job."""
-    # TODO stub
-    return 0
-
-
-def reaction_cost() -> JobCosts:
-    """Returns the cost of a reaction job."""
-    # TODO stub
-    result = JobCosts(
-        job_cost=0.0,
-        facility_tax=0.0,
-        scc=0.0,
-        alpha=0.0,
-    )
-    return result
 
 
 def base_research_time(
@@ -314,3 +414,21 @@ def _research_time(runs: int, base_time: int) -> int:
     for i in range(0, runs):
         metime = round(metime + (RESEARCH_TIME_MULTIPLIER[i] * base_time))
     return metime
+
+
+def reaction_time(*kwargs) -> int:
+    """Returns the time required for a reaction job."""
+    # TODO stub
+    return 0
+
+
+def reaction_cost(*kwargs) -> JobCosts:
+    """Returns the cost of a reaction job."""
+    # TODO stub
+    result = JobCosts(
+        job_cost=0.0,
+        facility_tax=0.0,
+        scc=0.0,
+        alpha=0.0,
+    )
+    return result
