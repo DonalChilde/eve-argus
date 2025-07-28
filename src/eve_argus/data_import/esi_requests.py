@@ -1,4 +1,7 @@
-"""API for retrieving public data from Eve ESI."""
+"""API for retrieving public data from Eve ESI.
+
+All code for woring with EsiResponse and EsiRequest models should live here.
+"""
 
 import json
 import logging
@@ -12,7 +15,7 @@ from uuid import uuid4
 
 import preston
 
-from eve_argus import data_import as DI
+from eve_argus.data_import import esi_to_argus as DI
 from eve_argus.models import argus as EAM
 from eve_argus.models.esi import EsiRequest, EsiResponse
 from eve_argus.snippets.file.datetime_filename import file_safe_datetime_string
@@ -133,9 +136,7 @@ class EsiPublic:
             f"Initialized EsiPublic client in {perf_counter() - start:.6f} seconds. server status: {status!r}"
         )
 
-    def get_market_history(
-        self, region_id: int, type_id: int
-    ) -> EAM.MarketHistoryByType:
+    def get_market_history(self, region_id: int, type_id: int) -> EAM.MarketHistory:
         """Get market history for a specific region and type."""
         request = EsiRequest(
             op_id="get_markets_region_id_history",
@@ -147,8 +148,8 @@ class EsiPublic:
         response = _get_esi_data(
             self.preston, request, debug_save=self.debug, debug_path=self.debug_path
         )
-        result = DI.market_history_from_esi(
-            region_id=region_id, type_id=type_id, response=response
+        result = DI.market_history(
+            region_id=region_id, type_id=type_id, data=response.data
         )
         logger.info(
             f"Retrieved {len(result.data)} market history records for {request!r}."
@@ -161,7 +162,7 @@ class EsiPublic:
         response = _get_esi_data(
             self.preston, request, debug_save=self.debug, debug_path=self.debug_path
         )
-        data = DI.market_prices_universe_from_esi(response.data)
+        data = DI.market_prices_universe(response.data)
         logger.info(f"Retrieved {len(data)} market prices for {request!r}.")
         result = EAM.UniverseMarketPrices(
             price_profile_id=uuid4(),

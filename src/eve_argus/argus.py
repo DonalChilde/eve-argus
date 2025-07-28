@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 
-from eve_argus.esi import EsiPublic
+from eve_argus.data_import.esi_requests import EsiPublic
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

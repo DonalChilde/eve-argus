@@ -49,6 +49,10 @@ class SystemCostIndices(BaseModel):
 class MarketHistoryDetail(BaseModel):
     """Market history data model."""
 
+    region_id: int
+    """The region ID where the market history is located."""
+    type_id: int
+    """The type ID of the item."""
     date: str
     highest: float
     average: float
@@ -57,24 +61,35 @@ class MarketHistoryDetail(BaseModel):
     volume: int
 
 
-class MarketHistoryByType(BaseModel):
-    """A collection model to make serialization faster."""
+class MarketHistory(BaseModel):
+    """Market history for a specific region and type."""
 
     region_id: int
     """The region ID where the market history is located."""
     type_id: int
     """The type ID of the item."""
     data: Sequence[MarketHistoryDetail]
-    """A sequence of market history records for the specified type in the specified region."""
+    """A sequence of market history records."""
 
 
-class MarketHistoryByRegion(BaseModel):
-    """A collection model for market history by region."""
+# class MarketHistoryByType(BaseModel):
+#     """A collection model to make serialization faster."""
 
-    region_id: int
-    """The region ID where the market history is located."""
-    data: dict[int, MarketHistoryByType] = {}
-    """A dictionary mapping type IDs to sequences of market history records."""
+#     region_id: int
+#     """The region ID where the market history is located."""
+#     type_id: int
+#     """The type ID of the item."""
+#     data: Sequence[MarketHistoryDetail]
+#     """A sequence of market history records for the specified type in the specified region."""
+
+
+# class MarketHistoryByRegion(BaseModel):
+#     """A collection model for market history by region."""
+
+#     region_id: int
+#     """The region ID where the market history is located."""
+#     data: dict[int, MarketHistoryByType] = {}
+#     """A dictionary mapping type IDs to sequences of market history records."""
 
 
 class MarketHistorySummary(BaseModel):

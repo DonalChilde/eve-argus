@@ -6,7 +6,7 @@ from pathlib import Path
 from time import perf_counter
 
 from eve_argus.data_import.argus_data_file_loader import ArgusFileWriter
-from eve_argus.esi import EsiPublic
+from eve_argus.data_import.esi_requests import EsiPublic
 
 save_path = Path.home() / "projects" / "tmp" / "eve-argus" / "sample-data"
 argus_writer = ArgusFileWriter(argus_path=save_path)
