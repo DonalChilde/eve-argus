@@ -3,13 +3,12 @@
 import json
 import logging
 from collections.abc import Sequence
-from dataclasses import asdict, astuple, dataclass, field
+from dataclasses import asdict
 from datetime import UTC, datetime
-from itertools import chain
 from pathlib import Path
 from time import perf_counter
 from typing import Any
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import preston
 

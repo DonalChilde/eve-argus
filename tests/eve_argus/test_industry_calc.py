@@ -1,6 +1,5 @@
 """Test for the industry calculation module."""
 
-from math import ceil
 
 from pytest import raises
 

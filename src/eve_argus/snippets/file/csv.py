@@ -6,7 +6,7 @@ Check for older version of csv util. Consolidate.
 import csv
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from .validate_file_out import validate_file_out
 

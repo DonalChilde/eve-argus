@@ -2,19 +2,16 @@
 # requires-python = ">=3.13"
 # dependencies = []
 # ///
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 from pathlib import Path
 from time import perf_counter
 
 from eve_argus.data_import.argus_data_file_loader import (
     ArgusFileReader,
     ArgusFileWriter,
-    SdeLoader,
 )
-from eve_argus.esi import EsiPublic
 from eve_argus.snippets.file.csv import write_dicts_to_csv
 from eve_argus.util import argus as ARGUS_UTIL
-from eve_argus.util import sde as SDE_UTIL
 
 EVE_ARGUS_DATA = Path.home() / "projects" / "eve-argus-data"
 

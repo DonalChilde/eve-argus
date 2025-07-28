@@ -5,8 +5,6 @@ from importlib import resources
 from itertools import chain
 from pathlib import Path
 
-import pytest
-
 from eve_argus.models import argus as EAM
 from eve_argus.util.market_orders import calculate_order_summary
 from tests.resources.argus_files import ARGUS_FILES

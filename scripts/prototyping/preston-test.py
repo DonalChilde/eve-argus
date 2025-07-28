@@ -4,19 +4,14 @@
 #     "preston",
 # ]
 # ///
-import json
 from pathlib import Path
 from time import perf_counter
 from typing import cast
 
 import preston
 
-from eve_argus.models.argus import MarketHistorySummary
 from eve_argus.models.esi import MarketHistory
 from eve_argus.snippets.file.csv import write_dicts_to_csv
-from eve_argus.util.esi import (
-    summarize_market_history_by_periods,
-)
 
 type_ids = [34, 35, 36, 37, 38, 39]
 region_id = 10000002  # The Forge region ID

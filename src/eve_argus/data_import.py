@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 from itertools import chain
 from typing import Any
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from eve_argus.models import argus as EAM
 from eve_argus.models.esi import EsiResponse

@@ -1,5 +1,4 @@
 import logging
-from time import perf_counter
 
 from eve_argus.esi import EsiPublic
 

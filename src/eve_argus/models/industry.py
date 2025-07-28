@@ -1,10 +1,7 @@
 """The models to represent an industry job in EVE Argus."""
 
-from collections.abc import Sequence
-from enum import Enum
-from math import ceil
 from typing import Literal
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from pydantic import BaseModel
 

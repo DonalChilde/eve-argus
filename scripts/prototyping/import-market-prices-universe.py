@@ -7,7 +7,6 @@ from time import perf_counter
 
 from eve_argus.data_import.argus_data_file_loader import ArgusFileWriter
 from eve_argus.esi import EsiPublic
-from eve_argus.models import argus as EAM
 
 EVE_ARGUS_DATA = Path.home() / "projects" / "eve-argus-data"
 

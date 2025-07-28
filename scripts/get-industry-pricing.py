@@ -9,12 +9,9 @@ from time import perf_counter
 from eve_argus.data_import.argus_data_file_loader import (
     ArgusFileReader,
     ArgusFileWriter,
-    SdeLoader,
 )
 from eve_argus.esi import EsiPublic
 from eve_argus.models import argus as EAM
-from eve_argus.util import argus as ARGUS_UTIL
-from eve_argus.util import sde as SDE_UTIL
 from eve_argus.util.market_history import summarize_regional_market_history
 from eve_argus.util.market_orders import calculate_order_summaries
 

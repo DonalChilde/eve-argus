@@ -1,6 +1,6 @@
 """Industry calculations using the most basic inputs."""
 
-from math import ceil, floor
+from math import ceil
 from typing import Any, TypedDict
 
 RESEARCH_TIME_MULTIPLIER = [

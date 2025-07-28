@@ -6,7 +6,7 @@ from typing import Any
 from eve_argus.models import argus as EAM
 
 
-def published_type_ids(type_dict: EAM.TypeInfoDict) -> EAM.TypeIDSubset:
+def published_type_ids(type_dict: EAM.TypeInfos) -> EAM.TypeIDSubset:
     """published_typeIDs .
 
     Args:
@@ -29,7 +29,7 @@ def published_type_ids(type_dict: EAM.TypeInfoDict) -> EAM.TypeIDSubset:
 
 
 def get_type_ids_used_in_blueprints(
-    blueprints: EAM.BlueprintsDict, published_type_ids: EAM.TypeIDSubset | None = None
+    blueprints: EAM.Blueprints, published_type_ids: EAM.TypeIDSubset | None = None
 ) -> EAM.TypeIDSubset:
     type_ids: set[int] = set()
     for blueprint in blueprints.data.values():
@@ -66,7 +66,7 @@ def get_type_ids_used_in_blueprints(
 
 
 def get_type_ids_possible_in_market(
-    eve_types: EAM.TypeInfoDict, filter_published: bool | None = True
+    eve_types: EAM.TypeInfos, filter_published: bool | None = True
 ) -> EAM.TypeIDSubset:
     """Get type IDs possible in the market from the SDE data."""
     if filter_published is not None:
@@ -99,7 +99,7 @@ def get_type_ids_needed_for_industry_pricing(
 
 
 def get_type_ids_of_blueprints(
-    type_info: EAM.TypeInfoDict, groups: EAM.Groups
+    type_info: EAM.TypeInfos, groups: EAM.Groups
 ) -> EAM.TypeIDSubset:
     """Get type IDs of blueprints."""
     type_ids = set()
@@ -116,7 +116,7 @@ def get_type_ids_of_blueprints(
 
 
 def type_info_table(
-    type_info: EAM.TypeInfoDict,
+    type_info: EAM.TypeInfos,
     meta_levels: EAM.MetaGroups,
     groups: EAM.Groups,
     categories: EAM.Categories,

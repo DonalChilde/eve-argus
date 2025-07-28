@@ -143,7 +143,7 @@ class Blueprint(BaseModel):
     activities: Activities
 
 
-class BlueprintsDict(BaseModel):
+class Blueprints(BaseModel):
     """A collection model to make serialization faster."""
 
     data: dict[int, Blueprint]
@@ -157,11 +157,12 @@ class TypeInfo(BaseModel):
     meta_group_id: int | None
     graphic_id: int | None
     capacity: float | None
-    portion_size: int
+    portion_size: int  # -1 if no value in SDE
+    """The portion size of the item, -1 if not available."""
     published: bool
 
 
-class TypeInfoDict(BaseModel):
+class TypeInfos(BaseModel):
     """A collection model to make serialization faster."""
 
     data: dict[int, TypeInfo]
@@ -172,7 +173,7 @@ class TypeDescription(BaseModel):
     description: str
 
 
-class TypeDescriptionDict(BaseModel):
+class TypeDescriptions(BaseModel):
     """A collection model to make serialization faster."""
 
     data: dict[int, TypeDescription]

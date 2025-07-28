@@ -59,10 +59,10 @@ class ArgusFileReader:
         )
         return result
 
-    def type_info(self) -> EAM.TypeInfoDict:
+    def type_info(self) -> EAM.TypeInfos:
         start = perf_counter()
         path_in = self.argus_path / ArgusFilePaths.TYPE_INFO
-        result = EAM.TypeInfoDict.model_validate_json(path_in.read_text())
+        result = EAM.TypeInfos.model_validate_json(path_in.read_text())
         logger.info(
             "Loaded data from %s in %s seconds",
             path_in,
@@ -70,10 +70,10 @@ class ArgusFileReader:
         )
         return result
 
-    def type_description(self) -> EAM.TypeDescriptionDict:
+    def type_description(self) -> EAM.TypeDescriptions:
         start = perf_counter()
         path_in = self.argus_path / ArgusFilePaths.TYPE_DESCRIPTION
-        result = EAM.TypeDescriptionDict.model_validate_json(path_in.read_text())
+        result = EAM.TypeDescriptions.model_validate_json(path_in.read_text())
         logger.info(
             "Loaded data from %s in %s seconds",
             path_in,
@@ -81,10 +81,10 @@ class ArgusFileReader:
         )
         return result
 
-    def blueprints(self) -> EAM.BlueprintsDict:
+    def blueprints(self) -> EAM.Blueprints:
         start = perf_counter()
         path_in = self.argus_path / ArgusFilePaths.BLUEPRINTS
-        result = EAM.BlueprintsDict.model_validate_json(path_in.read_text())
+        result = EAM.Blueprints.model_validate_json(path_in.read_text())
         logger.info(
             "Loaded data from %s in %s seconds",
             path_in,
@@ -365,7 +365,7 @@ class ArgusFileWriter:
         start = perf_counter()
         path_out = self.argus_path / ArgusFilePaths.TYPE_INFO
         data = {x.type_id: x for x in type_info}
-        data_dict = EAM.TypeInfoDict(data=data)
+        data_dict = EAM.TypeInfos(data=data)
         validate_file_out(file_path=path_out, overwrite=overwrite)
         path_out.write_text(data_dict.model_dump_json(indent=2))
         logger.info(
@@ -406,7 +406,7 @@ class ArgusFileWriter:
         start = perf_counter()
         path_out = self.argus_path / ArgusFilePaths.TYPE_DESCRIPTION
         data = {x.type_id: x for x in type_description}
-        data_dict = EAM.TypeDescriptionDict(data=data)
+        data_dict = EAM.TypeDescriptions(data=data)
         validate_file_out(file_path=path_out, overwrite=overwrite)
         path_out.write_text(data_dict.model_dump_json(indent=2))
         logger.info(
@@ -427,7 +427,7 @@ class ArgusFileWriter:
         start = perf_counter()
         path_out = self.argus_path / ArgusFilePaths.BLUEPRINTS
         data = {x.blueprintTypeID: x for x in blueprints}
-        data_dict = EAM.BlueprintsDict(data=data)
+        data_dict = EAM.Blueprints(data=data)
         validate_file_out(file_path=path_out, overwrite=overwrite)
         path_out.write_text(data_dict.model_dump_json(indent=2))
         logger.info(

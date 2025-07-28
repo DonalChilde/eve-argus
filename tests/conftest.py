@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 # Add an option to mark slow tests, so that they don't run every time.
 

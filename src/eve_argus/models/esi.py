@@ -1,7 +1,7 @@
 """ESI return data models."""
 
 from dataclasses import dataclass, field
-from typing import Any, TypedDict
+from typing import Any
 
 
 @dataclass(slots=True)
