@@ -41,7 +41,7 @@ Source = "https://github.com/DonalChilde/eve-argus"
 
 
 [tool.ruff.lint]
-select = ["B", "UP", "D", "DOC", "FIX", "I"]
+select = ["B", "UP", "D", "DOC", "FIX", "I", "F401"]
 # non-imperative-mood (D401)
 ignore = ["D401", "D101"]
 # extend-select = ["I"]
