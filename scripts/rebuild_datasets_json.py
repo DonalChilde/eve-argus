@@ -6,8 +6,12 @@
 from pathlib import Path
 from time import perf_counter
 
+from eve_argus.data_import.argus_data_file_loader import (
+    ArgusFileReader,
+    ArgusFileWriter,
+    SdeLoader,
+)
 from eve_argus.esi import EsiPublic
-from eve_argus.file_loader import ArgusLoader, ArgusWriter, SdeLoader
 from eve_argus.util import argus as ARGUS_UTIL
 from eve_argus.util import sde as SDE_UTIL
 
@@ -15,8 +19,8 @@ SDE_ROOT = Path.home() / "projects" / "eve-sde"
 EVE_ARGUS_DATA = Path.home() / "projects" / "eve-argus-data"
 
 sde_loader = SdeLoader(sde_path=SDE_ROOT)
-argus_loader = ArgusLoader(argus_path=EVE_ARGUS_DATA)
-argus_writer = ArgusWriter(argus_path=EVE_ARGUS_DATA)
+argus_loader = ArgusFileReader(argus_path=EVE_ARGUS_DATA)
+argus_writer = ArgusFileWriter(argus_path=EVE_ARGUS_DATA)
 
 
 def localize_sde_types():

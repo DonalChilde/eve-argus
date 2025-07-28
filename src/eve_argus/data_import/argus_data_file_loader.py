@@ -43,7 +43,7 @@ class ArgusFilePaths:
     MARKET_ORDER_SUMMARIES_BY_REGION = "${region_id}-${tag}-market-order-summaries.json"
 
 
-class ArgusLoader:
+class ArgusFileReader:
     def __init__(self, argus_path: Path) -> None:
         """API to load Argus specific data files."""
         self.argus_path = argus_path
@@ -314,7 +314,7 @@ class ArgusLoader:
         return result
 
 
-class ArgusWriter:
+class ArgusFileWriter:
     def __init__(self, argus_path: Path) -> None:
         """API to save Argus specific data files."""
         self.argus_path = argus_path

@@ -5,11 +5,11 @@
 from pathlib import Path
 from time import perf_counter
 
+from eve_argus.data_import.argus_data_file_loader import ArgusFileWriter
 from eve_argus.esi import EsiPublic
-from eve_argus.file_loader import ArgusWriter
 
 save_path = Path.home() / "projects" / "tmp" / "eve-argus" / "sample-data"
-argus_writer = ArgusWriter(argus_path=save_path)
+argus_writer = ArgusFileWriter(argus_path=save_path)
 
 
 def get_market_history(esi: EsiPublic, region_id: int, type_id: int):

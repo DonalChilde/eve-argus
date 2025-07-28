@@ -6,8 +6,12 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 from time import perf_counter
 
+from eve_argus.data_import.argus_data_file_loader import (
+    ArgusFileReader,
+    ArgusFileWriter,
+    SdeLoader,
+)
 from eve_argus.esi import EsiPublic
-from eve_argus.file_loader import ArgusLoader, ArgusWriter, SdeLoader
 from eve_argus.models import argus as EAM
 from eve_argus.util import argus as ARGUS_UTIL
 from eve_argus.util import sde as SDE_UTIL
@@ -16,9 +20,9 @@ from eve_argus.util.market_orders import calculate_order_summaries
 
 EVE_ARGUS_DATA = Path.home() / "projects" / "eve-argus-data"
 save_path = Path.home() / "projects" / "tmp" / "eve-argus" / "market-pricing"
-argus_loader = ArgusLoader(argus_path=EVE_ARGUS_DATA)
-market_loader = ArgusLoader(argus_path=save_path)
-argus_writer = ArgusWriter(argus_path=save_path)
+argus_loader = ArgusFileReader(argus_path=EVE_ARGUS_DATA)
+market_loader = ArgusFileReader(argus_path=save_path)
+argus_writer = ArgusFileWriter(argus_path=save_path)
 
 # 1. download region market orders
 # 2. download market history for all industry type_ids in the region
