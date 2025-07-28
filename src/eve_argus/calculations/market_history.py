@@ -1,4 +1,4 @@
-"""Functions for use with Eve ESI data."""
+"""Functions for manipulating MarketHistory."""
 
 from collections.abc import Iterable, Sequence
 from datetime import date
@@ -8,20 +8,29 @@ from eve_argus.snippets.datetime.date_range import date_range_days
 
 
 def summarize_regional_market_history(
-    history: EAM.MarketHistoryByRegion,
+    histories: EAM.MarketHistories,
     type_ids: Iterable[int] | None = None,
     periods: Sequence[int] = (10, 30, 60, 90),
-) -> EAM.MarketHistorySummariesByRegion:
-    """Summarize market history by type."""
+) -> EAM.MarketHistorySummaries:
+    """Summarize market history by type and period of days.
+
+    Args:
+        histories: The market histories to summarize.
+        type_ids: Optional list of type IDs to summarize. If None, all type_ids are summarized.
+        periods: The periods in days to summarize the market history.
+
+    Returns:
+        EAM.MarketHistorySummaries: The summarized market history.
+    """
     if type_ids is None:
-        type_ids = history.data.keys()
-    region_id = history.region_id
-    summaries = EAM.MarketHistorySummariesByRegion(
+        type_ids = histories.data.keys()
+    region_id = histories.region_id
+    summaries = EAM.MarketHistorySummaries(
         region_id=region_id,
         data={},
     )
     for type_id in type_ids:
-        market_history = history.data.get(type_id, None)
+        market_history = histories.data.get(type_id, None)
         if market_history is None:
             continue
         if not market_history.data:
@@ -42,15 +51,28 @@ def summarize_market_history_by_periods(
     periods: Sequence[int],
     data: Sequence[EAM.MarketHistoryDetail],
 ) -> dict[int, EAM.MarketHistorySummary]:
-    lookup = {date.fromisoformat(x.date): x for x in data}
+    """Summarize market history by periods.
+
+    Periods count back from most recent date.
+
+    Args:
+        region_id (int): The region ID.
+        type_id (int): The type ID.
+        periods (Sequence[int]): The periods in days to summarize.
+        data (Sequence[EAM.MarketHistoryDetail]): The market history data.
+
+    Returns:
+        dict[int, EAM.MarketHistorySummary]: The summarized market history by period.
+    """
+    by_date = {date.fromisoformat(x.date): x for x in data}
     result: list[EAM.MarketHistorySummary] = []
-    keys = list(lookup.keys())
+    keys = list(by_date.keys())
     keys.sort(reverse=True)  # Sort by date descending
     most_recent = keys[0]
     for period in periods:
         dates = list(date_range_days(start_date=most_recent, days=period, past=True))
         end = dates[-1]
-        summary = summarize_market_history_by_dates(dates=dates, data=lookup)
+        summary = summarize_market_history_by_dates(dates=dates, data=by_date)
         summary.region_id = region_id
         summary.type_id = type_id
         summary.period = period
@@ -63,6 +85,15 @@ def summarize_market_history_by_periods(
 def summarize_market_history_by_dates(
     dates: Sequence[date], data: dict[date, EAM.MarketHistoryDetail]
 ) -> EAM.MarketHistorySummary:
+    """Summarize market history by dates.
+
+    Args:
+        dates (Sequence[date]): The dates to summarize.
+        data (dict[date, EAM.MarketHistoryDetail]): The market history data keyed by date.
+
+    Returns:
+        EAM.MarketHistorySummary: The summarized market history.
+    """
     missing = average = highest = lowest = order_count = volume = 0
     count = len(dates)
     for key in dates:

@@ -72,24 +72,13 @@ class MarketHistory(BaseModel):
     """A sequence of market history records."""
 
 
-# class MarketHistoryByType(BaseModel):
-#     """A collection model to make serialization faster."""
+class MarketHistories(BaseModel):
+    """A collection model for market history by region."""
 
-#     region_id: int
-#     """The region ID where the market history is located."""
-#     type_id: int
-#     """The type ID of the item."""
-#     data: Sequence[MarketHistoryDetail]
-#     """A sequence of market history records for the specified type in the specified region."""
-
-
-# class MarketHistoryByRegion(BaseModel):
-#     """A collection model for market history by region."""
-
-#     region_id: int
-#     """The region ID where the market history is located."""
-#     data: dict[int, MarketHistoryByType] = {}
-#     """A dictionary mapping type IDs to sequences of market history records."""
+    region_id: int
+    """The region ID where the market history is located."""
+    data: dict[int, MarketHistory] = {}
+    """A dictionary mapping type IDs to MarketHistory records."""
 
 
 class MarketHistorySummary(BaseModel):
@@ -108,13 +97,14 @@ class MarketHistorySummary(BaseModel):
     volume: float
 
 
-class MarketHistorySummariesByRegion(BaseModel):
+class MarketHistorySummaries(BaseModel):
     """A collection model to make serialization faster."""
 
+    # TODO consider making this hold only one period? Or, put period as first key.
     region_id: int
     """The region ID where the market history summaries are located."""
     data: dict[int, dict[int, MarketHistorySummary]] = {}
-    """A dictionary mapping type IDs to market history summaries."""
+    """A dictionary mapping type IDs to market history summaries indexed by time period."""
 
 
 class Activity_Name(Enum):
@@ -281,7 +271,7 @@ class UniverseMarketPrices(BaseModel):
     """A dictionary mapping type IDs to adjusted and average market prices for the universe."""
 
 
-class MarketOrder(BaseModel):
+class MarketOrderDetail(BaseModel):
     """A market order data model."""
 
     duration: int  # in days
@@ -310,25 +300,25 @@ class MarketOrder(BaseModel):
 #     """A dictionary mapping type IDs to sequences of market sell orders."""
 
 
-class MarketOrdersByType(BaseModel):
-    """A collection model for buy and sell market orders grouped by type and region."""
+class MarketOrders(BaseModel):
+    """A collection model for buy and sell market orders for one type in one region."""
 
     region_id: int
     """The region ID where the market orders are located."""
     type_id: int
     """The type ID of the market orders."""
-    buy_orders: list[MarketOrder] = []
+    buy_orders: list[MarketOrderDetail] = []
     """A list of market buy orders for the specified type."""
-    sell_orders: list[MarketOrder] = []
+    sell_orders: list[MarketOrderDetail] = []
     """A list of market sell orders for the specified type."""
 
 
-class MarketOrdersByRegion(BaseModel):
-    """A collection model for market orders in a specific region."""
+class RegionalMarketOrders(BaseModel):
+    """A collection model for market orders multiple types in a specific region."""
 
     region_id: int
     """The region ID where the market orders are located."""
-    orders: dict[int, MarketOrdersByType] = {}
+    orders: dict[int, MarketOrders] = {}
 
 
 class MarketOrderSummaryDetails(BaseModel):

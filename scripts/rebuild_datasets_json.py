@@ -6,13 +6,13 @@
 from pathlib import Path
 from time import perf_counter
 
-from eve_argus.data_import.argus_data_file_loader import (
+from eve_argus.calculations import sde as SDE_UTIL
+from eve_argus.calculations import type_id as ARGUS_UTIL
+from eve_argus.data_import.argus_data_file_reader import (
     ArgusFileReader,
     ArgusFileWriter,
     SdeLoader,
 )
-from eve_argus.util import argus as ARGUS_UTIL
-from eve_argus.util import sde as SDE_UTIL
 
 SDE_ROOT = Path.home() / "projects" / "eve-sde"
 EVE_ARGUS_DATA = Path.home() / "projects" / "eve-argus-data"
@@ -220,7 +220,7 @@ def get_type_ids_used_in_blueprints():
 
     conversion_start = perf_counter()
     print("Filtering for published type IDs used in blueprints.")
-    type_ids_used = ARGUS_UTIL.get_type_ids_used_in_blueprints(blueprints=blueprints)
+    type_ids_used = ARGUS_UTIL.type_ids_used_in_blueprints(blueprints=blueprints)
     print(
         f"Found {len(type_ids_used.type_ids)} type IDs used in blueprints in {perf_counter() - conversion_start:.6f} seconds."
     )
@@ -244,7 +244,7 @@ def get_published_type_ids_possible_in_market():
 
     conversion_start = perf_counter()
     print("Filtering for type IDs possible in the market.")
-    type_ids_possible = ARGUS_UTIL.get_type_ids_possible_in_market(
+    type_ids_possible = ARGUS_UTIL.type_ids_possible_in_market(
         eve_types=eve_types, filter_published=True
     )
     print(
@@ -271,7 +271,7 @@ def get_type_ids_needed_for_industry_pricing():
 
     conversion_start = perf_counter()
     print("Filtering for type IDs needed for industry pricing.")
-    type_ids_needed = ARGUS_UTIL.get_type_ids_needed_for_industry_pricing(
+    type_ids_needed = ARGUS_UTIL.type_ids_needed_for_industry_pricing(
         market_type_ids=market_type_ids, blueprint_type_ids=blueprint_type_ids
     )
     print(

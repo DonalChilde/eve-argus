@@ -1,9 +1,8 @@
 """Test for the industry calculation module."""
 
-
 from pytest import raises
 
-from eve_argus.util import industry_calc
+from eve_argus.calculations import industry_calc
 
 ADJUSTED_PRICES = {
     34: 3.33,

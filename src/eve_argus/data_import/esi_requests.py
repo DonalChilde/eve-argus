@@ -186,7 +186,7 @@ class EsiPublic:
 
     def get_market_orders_by_region(
         self, region_id: int, order_type: str = "all"
-    ) -> EAM.MarketOrdersByRegion:
+    ) -> EAM.RegionalMarketOrders:
         """Get market orders for a specific region."""
         request = EsiRequest(
             op_id="get_markets_region_id_orders",
@@ -204,7 +204,7 @@ class EsiPublic:
 
     def get_market_orders_by_region_and_type(
         self, region_id: int, type_id: int, order_type: str = "all"
-    ) -> EAM.MarketOrdersByType:
+    ) -> EAM.MarketOrders:
         """Get market orders for a specific type in a region."""
         request = EsiRequest(
             op_id="get_markets_region_id_orders",

@@ -6,12 +6,12 @@
 from pathlib import Path
 from time import perf_counter
 
-from eve_argus.data_import.argus_data_file_loader import (
+from eve_argus.calculations.sde import import_market_groups
+from eve_argus.data_import.argus_data_file_reader import (
     ArgusFileReader,
     ArgusFileWriter,
     SdeLoader,
 )
-from eve_argus.util.sde import import_market_groups
 
 SDE_ROOT = Path.home() / "projects" / "eve-sde"
 EVE_ARGUS_DATA = Path.home() / "projects" / "eve-argus-data"

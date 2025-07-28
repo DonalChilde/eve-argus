@@ -5,8 +5,8 @@ from importlib import resources
 from itertools import chain
 from pathlib import Path
 
+from eve_argus.calculations.market_orders import calculate_order_summary
 from eve_argus.models import argus as EAM
-from eve_argus.util.market_orders import calculate_order_summary
 from tests.resources.argus_files import ARGUS_FILES
 
 logger = logging.getLogger(__name__)
@@ -18,9 +18,7 @@ def test_market_order_summary(test_output_dir: Path):
         "10000002-34-market-orders.json"
     )
     with resources.as_file(file_resource) as input_path:
-        market_orders = EAM.MarketOrdersByType.model_validate_json(
-            input_path.read_text()
-        )
+        market_orders = EAM.MarketOrders.model_validate_json(input_path.read_text())
         orders = chain(
             market_orders.buy_orders,
             market_orders.sell_orders,

@@ -6,14 +6,14 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 from time import perf_counter
 
-from eve_argus.data_import.argus_data_file_loader import (
+from eve_argus.calculations.market_history import summarize_regional_market_history
+from eve_argus.calculations.market_orders import calculate_order_summaries
+from eve_argus.data_import.argus_data_file_reader import (
     ArgusFileReader,
     ArgusFileWriter,
 )
 from eve_argus.data_import.esi_requests import EsiPublic
 from eve_argus.models import argus as EAM
-from eve_argus.util.market_history import summarize_regional_market_history
-from eve_argus.util.market_orders import calculate_order_summaries
 
 EVE_ARGUS_DATA = Path.home() / "projects" / "eve-argus-data"
 save_path = Path.home() / "projects" / "tmp" / "eve-argus" / "market-pricing"
@@ -66,11 +66,11 @@ def get_market_history_by_region(
 
 
 def summarize_market_orders(
-    orders: EAM.MarketOrdersByRegion, type_ids: Iterable[int] | None = None
+    orders: EAM.RegionalMarketOrders, type_ids: Iterable[int] | None = None
 ) -> None:
     """Summarize market orders by type."""
     summaries = calculate_order_summaries(
-        orders=orders,
+        regional_orders=orders,
         location_id=orders.region_id,
         location_spec="region",
         type_ids=type_ids,
@@ -94,7 +94,7 @@ def summarize_market_history(
     if type_ids is None:
         type_ids = history.data.keys()
     summaries = summarize_regional_market_history(
-        history=history,
+        histories=history,
         type_ids=type_ids,
         periods=[10, 30, 60, 90],
     )
@@ -124,11 +124,11 @@ def main() -> None:
             esi, region_id=region_id, type_ids=list(industry_ids.type_ids)
         )
     load_orders = perf_counter()
-    orders = market_loader.market_orders_by_region(region_id=region_id)
+    orders = market_loader.regional_market_orders(region_id=region_id)
     print(f"Loaded market orders in {load_orders - start:.6f} seconds.")
     summarize_market_orders(orders, type_ids=industry_ids.type_ids)
     load_history = perf_counter()
-    history = market_loader.market_history_by_region(region_id=region_id)
+    history = market_loader.market_histories(region_id=region_id)
     print(f"Loaded market history in {load_history - load_orders:.6f} seconds.")
     summarize_market_history(history=history, type_ids=industry_ids.type_ids)
 

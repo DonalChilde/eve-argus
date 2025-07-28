@@ -53,14 +53,14 @@ def region_market_types_from_esi(
 def region_market_orders_from_esi(
     region_id: int,
     paged_data: Sequence[Sequence[dict[str, Any]]],
-) -> EAM.MarketOrdersByRegion:
+) -> EAM.RegionalMarketOrders:
     """Import market orders for a specific region from a sequence of dictionaries."""
-    result = EAM.MarketOrdersByRegion(region_id=region_id, orders={})
+    result = EAM.RegionalMarketOrders(region_id=region_id, orders={})
     flattened_data = chain(*paged_data)
     for item in flattened_data:
-        order = EAM.MarketOrder(region_id=region_id, **item)
+        order = EAM.MarketOrderDetail(region_id=region_id, **item)
         if order.type_id not in result.orders:
-            result.orders[order.type_id] = EAM.MarketOrdersByType(
+            result.orders[order.type_id] = EAM.MarketOrders(
                 region_id=region_id, type_id=order.type_id
             )
         if order.is_buy_order:
@@ -74,12 +74,12 @@ def region_and_type_market_orders_from_esi(
     region_id: int,
     type_id: int,
     paged_data: Sequence[Sequence[dict[str, Any]]],
-) -> EAM.MarketOrdersByType:
+) -> EAM.MarketOrders:
     """Import market orders for a specific region and type from a sequence of dictionaries."""
-    result = EAM.MarketOrdersByType(region_id=region_id, type_id=type_id)
+    result = EAM.MarketOrders(region_id=region_id, type_id=type_id)
     flattened_data = chain(*paged_data)
     for item in flattened_data:
-        order = EAM.MarketOrder(region_id=region_id, **item)
+        order = EAM.MarketOrderDetail(region_id=region_id, **item)
         if order.is_buy_order:
             result.buy_orders.append(order)
         else:

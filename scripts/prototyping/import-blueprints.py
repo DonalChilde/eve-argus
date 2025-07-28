@@ -5,13 +5,16 @@
 from pathlib import Path
 from time import perf_counter
 
-from eve_argus.data_import.argus_data_file_loader import (
+from eve_argus.calculations.sde import import_blueprints
+from eve_argus.calculations.type_id import (
+    published_type_ids,
+    type_ids_used_in_blueprints,
+)
+from eve_argus.data_import.argus_data_file_reader import (
     ArgusFileReader,
     ArgusFileWriter,
     SdeLoader,
 )
-from eve_argus.util.argus import get_type_ids_used_in_blueprints, published_type_ids
-from eve_argus.util.sde import import_blueprints
 
 SDE_ROOT = Path.home() / "projects" / "eve-sde"
 EVE_ARGUS_DATA = Path.home() / "projects" / "eve-argus-data"
@@ -52,7 +55,7 @@ def main() -> None:
         if key not in published_ids:
             unpublished_bp += 1
     print(f"Found {unpublished_bp} unpublished blueprints.")
-    used_type_ids = get_type_ids_used_in_blueprints(loaded_bp)
+    used_type_ids = type_ids_used_in_blueprints(loaded_bp)
     unpublished_types = 0
     for type_id in used_type_ids:
         if type_id not in published_ids:

@@ -1,8 +1,5 @@
 """Utility functions for working with argus models."""
 
-from collections.abc import Iterable, Sequence
-from typing import Any
-
 from eve_argus.models import argus as EAM
 
 
@@ -28,7 +25,7 @@ def published_type_ids(type_dict: EAM.TypeInfos) -> EAM.TypeIDSubset:
     return result
 
 
-def get_type_ids_used_in_blueprints(
+def type_ids_used_in_blueprints(
     blueprints: EAM.Blueprints, published_type_ids: EAM.TypeIDSubset | None = None
 ) -> EAM.TypeIDSubset:
     type_ids: set[int] = set()
@@ -65,7 +62,7 @@ def get_type_ids_used_in_blueprints(
     return result
 
 
-def get_type_ids_possible_in_market(
+def type_ids_possible_in_market(
     eve_types: EAM.TypeInfos, filter_published: bool | None = True
 ) -> EAM.TypeIDSubset:
     """Get type IDs possible in the market from the SDE data."""
@@ -85,7 +82,7 @@ def get_type_ids_possible_in_market(
     )
 
 
-def get_type_ids_needed_for_industry_pricing(
+def type_ids_needed_for_industry_pricing(
     market_type_ids: EAM.TypeIDSubset,
     blueprint_type_ids: EAM.TypeIDSubset,
 ) -> EAM.TypeIDSubset:
@@ -98,7 +95,7 @@ def get_type_ids_needed_for_industry_pricing(
     )
 
 
-def get_type_ids_of_blueprints(
+def type_ids_of_blueprints(
     type_info: EAM.TypeInfos, groups: EAM.Groups
 ) -> EAM.TypeIDSubset:
     """Get type IDs of blueprints."""
@@ -113,44 +110,3 @@ def get_type_ids_of_blueprints(
         description="Type IDs of blueprints.",
         type_ids=type_ids,
     )
-
-
-def type_info_table(
-    type_info: EAM.TypeInfos,
-    meta_levels: EAM.MetaGroups,
-    groups: EAM.Groups,
-    categories: EAM.Categories,
-    market_groups: EAM.MarketGroups,
-    type_ids: Iterable[int] | None = None,
-) -> Sequence[dict[str, Any]]:
-    """Create a table of type information."""
-    table = []
-    if type_ids is None:
-        type_ids = type_info.data.keys()
-    for type_id in type_ids:
-        info = type_info.data[type_id]
-        meta = meta_levels.data.get(info.meta_group_id)
-        group = groups.data.get(info.group_id)
-        if group is not None:
-            category = categories.data.get(group.category_id)
-        else:
-            category = None
-        market_group = market_groups.data.get(info.market_group_id)
-
-        table.append(
-            {
-                "Type ID": type_id,
-                "Name": info.name,
-                "Meta Level": meta.name if meta else "N/A",
-                "Category": category.name if category else "N/A",
-                "Group": group.name if group else "N/A",
-                "Market Group": market_group.name if market_group else "N/A",
-                "Portion Size": info.portion_size,
-                "Capacity": info.capacity if info.capacity is not None else "N/A",
-                "Market Path": market_groups.path_string(
-                    market_group.path if market_group else [],
-                    separator="\\",
-                ),
-            }
-        )
-    return table

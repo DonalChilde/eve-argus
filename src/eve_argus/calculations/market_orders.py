@@ -1,3 +1,5 @@
+"""Functions for manipulating MarketOrders."""
+
 from collections.abc import Iterable, Sequence
 from itertools import chain
 from typing import Literal, TypedDict
@@ -6,12 +8,12 @@ from eve_argus.models import argus as EAM
 
 
 def filter_orders(
-    orders: Iterable[EAM.MarketOrder],
+    orders: Iterable[EAM.MarketOrderDetail],
     type_id: int | None,
     is_buy_order: bool | None,
     location_id: int | None,
     location_spec: Literal["region", "system", "station"] | None,
-) -> list[EAM.MarketOrder]:
+) -> list[EAM.MarketOrderDetail]:
     """Filter orders by type_id, is_buy_order, location_id, and location_spec.
 
     Args:
@@ -77,7 +79,7 @@ class OrderSummaryTD(TypedDict):
 
 
 def _calculate_order_summary_TD(
-    orders: Sequence[EAM.MarketOrder],
+    orders: Sequence[EAM.MarketOrderDetail],
     is_buy_summary: bool,
     filter_factor: float = 100.0,
 ) -> OrderSummaryTD:
@@ -121,7 +123,7 @@ def _calculate_order_summary_TD(
     filtered_items = sum(o.volume_remain for o in excluded_orders)
     filtered_orders = len(excluded_orders)
     five_percent_of_items = total_items * 0.05
-    five_percent_orders: list[EAM.MarketOrder] = []
+    five_percent_orders: list[EAM.MarketOrderDetail] = []
     items = 0
     for order in valid_orders:
         if items <= five_percent_of_items:
@@ -164,7 +166,7 @@ def _calculate_order_summary_TD(
 
 
 def calculate_order_summary(
-    orders: Iterable[EAM.MarketOrder],
+    orders: Iterable[EAM.MarketOrderDetail],
     filter_factor: float,
     type_id: int,
     location_id: int,
@@ -227,19 +229,31 @@ def calculate_order_summary(
 
 
 def calculate_order_summaries(
-    orders: EAM.MarketOrdersByRegion,
+    regional_orders: EAM.RegionalMarketOrders,
     location_id: int,
     location_spec: Literal["region", "system", "station"] = "region",
     type_ids: Iterable[int] | None = None,
     filter_factor: float = 100.0,
 ) -> EAM.MarketOrderSummaries:
+    """Calculate order summaries for a location.
+
+    Args:
+        regional_orders (EAM.RegionalMarketOrders): The market orders to summarize.
+        location_id (int): The ID of the location to summarize the orders for.
+        location_spec (Literal["region", "system", "station"]): The specification of the location.
+        type_ids (Iterable[int] | None): Optional list of type IDs to summarize. If None, all type IDs are summarized.
+        filter_factor (float): Factor to filter the orders by price.
+
+    Returns:
+        EAM.MarketOrderSummaries: The summaries of the market orders.
+    """
     result = EAM.MarketOrderSummaries(
         location_spec=location_spec, location_id=location_id, data={}
     )
     if type_ids is None:
-        type_ids = orders.orders.keys()
+        type_ids = regional_orders.orders.keys()
     for type_id in type_ids:
-        market_orders = orders.orders.get(type_id, None)
+        market_orders = regional_orders.orders.get(type_id, None)
         if market_orders is None:
             continue
         summary = calculate_order_summary(
