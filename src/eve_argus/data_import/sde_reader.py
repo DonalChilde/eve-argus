@@ -1,6 +1,7 @@
 """Entry point for SDE data imports."""
 
 import logging
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +20,17 @@ class SdeFilePaths:
     CATEGORIES = Path("fsd") / "categories.yaml"
 
 
-class SdeLoader:
+class SdeSpecifiers(StrEnum):
+    ALL = "all"
+    TYPES = "types"
+    BLUEPRINTS = "blueprints"
+    MARKET_GROUPS = "market_groups"
+    META_GROUPS = "meta_groups"
+    GROUPS = "groups"
+    CATEGORIES = "categories"
+
+
+class SdeReader:
     def __init__(self, sde_path: Path) -> None:
         """API to load files from the sde.
 
