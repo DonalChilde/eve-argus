@@ -5,6 +5,7 @@ from typing import Annotated
 
 import typer
 
+from eve_argus import CONFIG
 from eve_argus.cli.data_exports import app as exports_app
 from eve_argus.cli.data_imports import app as imports_app
 from eve_argus.cli.esi_requests import app as esi_app
@@ -22,22 +23,23 @@ def default_options(
     ctx.ensure_object(dict)
     ctx.obj["START_TIME"] = perf_counter_ns()
     ctx.obj["DEBUG"] = debug
-    typer.echo(f"Verbosity: {verbosity}")
     ctx.obj["VERBOSITY"] = verbosity
+    # Where to init EveArgus? here or in commands?
+    # Can i change the data paths for the app in the commands?
+    # Since each run of the cli tool is independent, I think it makes sense to
+    # initialize the class in the command, so that the option of independent action is there.
+
+    if ctx.obj["VERBOSITY"] > 1:
+        typer.echo("App configuration:")
+        typer.echo(f"{debug=}")
+        typer.echo(f"{verbosity=}")
+        typer.echo(f"{CONFIG=!r}")
 
 
 app = typer.Typer(callback=default_options)
 app.add_typer(exports_app, name="exports", help="Data exports commands.")
 app.add_typer(imports_app, name="imports", help="Data imports commands.")
 app.add_typer(esi_app, name="esi", help="ESI requests commands.")
-
-
-# @app.command()
-# def hash_md5(
-#     ctx: typer.Context, path_in: Annotated[Path, typer.Argument(help="file to hash.")]
-# ):
-#     hashcode = hash_file(path_in, md5())
-#     typer.echo(f"{hashcode}  {path_in.name}")
 
 
 if __name__ == "__main__":

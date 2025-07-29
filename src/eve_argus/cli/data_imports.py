@@ -1,15 +1,157 @@
+"""Cli commands for importing data."""
+
+from enum import Enum, StrEnum
 from pathlib import Path
-from typing import Annotated
+from time import perf_counter
+from typing import Annotated, Literal
 
 import typer
+
+from eve_argus import CONFIG
+from eve_argus.data_export.argus_data_file_writer import ArgusFileWriter
+from eve_argus.data_import import sde_to_argus as DI
+from eve_argus.data_import.sde_reader import SdeReader, SdeSpecifiers
 
 app = typer.Typer()
 
 
 @app.command()
 def sde(
-    ctx: typer.Context, path_in: Annotated[Path, typer.Argument(help="file to import.")]
+    ctx: typer.Context,
+    specifier: Annotated[
+        SdeSpecifiers, typer.Option(help="SDE specifier.")
+    ] = SdeSpecifiers.ALL,
+    sde_path: Annotated[Path, typer.Option(help="Path to the SDE files.")] = CONFIG[
+        "default_sde_path"
+    ],
+    path_out: Annotated[
+        Path, typer.Option(help="Directory to import SDE data to.")
+    ] = CONFIG["default_app_data_path"],
+    language: Annotated[
+        str,
+        typer.Option(
+            help="Two letter language code for localization. Other languages will be dropped."
+        ),
+    ] = "en",
 ):
     """Import SDE data from files."""
-    pass
-    # Placeholder for the actual import logic
+    typer.echo(
+        f"\nImporting `{specifier}` SDE data using:\n\tSDE path: {sde_path}\n\tOutput path: {path_out}"
+    )
+    sde_reader = SdeReader(sde_path)
+    argus_writer = ArgusFileWriter(path_out)
+    match specifier:
+        case SdeSpecifiers.ALL:
+            all(sde_reader, argus_writer)
+        case SdeSpecifiers.TYPES:
+            type_descriptions(sde_reader, argus_writer)
+        case SdeSpecifiers.BLUEPRINTS:
+            blueprints(sde_reader, argus_writer)
+        case SdeSpecifiers.MARKET_GROUPS:
+            market_groups(sde_reader, argus_writer)
+        case SdeSpecifiers.META_GROUPS:
+            meta_groups(sde_reader, argus_writer)
+        case SdeSpecifiers.GROUPS:
+            groups(sde_reader, argus_writer)
+        case SdeSpecifiers.CATEGORIES:
+            categories(sde_reader, argus_writer)
+        case _:
+            typer.echo(f"Unknown specifier: {specifier}")
+
+
+def type_descriptions(sde_reader: SdeReader, argus_writer: ArgusFileWriter) -> None:
+    """Get type descriptions from the SDE."""
+    typer.echo("\nImporting types...")
+    start = perf_counter()
+    sde_types = sde_reader.load_types()
+    typer.echo(f"Loaded {len(sde_types)} types from SDE.")
+    argus_types, argus_descriptions = DI.sde_types(sde_types)
+    argus_writer.type_info(argus_types)
+    argus_writer.type_description(argus_descriptions)
+    typer.echo(
+        f"Exported {len(argus_types.data)} types and {len(argus_descriptions.data)} "
+        f"descriptions. to {argus_writer.argus_path} in {perf_counter() - start:.6f} seconds."
+    )
+
+
+def blueprints(sde_reader: SdeReader, argus_writer: ArgusFileWriter) -> None:
+    """Get blueprints from the SDE."""
+    typer.echo("\nImporting blueprints...")
+    start = perf_counter()
+    sde_blueprints = sde_reader.load_blueprints()
+    typer.echo(f"Loaded {len(sde_blueprints)} blueprints from SDE.")
+    argus_blueprints = DI.blueprints(sde_blueprints)
+    argus_writer.blueprints(argus_blueprints)
+    typer.echo(
+        f"Exported {len(argus_blueprints.data)} blueprints to {argus_writer.argus_path} "
+        f"in {perf_counter() - start:.6f} seconds."
+    )
+
+
+def market_groups(sde_reader: SdeReader, argus_writer: ArgusFileWriter) -> None:
+    """Get market groups from the SDE."""
+    typer.echo("\nImporting market groups...")
+    start = perf_counter()
+    sde_market_groups = sde_reader.load_market_groups()
+    typer.echo(f"Loaded {len(sde_market_groups)} market groups from SDE.")
+    argus_market_groups = DI.market_groups(sde_market_groups)
+    argus_writer.market_groups(argus_market_groups)
+    typer.echo(
+        f"Exported {len(argus_market_groups.data)} market groups to {argus_writer.argus_path} "
+        f"in {perf_counter() - start:.6f} seconds."
+    )
+
+
+def meta_groups(sde_reader: SdeReader, argus_writer: ArgusFileWriter) -> None:
+    """Get meta groups from the SDE."""
+    typer.echo("\nImporting meta groups...")
+    start = perf_counter()
+    sde_meta_groups = sde_reader.load_meta_groups()
+    typer.echo(f"Loaded {len(sde_meta_groups)} meta groups from SDE.")
+    argus_meta_groups = DI.meta_groups(sde_meta_groups)
+    argus_writer.meta_groups(argus_meta_groups)
+    typer.echo(
+        f"Exported {len(argus_meta_groups.data)} meta groups to {argus_writer.argus_path} "
+        f"in {perf_counter() - start:.6f} seconds."
+    )
+
+
+def groups(sde_reader: SdeReader, argus_writer: ArgusFileWriter) -> None:
+    """Get groups from the SDE."""
+    typer.echo("\nImporting groups...")
+    start = perf_counter()
+    sde_groups = sde_reader.load_groups()
+    typer.echo(f"Loaded {len(sde_groups)} groups from SDE.")
+    argus_groups = DI.groups(sde_groups)
+    argus_writer.groups(argus_groups)
+    typer.echo(
+        f"Exported {len(argus_groups.data)} groups to {argus_writer.argus_path} "
+        f"in {perf_counter() - start:.6f} seconds."
+    )
+
+
+def categories(sde_reader: SdeReader, argus_writer: ArgusFileWriter) -> None:
+    """Get categories from the SDE."""
+    typer.echo("\nImporting categories...")
+    start = perf_counter()
+    sde_categories = sde_reader.load_categories()
+    typer.echo(f"Loaded {len(sde_categories)} categories from SDE.")
+    argus_categories = DI.categories(sde_categories)
+    argus_writer.categories(argus_categories)
+    typer.echo(
+        f"Exported {len(argus_categories.data)} categories to {argus_writer.argus_path} "
+        f"in {perf_counter() - start:.6f} seconds."
+    )
+
+
+def all(sde_reader: SdeReader, argus_writer: ArgusFileWriter) -> None:
+    """Import all SDE data."""
+    typer.echo("\nImporting all SDE data...")
+    start = perf_counter()
+    type_descriptions(sde_reader, argus_writer)
+    blueprints(sde_reader, argus_writer)
+    market_groups(sde_reader, argus_writer)
+    meta_groups(sde_reader, argus_writer)
+    groups(sde_reader, argus_writer)
+    categories(sde_reader, argus_writer)
+    typer.echo(f"\nAll SDE data imported in {perf_counter() - start:.6f} seconds.")
