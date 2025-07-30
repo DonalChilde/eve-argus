@@ -124,8 +124,25 @@ class EsiPublic:
         user_agent: str = "Eve Argus testing",
         debug: bool = False,
         debug_path: Path | None = None,
+        preston_client: preston.Preston | None = None,
     ) -> None:
-        self.preston = preston.Preston(user_agent=user_agent)
+        """Initialize the EsiPublic client.
+
+        The preston client downloads the swagger.json file on first request, and stores it
+        in client.spec, so this constructor will take some time on first use. A preconfigured
+        Preston client can be passed in to avoid this delay. To pre-configure another
+        Preston client, make a new client or copy a current client, then set the
+        new_client.spec = old_client.spec before first use of new_client.
+
+        Args:
+            user_agent (str): User agent for the ESI requests.
+            debug (bool): Whether to enable debug mode.
+            debug_path (Path | None): Path to save debug data.
+            preston_client (preston.Preston | None): Optional existing Preston client.
+        """
+        self.preston = (
+            preston_client if preston_client else preston.Preston(user_agent=user_agent)
+        )
         self.debug = debug
         self.debug_path = debug_path
         start = perf_counter()
