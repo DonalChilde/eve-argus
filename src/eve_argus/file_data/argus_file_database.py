@@ -3,8 +3,8 @@
 from pathlib import Path
 from typing import Any
 
-from eve_argus.data_export.argus_data_file_writer import ArgusFileWriter
-from eve_argus.data_import.argus_data_file_reader import ArgusFileReader
+from eve_argus.file_io.argus_data_file_reader import ArgusFileReader
+from eve_argus.file_io.argus_data_file_writer import ArgusFileWriter
 from eve_argus.models import argus as EAM
 
 # File based data point of entry
@@ -74,7 +74,7 @@ class ArgusData:
         """Set the type info data."""
         self._type_info = value
         self._update_manifest(value)
-        self.writer.type_info(value)
+        self.writer.type_infos(value)
 
     ########################## Dynamic data properties ############################
     @property

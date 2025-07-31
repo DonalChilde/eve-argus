@@ -7,7 +7,7 @@ from pathlib import Path
 from time import perf_counter
 
 from eve_argus.calculations import type_id as ARGUS_UTIL
-from eve_argus.data_import.argus_data_file_reader import (
+from eve_argus.file_io.argus_data_file_reader import (
     ArgusFileReader,
     ArgusFileWriter,
 )

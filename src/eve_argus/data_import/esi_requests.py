@@ -15,7 +15,7 @@ from uuid import uuid4
 
 import preston
 
-from eve_argus.data_import import esi_to_argus as DI
+from eve_argus.data_transform import esi_to_argus as DI
 from eve_argus.models import argus as EAM
 from eve_argus.models.esi import EsiRequest, EsiResponse
 from eve_argus.snippets.file.datetime_filename import file_safe_datetime_string

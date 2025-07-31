@@ -10,7 +10,7 @@ from eve_argus.calculations.type_id import (
     published_type_ids,
     type_ids_used_in_blueprints,
 )
-from eve_argus.data_import.argus_data_file_reader import (
+from eve_argus.file_io.argus_data_file_reader import (
     ArgusFileReader,
     ArgusFileWriter,
     SdeLoader,

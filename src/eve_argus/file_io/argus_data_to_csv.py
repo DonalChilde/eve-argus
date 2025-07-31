@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from time import perf_counter
 
-from eve_argus.config.argus_file_paths import ArgusFilePaths
+from eve_argus.file_io.argus_file_paths import ArgusFilePaths
 from eve_argus.models import argus as EAM
 from eve_argus.snippets.file.csv import write_dicts_to_csv
 
@@ -33,7 +33,7 @@ class ArgusCSVWriter:
             int: _description_
         """
         start = perf_counter()
-        path_out = self.argus_path / ArgusFilePaths.TYPE_INFO.with_suffix(".csv")
+        path_out = self.argus_path / Path(ArgusFilePaths.TYPE_INFO).with_suffix(".csv")
         data = (EAM.TypeInfo.model_dump(x) for x in type_info)
         count = write_dicts_to_csv(data=data, file_path=path_out, overwrite=overwrite)
         logger.info(
@@ -54,7 +54,9 @@ class ArgusCSVWriter:
             int: _description_
         """
         start = perf_counter()
-        path_out = self.argus_path / ArgusFilePaths.TYPE_DESCRIPTION.with_suffix(".csv")
+        path_out = self.argus_path / Path(ArgusFilePaths.TYPE_DESCRIPTION).with_suffix(
+            ".csv"
+        )
         data = (EAM.TypeDescription.model_dump(x) for x in type_description)
         count = write_dicts_to_csv(data=data, file_path=path_out, overwrite=overwrite)
         logger.info(

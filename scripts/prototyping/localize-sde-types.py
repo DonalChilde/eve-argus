@@ -8,7 +8,7 @@ from pathlib import Path
 from time import perf_counter
 
 from eve_argus.calculations.sde import import_sde_types
-from eve_argus.data_import.argus_data_file_reader import ArgusFileWriter, SdeLoader
+from eve_argus.file_io.argus_data_file_reader import ArgusFileWriter, SdeLoader
 
 SDE_ROOT = Path.home() / "projects" / "eve-sde"
 EVE_ARGUS_DATA = Path.home() / "projects" / "eve-argus-data"

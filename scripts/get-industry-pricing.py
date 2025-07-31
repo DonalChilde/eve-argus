@@ -8,11 +8,11 @@ from time import perf_counter
 
 from eve_argus.calculations.market_history import summarize_regional_market_history
 from eve_argus.calculations.market_orders import calculate_order_summaries
-from eve_argus.data_import.argus_data_file_reader import (
+from eve_argus.data_import.esi_requests import EsiPublic
+from eve_argus.file_io.argus_data_file_reader import (
     ArgusFileReader,
     ArgusFileWriter,
 )
-from eve_argus.data_import.esi_requests import EsiPublic
 from eve_argus.models import argus as EAM
 
 EVE_ARGUS_DATA = Path.home() / "projects" / "eve-argus-data"

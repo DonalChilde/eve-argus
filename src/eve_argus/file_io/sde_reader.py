@@ -39,7 +39,7 @@ class SdeReader:
         """
         self.sde_path = sde_path
 
-    def load_types(self) -> dict[int, dict[str, Any]]:
+    def types(self) -> dict[int, dict[str, Any]]:
         """Load type info from the sde.
 
         Returns:
@@ -50,7 +50,7 @@ class SdeReader:
             data = safe_load(file_in)
         return data
 
-    def load_blueprints(self) -> dict[int, dict[str, Any]]:
+    def blueprints(self) -> dict[int, dict[str, Any]]:
         """Load blueprints from the sde.
 
         Returns:
@@ -61,7 +61,7 @@ class SdeReader:
             data = safe_load(file_in)
         return data
 
-    def load_market_groups(self) -> dict[int, dict[str, Any]]:
+    def market_groups(self) -> dict[int, dict[str, Any]]:
         """Load market groups from sde.
 
         Returns:
@@ -72,19 +72,19 @@ class SdeReader:
             data = safe_load(file_in)
         return data
 
-    def load_meta_groups(self) -> dict[int, dict[str, Any]]:
+    def meta_groups(self) -> dict[int, dict[str, Any]]:
         path_in = self.sde_path / SdeFilePaths.META_GROUPS
         with open(path_in) as file_in:
             data = safe_load(file_in)
         return data
 
-    def load_groups(self) -> dict[int, dict[str, Any]]:
+    def groups(self) -> dict[int, dict[str, Any]]:
         path_in = self.sde_path / SdeFilePaths.GROUPS
         with open(path_in) as file_in:
             data = safe_load(file_in)
         return data
 
-    def load_categories(self) -> dict[int, dict[str, Any]]:
+    def categories(self) -> dict[int, dict[str, Any]]:
         path_in = self.sde_path / SdeFilePaths.CATEGORIES
         with open(path_in) as file_in:
             data = safe_load(file_in)

@@ -5,7 +5,7 @@ from pathlib import Path
 from string import Template
 from time import perf_counter
 
-from eve_argus.config.argus_file_paths import ArgusFilePaths
+from eve_argus.file_io.argus_file_paths import ArgusFilePaths
 from eve_argus.models import argus as EAM
 
 logger = logging.getLogger(__name__)
@@ -161,118 +161,118 @@ class ArgusFileReader:
         )
         return result
 
-    def type_ids_published(self) -> EAM.TypeIDSubset:
-        """Load published type IDs from JSON.
+    # def type_ids_published(self) -> EAM.TypeIDSubset:
+    #     """Load published type IDs from JSON.
 
-        Returns:
-            EAM.TypeIDSubset: The published type IDs data.
-        """
-        start = perf_counter()
-        path_in = self.argus_path / ArgusFilePaths.TYPE_IDS_PUBLISHED
-        result = EAM.TypeIDSubset.model_validate_json(path_in.read_text())
-        logger.info(
-            "Loaded data from %s in %s seconds",
-            path_in,
-            f"{perf_counter() - start:.6f}",
-        )
-        return result
+    #     Returns:
+    #         EAM.TypeIDSubset: The published type IDs data.
+    #     """
+    #     start = perf_counter()
+    #     path_in = self.argus_path / ArgusFilePaths.TYPE_IDS_PUBLISHED
+    #     result = EAM.TypeIDSubset.model_validate_json(path_in.read_text())
+    #     logger.info(
+    #         "Loaded data from %s in %s seconds",
+    #         path_in,
+    #         f"{perf_counter() - start:.6f}",
+    #     )
+    #     return result
 
-    def type_ids_in_blueprints(self) -> EAM.TypeIDSubset:
-        """Load type IDs that are used in blueprints from JSON.
+    # def type_ids_in_blueprints(self) -> EAM.TypeIDSubset:
+    #     """Load type IDs that are used in blueprints from JSON.
 
-        Returns:
-            EAM.TypeIDSubset: The type IDs used in blueprints data.
-        """
-        start = perf_counter()
-        path_in = self.argus_path / ArgusFilePaths.TYPE_IDS_IN_BLUEPRINTS
-        result = EAM.TypeIDSubset.model_validate_json(path_in.read_text())
-        logger.info(
-            "Loaded data from %s in %s seconds",
-            path_in,
-            f"{perf_counter() - start:.6f}",
-        )
-        return result
+    #     Returns:
+    #         EAM.TypeIDSubset: The type IDs used in blueprints data.
+    #     """
+    #     start = perf_counter()
+    #     path_in = self.argus_path / ArgusFilePaths.TYPE_IDS_IN_BLUEPRINTS
+    #     result = EAM.TypeIDSubset.model_validate_json(path_in.read_text())
+    #     logger.info(
+    #         "Loaded data from %s in %s seconds",
+    #         path_in,
+    #         f"{perf_counter() - start:.6f}",
+    #     )
+    #     return result
 
-    def type_ids_in_market(self) -> EAM.TypeIDSubset:
-        """Load type IDs that are possible in the market from JSON.
+    # def type_ids_in_market(self) -> EAM.TypeIDSubset:
+    #     """Load type IDs that are possible in the market from JSON.
 
-        Returns:
-            EAM.TypeIDSubset: The type IDs possible in the market data.
-        """
-        start = perf_counter()
-        path_in = self.argus_path / ArgusFilePaths.TYPE_IDS_IN_MARKET
-        result = EAM.TypeIDSubset.model_validate_json(path_in.read_text())
-        logger.info(
-            "Loaded data from %s in %s seconds",
-            path_in,
-            f"{perf_counter() - start:.6f}",
-        )
-        return result
+    #     Returns:
+    #         EAM.TypeIDSubset: The type IDs possible in the market data.
+    #     """
+    #     start = perf_counter()
+    #     path_in = self.argus_path / ArgusFilePaths.TYPE_IDS_IN_MARKET
+    #     result = EAM.TypeIDSubset.model_validate_json(path_in.read_text())
+    #     logger.info(
+    #         "Loaded data from %s in %s seconds",
+    #         path_in,
+    #         f"{perf_counter() - start:.6f}",
+    #     )
+    #     return result
 
-    def type_ids_for_industry_pricing(self) -> EAM.TypeIDSubset:
-        """Load type IDs that are needed for industry pricing from JSON.
+    # def type_ids_for_industry_pricing(self) -> EAM.TypeIDSubset:
+    #     """Load type IDs that are needed for industry pricing from JSON.
 
-        Returns:
-            EAM.TypeIDSubset: The type IDs needed for industry pricing data.
-        """
-        start = perf_counter()
-        path_in = self.argus_path / ArgusFilePaths.TYPE_IDS_FOR_INDUSTRY_PRICING
-        result = EAM.TypeIDSubset.model_validate_json(path_in.read_text())
-        logger.info(
-            "Loaded data from %s in %s seconds",
-            path_in,
-            f"{perf_counter() - start:.6f}",
-        )
-        return result
+    #     Returns:
+    #         EAM.TypeIDSubset: The type IDs needed for industry pricing data.
+    #     """
+    #     start = perf_counter()
+    #     path_in = self.argus_path / ArgusFilePaths.TYPE_IDS_FOR_INDUSTRY_PRICING
+    #     result = EAM.TypeIDSubset.model_validate_json(path_in.read_text())
+    #     logger.info(
+    #         "Loaded data from %s in %s seconds",
+    #         path_in,
+    #         f"{perf_counter() - start:.6f}",
+    #     )
+    #     return result
 
-    def market_history(self, region_id: int, type_id: int) -> EAM.MarketHistory:
-        """Load market history for a specific region and type from JSON.
+    # def market_history(self, region_id: int, type_id: int) -> EAM.MarketHistory:
+    #     """Load market history for a specific region and type from JSON.
 
-        Args:
-            region_id (int): The ID of the region.
-            type_id (int): The ID of the type.
+    #     Args:
+    #         region_id (int): The ID of the region.
+    #         type_id (int): The ID of the type.
 
-        Returns:
-            EAM.MarketHistory: The market history data for the specified region and type.
-        """
-        start = perf_counter()
-        path_in = (
-            self.argus_path
-            / ArgusFilePaths.ESI_DATA
-            / Template(ArgusFilePaths.MARKET_HISTORY).substitute(
-                region_id=region_id, type_id=type_id
-            )
-        )
-        result = EAM.MarketHistory.model_validate_json(path_in.read_text())
-        logger.info(
-            "Loaded data from %s in %s seconds",
-            path_in,
-            f"{perf_counter() - start:.6f}",
-        )
-        return result
+    #     Returns:
+    #         EAM.MarketHistory: The market history data for the specified region and type.
+    #     """
+    #     start = perf_counter()
+    #     path_in = (
+    #         self.argus_path
+    #         / ArgusFilePaths.ESI_DATA
+    #         / Template(ArgusFilePaths.MARKET_HISTORY).substitute(
+    #             region_id=region_id, type_id=type_id
+    #         )
+    #     )
+    #     result = EAM.MarketHistory.model_validate_json(path_in.read_text())
+    #     logger.info(
+    #         "Loaded data from %s in %s seconds",
+    #         path_in,
+    #         f"{perf_counter() - start:.6f}",
+    #     )
+    #     return result
 
-    def market_histories(self, region_id: int) -> EAM.MarketHistories:
-        """Load market history for a specific region from JSON.
+    # def market_histories(self, region_id: int) -> EAM.MarketHistories:
+    #     """Load market history for a specific region from JSON.
 
-        Args:
-            region_id (int): The ID of the region.
+    #     Args:
+    #         region_id (int): The ID of the region.
 
-        Returns:
-            EAM.RegionalMarketHistory: The market history data for the specified region.
-        """
-        start = perf_counter()
-        path_in = (
-            self.argus_path
-            / ArgusFilePaths.ESI_DATA
-            / Template(ArgusFilePaths.MARKET_HISTORIES).substitute(region_id=region_id)
-        )
-        result = EAM.MarketHistories.model_validate_json(path_in.read_text())
-        logger.info(
-            "Loaded data from %s in %s seconds",
-            path_in,
-            f"{perf_counter() - start:.6f}",
-        )
-        return result
+    #     Returns:
+    #         EAM.RegionalMarketHistory: The market history data for the specified region.
+    #     """
+    #     start = perf_counter()
+    #     path_in = (
+    #         self.argus_path
+    #         / ArgusFilePaths.ESI_DATA
+    #         / Template(ArgusFilePaths.MARKET_HISTORIES).substitute(region_id=region_id)
+    #     )
+    #     result = EAM.MarketHistories.model_validate_json(path_in.read_text())
+    #     logger.info(
+    #         "Loaded data from %s in %s seconds",
+    #         path_in,
+    #         f"{perf_counter() - start:.6f}",
+    #     )
+    #     return result
 
     def regional_market_orders(self, region_id: int) -> EAM.RegionalMarketOrders:
         """Load market orders for a specific region from JSON.

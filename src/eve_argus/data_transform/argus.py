@@ -13,7 +13,7 @@ def type_id_subsets(
     )
     published_blueprints = EAM.TypeIDSubset(
         description="published blueprints",
-        type_ids=published_blueprints_type_ids(type_info=type_infos, groups=groups),
+        type_ids=published_blueprints_type_ids(type_info=type_infos),
     )
     manufacturing_materials = EAM.TypeIDSubset(
         description="manufacturing materials",
@@ -92,18 +92,12 @@ def published_type_ids(type_info: EAM.TypeInfos) -> set[int]:
     }
 
 
-def published_blueprints_type_ids(
-    type_info: EAM.TypeInfos, groups: EAM.Groups
-) -> set[int]:
+def published_blueprints_type_ids(type_info: EAM.TypeInfos) -> set[int]:
     """Get a set of type IDs that are blueprints from TypeInfos."""
     result: set[int] = set()
     for type_id, type_data in type_info.data.items():
-        if type_data.group_id is not None:
-            group = groups.data.get(type_data.group_id)
-            if (
-                group is not None and group.category_id == 9
-            ):  # Category ID for blueprints
-                result.add(type_id)
+        if type_data.category_id == 9:  # Category ID for blueprints
+            result.add(type_id)
     return result
 
 

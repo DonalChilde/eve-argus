@@ -5,7 +5,7 @@ from enum import Enum, StrEnum
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class DataTypes(StrEnum):
@@ -179,12 +179,16 @@ class Activity_Name(Enum):
 
 class Material(BaseModel):
     quantity: int
-    type_id: int
+    type_id: int = Field(
+        validation_alias="typeID", description="The type ID of the material."
+    )
 
 
 class Skill(BaseModel):
     level: int
-    type_id: int
+    type_id: int = Field(
+        validation_alias="typeID", description="The type ID of the material."
+    )
 
 
 class Activity(BaseModel):
@@ -220,6 +224,8 @@ class TypeInfo(BaseModel):
     type_id: int
     group_id: int | None
     """The group ID of the item, None if not available."""
+    category_id: int | None
+    """The category ID of the item, None if not available."""
     market_group_id: int | None
     meta_group_id: int | None
     graphic_id: int | None

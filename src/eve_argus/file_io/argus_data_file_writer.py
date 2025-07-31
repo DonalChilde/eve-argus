@@ -8,7 +8,7 @@ from pathlib import Path
 from string import Template
 from time import perf_counter
 
-from eve_argus.config.argus_file_paths import ArgusFilePaths
+from eve_argus.file_io.argus_file_paths import ArgusFilePaths
 from eve_argus.models import argus as EAM
 from eve_argus.snippets.file.validate_file_out import validate_file_out
 
@@ -42,7 +42,7 @@ class ArgusFileWriter:
         )
         return path_out
 
-    def type_info(self, type_infos: EAM.TypeInfos, overwrite: bool = True) -> Path:
+    def type_infos(self, type_infos: EAM.TypeInfos, overwrite: bool = True) -> Path:
         """Save type information to JSON.
 
         Args:
@@ -61,7 +61,7 @@ class ArgusFileWriter:
         )
         return path_out
 
-    def type_description(
+    def type_descriptions(
         self, type_descriptions: EAM.TypeDescriptions, overwrite: bool = True
     ) -> Path:
         """Save type descriptions to JSON.
@@ -205,68 +205,68 @@ class ArgusFileWriter:
         )
         return path_out
 
-    def market_history(
-        self,
-        region_id: int,
-        type_id: int,
-        market_history: EAM.MarketHistory,
-        overwrite: bool = True,
-    ) -> Path:
-        """Save market history for a specific region and type to JSON.
+    # def market_history(
+    #     self,
+    #     region_id: int,
+    #     type_id: int,
+    #     market_history: EAM.MarketHistory,
+    #     overwrite: bool = True,
+    # ) -> Path:
+    #     """Save market history for a specific region and type to JSON.
 
-        Args:
-            region_id (int): The ID of the region.
-            type_id (int): The ID of the type.
-            market_history (EAM.MarketHistory): The market history data to save.
-            overwrite (bool, optional): Whether to overwrite existing files. Defaults to True.
+    #     Args:
+    #         region_id (int): The ID of the region.
+    #         type_id (int): The ID of the type.
+    #         market_history (EAM.MarketHistory): The market history data to save.
+    #         overwrite (bool, optional): Whether to overwrite existing files. Defaults to True.
 
-        Returns:
-            Path: The path to the saved JSON file.
-        """
-        start = perf_counter()
-        path_out = (
-            self.argus_path
-            / ArgusFilePaths.ESI_DATA
-            / Template(ArgusFilePaths.MARKET_HISTORY).substitute(
-                region_id=region_id, type_id=type_id
-            )
-        )
+    #     Returns:
+    #         Path: The path to the saved JSON file.
+    #     """
+    #     start = perf_counter()
+    #     path_out = (
+    #         self.argus_path
+    #         / ArgusFilePaths.ESI_DATA
+    #         / Template(ArgusFilePaths.MARKET_HISTORY).substitute(
+    #             region_id=region_id, type_id=type_id
+    #         )
+    #     )
 
-        validate_file_out(file_path=path_out, overwrite=overwrite)
-        path_out.write_text(market_history.model_dump_json(indent=2))
-        logger.info(
-            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
-        )
-        return path_out
+    #     validate_file_out(file_path=path_out, overwrite=overwrite)
+    #     path_out.write_text(market_history.model_dump_json(indent=2))
+    #     logger.info(
+    #         "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+    #     )
+    #     return path_out
 
-    def market_histories(
-        self,
-        market_history: EAM.MarketHistories,
-        overwrite: bool = True,
-    ) -> Path:
-        """Save regional market history to JSON.
+    # def market_histories(
+    #     self,
+    #     market_history: EAM.MarketHistories,
+    #     overwrite: bool = True,
+    # ) -> Path:
+    #     """Save regional market history to JSON.
 
-        Args:
-            market_history (EAM.RegionalMarketHistory): The regional market history data to save.
-            overwrite (bool, optional): Whether to overwrite existing files. Defaults to True.
+    #     Args:
+    #         market_history (EAM.RegionalMarketHistory): The regional market history data to save.
+    #         overwrite (bool, optional): Whether to overwrite existing files. Defaults to True.
 
-        Returns:
-            Path: The path to the saved JSON file.
-        """
-        start = perf_counter()
-        region_id = market_history.region_id
-        path_out = (
-            self.argus_path
-            / ArgusFilePaths.ESI_DATA
-            / Template(ArgusFilePaths.MARKET_HISTORIES).substitute(region_id=region_id)
-        )
+    #     Returns:
+    #         Path: The path to the saved JSON file.
+    #     """
+    #     start = perf_counter()
+    #     region_id = market_history.region_id
+    #     path_out = (
+    #         self.argus_path
+    #         / ArgusFilePaths.ESI_DATA
+    #         / Template(ArgusFilePaths.MARKET_HISTORIES).substitute(region_id=region_id)
+    #     )
 
-        validate_file_out(file_path=path_out, overwrite=overwrite)
-        path_out.write_text(market_history.model_dump_json(indent=2))
-        logger.info(
-            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
-        )
-        return path_out
+    #     validate_file_out(file_path=path_out, overwrite=overwrite)
+    #     path_out.write_text(market_history.model_dump_json(indent=2))
+    #     logger.info(
+    #         "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+    #     )
+    #     return path_out
 
     def region_market_types(
         self,
@@ -358,89 +358,89 @@ class ArgusFileWriter:
         )
         return path_out
 
-    def type_ids_published(
-        self, type_ids: EAM.TypeIDSubset, overwrite: bool = True
-    ) -> Path:
-        """Save type IDs that are published to JSON.
+    # def type_ids_published(
+    #     self, type_ids: EAM.TypeIDSubset, overwrite: bool = True
+    # ) -> Path:
+    #     """Save type IDs that are published to JSON.
 
-        Args:
-            type_ids (EAM.TypeIDSubset): The type IDs to save.
-            overwrite (bool, optional): Whether to overwrite existing files. Defaults to True.
+    #     Args:
+    #         type_ids (EAM.TypeIDSubset): The type IDs to save.
+    #         overwrite (bool, optional): Whether to overwrite existing files. Defaults to True.
 
-        Returns:
-            Path: The path to the saved JSON file.
-        """
-        start = perf_counter()
-        path_out = self.argus_path / ArgusFilePaths.TYPE_IDS_PUBLISHED
-        validate_file_out(file_path=path_out, overwrite=overwrite)
-        path_out.write_text(type_ids.model_dump_json(indent=2))
-        logger.info(
-            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
-        )
-        return path_out
+    #     Returns:
+    #         Path: The path to the saved JSON file.
+    #     """
+    #     start = perf_counter()
+    #     path_out = self.argus_path / ArgusFilePaths.TYPE_IDS_PUBLISHED
+    #     validate_file_out(file_path=path_out, overwrite=overwrite)
+    #     path_out.write_text(type_ids.model_dump_json(indent=2))
+    #     logger.info(
+    #         "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+    #     )
+    #     return path_out
 
-    def type_ids_in_blueprints(
-        self, type_ids: EAM.TypeIDSubset, overwrite: bool = True
-    ) -> Path:
-        """Save type IDs in blueprints to JSON.
+    # def type_ids_in_blueprints(
+    #     self, type_ids: EAM.TypeIDSubset, overwrite: bool = True
+    # ) -> Path:
+    #     """Save type IDs in blueprints to JSON.
 
-        Args:
-            type_ids (EAM.TypeIDSubset): The type IDs to save.
-            overwrite (bool, optional): Whether to overwrite existing files. Defaults to True.
+    #     Args:
+    #         type_ids (EAM.TypeIDSubset): The type IDs to save.
+    #         overwrite (bool, optional): Whether to overwrite existing files. Defaults to True.
 
-        Returns:
-            Path: The path to the saved JSON file.
-        """
-        start = perf_counter()
-        path_out = self.argus_path / ArgusFilePaths.TYPE_IDS_IN_BLUEPRINTS
-        validate_file_out(file_path=path_out, overwrite=overwrite)
-        path_out.write_text(type_ids.model_dump_json(indent=2))
-        logger.info(
-            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
-        )
-        return path_out
+    #     Returns:
+    #         Path: The path to the saved JSON file.
+    #     """
+    #     start = perf_counter()
+    #     path_out = self.argus_path / ArgusFilePaths.TYPE_IDS_IN_BLUEPRINTS
+    #     validate_file_out(file_path=path_out, overwrite=overwrite)
+    #     path_out.write_text(type_ids.model_dump_json(indent=2))
+    #     logger.info(
+    #         "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+    #     )
+    #     return path_out
 
-    def type_ids_in_market(
-        self, type_ids: EAM.TypeIDSubset, overwrite: bool = True
-    ) -> Path:
-        """Save type IDs in market to JSON.
+    # def type_ids_in_market(
+    #     self, type_ids: EAM.TypeIDSubset, overwrite: bool = True
+    # ) -> Path:
+    #     """Save type IDs in market to JSON.
 
-        Args:
-            type_ids (EAM.TypeIDSubset): The type IDs to save.
-            overwrite (bool, optional): Whether to overwrite existing files. Defaults to True.
+    #     Args:
+    #         type_ids (EAM.TypeIDSubset): The type IDs to save.
+    #         overwrite (bool, optional): Whether to overwrite existing files. Defaults to True.
 
-        Returns:
-            Path: The path to the saved JSON file.
-        """
-        start = perf_counter()
-        path_out = self.argus_path / ArgusFilePaths.TYPE_IDS_IN_MARKET
-        validate_file_out(file_path=path_out, overwrite=overwrite)
-        path_out.write_text(type_ids.model_dump_json(indent=2))
-        logger.info(
-            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
-        )
-        return path_out
+    #     Returns:
+    #         Path: The path to the saved JSON file.
+    #     """
+    #     start = perf_counter()
+    #     path_out = self.argus_path / ArgusFilePaths.TYPE_IDS_IN_MARKET
+    #     validate_file_out(file_path=path_out, overwrite=overwrite)
+    #     path_out.write_text(type_ids.model_dump_json(indent=2))
+    #     logger.info(
+    #         "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+    #     )
+    #     return path_out
 
-    def type_ids_for_industry_pricing(
-        self, type_ids: EAM.TypeIDSubset, overwrite: bool = True
-    ) -> Path:
-        """Save type IDs for industry pricing to JSON.
+    # def type_ids_for_industry_pricing(
+    #     self, type_ids: EAM.TypeIDSubset, overwrite: bool = True
+    # ) -> Path:
+    #     """Save type IDs for industry pricing to JSON.
 
-        Args:
-            type_ids (EAM.TypeIDSubset): The type IDs to save.
-            overwrite (bool, optional): Whether to overwrite existing files. Defaults to True.
+    #     Args:
+    #         type_ids (EAM.TypeIDSubset): The type IDs to save.
+    #         overwrite (bool, optional): Whether to overwrite existing files. Defaults to True.
 
-        Returns:
-            Path: The path to the saved JSON file.
-        """
-        start = perf_counter()
-        path_out = self.argus_path / ArgusFilePaths.TYPE_IDS_FOR_INDUSTRY_PRICING
-        validate_file_out(file_path=path_out, overwrite=overwrite)
-        path_out.write_text(type_ids.model_dump_json(indent=2))
-        logger.info(
-            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
-        )
-        return path_out
+    #     Returns:
+    #         Path: The path to the saved JSON file.
+    #     """
+    #     start = perf_counter()
+    #     path_out = self.argus_path / ArgusFilePaths.TYPE_IDS_FOR_INDUSTRY_PRICING
+    #     validate_file_out(file_path=path_out, overwrite=overwrite)
+    #     path_out.write_text(type_ids.model_dump_json(indent=2))
+    #     logger.info(
+    #         "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+    #     )
+    #     return path_out
 
     def market_history_summaries(
         self,
@@ -507,3 +507,6 @@ class ArgusFileWriter:
             "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
         )
         return path_out
+
+
+# FIXME refactor typeidsubset, unused markethistory.
