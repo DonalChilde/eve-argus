@@ -1,11 +1,21 @@
 """Models for the Eve Argus app."""
 
 from collections.abc import Sequence
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel
+
+
+class DataTypes(StrEnum):
+    """Data types for Argus."""
+
+    # This is to enable different actions based on the type of data
+    ## e.g. different expiration times for market history vs market pricing.
+    type1 = "type1"
+    type2 = "type2"
+    type3 = "type3"
 
 
 class TypeIDSubset(BaseModel):
@@ -61,24 +71,24 @@ class MarketHistoryDetail(BaseModel):
     volume: int
 
 
-class MarketHistory(BaseModel):
-    """Market history for a specific region and type."""
+# class MarketHistory(BaseModel):
+#     """Market history for a specific region and type."""
 
-    region_id: int
-    """The region ID where the market history is located."""
-    type_id: int
-    """The type ID of the item."""
-    data: Sequence[MarketHistoryDetail]
-    """A sequence of market history records."""
+#     region_id: int
+#     """The region ID where the market history is located."""
+#     type_id: int
+#     """The type ID of the item."""
+#     data: Sequence[MarketHistoryDetail]
+#     """A sequence of market history records."""
 
 
-class MarketHistories(BaseModel):
-    """A collection model for market history by region."""
+# class MarketHistories(BaseModel):
+#     """A collection model for market history by region."""
 
-    region_id: int
-    """The region ID where the market history is located."""
-    data: dict[int, MarketHistory] = {}
-    """A dictionary mapping type IDs to MarketHistory records."""
+#     region_id: int
+#     """The region ID where the market history is located."""
+#     data: dict[int, MarketHistory] = {}
+#     """A dictionary mapping type IDs to MarketHistory records."""
 
 
 class MarketHistorySummary(BaseModel):
@@ -95,16 +105,18 @@ class MarketHistorySummary(BaseModel):
     lowest: float
     order_count: int
     volume: float
+    generated: str
+    """The UTC datetime the summary was generated, in ISO 8601 format."""
 
 
-class MarketHistorySummaries(BaseModel):
-    """A collection model to make serialization faster."""
+# class MarketHistorySummaries(BaseModel):
+#     """A collection model to make serialization faster."""
 
-    # TODO consider making this hold only one period? Or, put period as first key.
-    region_id: int
-    """The region ID where the market history summaries are located."""
-    data: dict[int, dict[int, MarketHistorySummary]] = {}
-    """A dictionary mapping type IDs to market history summaries indexed by time period."""
+#     # TODO consider making this hold only one period? Or, put period as first key.
+#     region_id: int
+#     """The region ID where the market history summaries are located."""
+#     data: dict[int, dict[int, MarketHistorySummary]] = {}
+#     """A dictionary mapping type IDs to market history summaries indexed by time period."""
 
 
 class Activity_Name(Enum):
