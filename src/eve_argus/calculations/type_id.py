@@ -33,23 +33,23 @@ def type_ids_used_in_blueprints(
         type_ids.add(blueprint.blueprintTypeID)
         if blueprint.activities.copying:
             for material in blueprint.activities.copying.materials:
-                type_ids.add(material.typeID)
+                type_ids.add(material.type_id)
         if blueprint.activities.invention:
             for material in blueprint.activities.invention.materials:
-                type_ids.add(material.typeID)
+                type_ids.add(material.type_id)
             for material in blueprint.activities.invention.products:
-                type_ids.add(material.typeID)
+                type_ids.add(material.type_id)
         if blueprint.activities.manufacturing:
             for material in blueprint.activities.manufacturing.materials:
-                type_ids.add(material.typeID)
+                type_ids.add(material.type_id)
             for material in blueprint.activities.manufacturing.products:
-                type_ids.add(material.typeID)
+                type_ids.add(material.type_id)
         if blueprint.activities.research_material:
             for material in blueprint.activities.research_material.materials:
-                type_ids.add(material.typeID)
+                type_ids.add(material.type_id)
         if blueprint.activities.research_time:
             for material in blueprint.activities.research_time.materials:
-                type_ids.add(material.typeID)
+                type_ids.add(material.type_id)
     if published_type_ids is not None:
         type_ids = type_ids.intersection(published_type_ids.type_ids)
         descriptor = "Type IDs used in blueprints, filtered by published types."

@@ -27,10 +27,11 @@ class ArgusFilePaths(StrEnum):
     META_GROUPS = "meta-groups.json"
     GROUPS = "groups.json"
     CATEGORIES = "categories.json"
-    TYPE_IDS_PUBLISHED = "type-ids-published.json"  # FIXME No longer required?
-    TYPE_IDS_IN_BLUEPRINTS = "type-ids-in-blueprints.json"
-    TYPE_IDS_IN_MARKET = "type-ids-in-market.json"
-    TYPE_IDS_FOR_INDUSTRY_PRICING = "type-ids-for-industry-pricing.json"
+    TYPE_ID_SUBSETS = "type-id-subsets.json"
+    # TYPE_IDS_PUBLISHED = "type-ids-published.json"  # FIXME No longer required?
+    # TYPE_IDS_IN_BLUEPRINTS = "type-ids-in-blueprints.json"
+    # TYPE_IDS_IN_MARKET = "type-ids-in-market.json"
+    # TYPE_IDS_FOR_INDUSTRY_PRICING = "type-ids-for-industry-pricing.json"
 
     ################
     # Dynamic data #

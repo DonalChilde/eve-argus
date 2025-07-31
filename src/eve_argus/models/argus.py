@@ -17,6 +17,8 @@ class DataTypes(StrEnum):
     RegionalMarketOrders = "regional_market_orders"
     MarketOrderSummaries = "market_order_summaries"
     SystemCostIndices = "system_cost_indices"
+    TypeIDSubsets = "type_id_subsets"
+    Static = "static"
 
 
 class TopLevelDataSet(BaseModel):
@@ -61,13 +63,14 @@ class TypeIDSubsets(TopLevelDataSet):
     reaction_materials: TypeIDSubset
     """The type_ids of published items that can be used as reaction materials."""
     research_materials: TypeIDSubset
-    """The type_ids of published items that can be used as research materials."""
-    market_industry: TypeIDSubset
-    """The type_ids of published items that exist in the market and are used in industry activities."""
+    """The type_ids of published items that can be used as research materials for TE or ME."""
     manufacturing_products: TypeIDSubset
     """The type_ids of published items that can be manufactured."""
     reaction_products: TypeIDSubset
     """The type_ids of published items that can be produced by reactions."""
+    industry_related: TypeIDSubset
+    """A union of all type_ids that are related to industry activities."""
+
     types_in_market: TypeIDSubset
     """The type_ids of published items that exist in the market."""
 
@@ -176,12 +179,12 @@ class Activity_Name(Enum):
 
 class Material(BaseModel):
     quantity: int
-    typeID: int
+    type_id: int
 
 
 class Skill(BaseModel):
     level: int
-    typeID: int
+    type_id: int
 
 
 class Activity(BaseModel):
@@ -216,6 +219,7 @@ class TypeInfo(BaseModel):
     name: str
     type_id: int
     group_id: int | None
+    """The group ID of the item, None if not available."""
     market_group_id: int | None
     meta_group_id: int | None
     graphic_id: int | None
