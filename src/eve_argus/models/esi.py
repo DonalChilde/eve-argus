@@ -3,7 +3,10 @@
 from dataclasses import dataclass, field
 from typing import Any
 
+from pydantic import BaseModel
 
+
+# TODO change these to BaseModel, and use DebugRequest class for serialization.
 @dataclass(slots=True)
 class EsiRequest:
     """Base class for ESI requests."""
@@ -18,3 +21,12 @@ class EsiResponse:
 
     headers: dict[str, Any] = field(default_factory=dict)
     data: Any = None
+
+
+class DebugRequest(BaseModel):
+    """A request and response for debugging and serializing purposes."""
+
+    request: EsiRequest
+    """The ESI request being made."""
+    response: EsiResponse
+    """The ESI response received."""
