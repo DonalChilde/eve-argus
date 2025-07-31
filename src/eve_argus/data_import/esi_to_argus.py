@@ -28,16 +28,12 @@ def market_history(
     region_id: int,
     type_id: int,
     data: Sequence[dict[str, Any]],
-) -> EAM.MarketHistory:
+) -> Sequence[EAM.MarketHistoryDetail]:
     """Import market history for a specific region and type from esi response."""
-    result = EAM.MarketHistory(
-        region_id=region_id,
-        type_id=type_id,
-        data=[
-            EAM.MarketHistoryDetail(region_id=region_id, type_id=type_id, **x)
-            for x in data
-        ],
-    )
+    result = [
+        EAM.MarketHistoryDetail(region_id=region_id, type_id=type_id, **x) for x in data
+    ]
+
     return result
 
 
@@ -55,7 +51,15 @@ def region_market_orders_from_esi(
     paged_data: Sequence[Sequence[dict[str, Any]]],
 ) -> EAM.RegionalMarketOrders:
     """Import market orders for a specific region from a sequence of dictionaries."""
-    result = EAM.RegionalMarketOrders(region_id=region_id, orders={})
+    result = EAM.RegionalMarketOrders(
+        data_set_id=uuid4(),
+        effective_date=datetime.now(UTC).isoformat(),
+        data_type=EAM.DataTypes.RegionalMarketOrders,
+        description=f"Regional market orders for {region_id}",
+        data_source=None,
+        region_id=region_id,
+        orders={},
+    )
     flattened_data = chain(*paged_data)
     for item in flattened_data:
         order = EAM.MarketOrderDetail(region_id=region_id, **item)
@@ -93,7 +97,10 @@ def system_cost_indices_from_esi(
     """Import system cost indices from a sequence of dictionaries."""
     result = EAM.SystemCostIndices(
         data_set_id=uuid4(),
-        date=datetime.now(UTC).isoformat(),
+        effective_date=datetime.now(UTC).isoformat(),
+        data_type=EAM.DataTypes.SystemCostIndices,
+        description="System cost indices",
+        data_source=None,
         data={},
     )
 

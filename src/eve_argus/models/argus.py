@@ -13,9 +13,25 @@ class DataTypes(StrEnum):
 
     # This is to enable different actions based on the type of data
     ## e.g. different expiration times for market history vs market pricing.
-    type1 = "type1"
-    type2 = "type2"
-    type3 = "type3"
+    UniverseMarketPrices = "universe_market_prices"
+    RegionalMarketOrders = "regional_market_orders"
+    MarketOrderSummaries = "market_order_summaries"
+    SystemCostIndices = "system_cost_indices"
+
+
+class TopLevelDataSet(BaseModel):
+    """A top-level data set model for Argus."""
+
+    data_set_id: UUID
+    """The unique identifier for the data set."""
+    effective_date: str | None = None
+    """The effective date of the data set, in ISO 8601 format."""
+    description: str | None = None
+    """An optional description of the data set."""
+    data_type: DataTypes
+    """The type of data contained in this data set."""
+    data_source: UUID | None = None
+    """The source of the data, if applicable, as a UUID."""
 
 
 class TypeIDSubset(BaseModel):
@@ -24,6 +40,36 @@ class TypeIDSubset(BaseModel):
     description: str
     type_ids: set[int]
     """A set of type IDs."""
+
+
+class TypeIDSubsets(TopLevelDataSet):
+    """A collection of type ID subsets.
+
+    These subsets are mostly built from SDE static data.
+    """
+
+    published: TypeIDSubset
+    """The published type ID subset."""
+    blueprints: TypeIDSubset
+    """The type_ids of published blueprints."""
+    manufacturing_materials: TypeIDSubset
+    """The type_ids of published items that can be used as manufacturing materials."""
+    copy_materials: TypeIDSubset
+    """The type_ids of published items that can be used as copying materials."""
+    invention_materials: TypeIDSubset
+    """The type_ids of published items that can be used as invention materials."""
+    reaction_materials: TypeIDSubset
+    """The type_ids of published items that can be used as reaction materials."""
+    research_materials: TypeIDSubset
+    """The type_ids of published items that can be used as research materials."""
+    market_industry: TypeIDSubset
+    """The type_ids of published items that exist in the market and are used in industry activities."""
+    manufacturing_products: TypeIDSubset
+    """The type_ids of published items that can be manufactured."""
+    reaction_products: TypeIDSubset
+    """The type_ids of published items that can be produced by reactions."""
+    types_in_market: TypeIDSubset
+    """The type_ids of published items that exist in the market."""
 
 
 class SystemCostIndex(BaseModel):
@@ -45,13 +91,9 @@ class SystemCostIndex(BaseModel):
     """The reaction cost index."""
 
 
-class SystemCostIndices(BaseModel):
+class SystemCostIndices(TopLevelDataSet):
     """The cost indices for all solar systems."""
 
-    data_set_id: UUID
-    """The unique identifier for the data set."""
-    date: str
-    """The date the cost indices were recorded, in ISO 8601 format."""
     data: dict[int, SystemCostIndex]
     """A dictionary mapping solar system IDs to their cost indices."""
 
@@ -71,24 +113,26 @@ class MarketHistoryDetail(BaseModel):
     volume: int
 
 
-# class MarketHistory(BaseModel):
-#     """Market history for a specific region and type."""
+@DeprecationWarning
+class MarketHistory(TopLevelDataSet):
+    """Market history for a specific region.
 
-#     region_id: int
-#     """The region ID where the market history is located."""
-#     type_id: int
-#     """The type ID of the item."""
-#     data: Sequence[MarketHistoryDetail]
-#     """A sequence of market history records."""
+    This structure can be used to store either a current snapshot of recent market history, or
+    a yearly archive of market history data
 
+    Not in current use. It's purpose was to store market history data to file,
+    but that is not a current goal. Later the option to stream market history data to a
+    jsonl file will be added.
+    """
 
-# class MarketHistories(BaseModel):
-#     """A collection model for market history by region."""
-
-#     region_id: int
-#     """The region ID where the market history is located."""
-#     data: dict[int, MarketHistory] = {}
-#     """A dictionary mapping type IDs to MarketHistory records."""
+    region_id: int
+    """The region ID where the market history is located."""
+    max_date: str
+    """The maximum datetime of the market history records, in ISO 8601 format."""
+    min_date: str
+    """The minimum datetime of the market history records, in ISO 8601 format."""
+    data: dict[int, Sequence[MarketHistoryDetail]]
+    """A sequence of market history records indexed by type_id."""
 
 
 class MarketHistorySummary(BaseModel):
@@ -105,18 +149,20 @@ class MarketHistorySummary(BaseModel):
     lowest: float
     order_count: int
     volume: float
-    generated: str
-    """The UTC datetime the summary was generated, in ISO 8601 format."""
+    effective_date: str
+    """The UTC datetime that is the effective_date of the source data, in ISO 8601 format."""
 
 
-# class MarketHistorySummaries(BaseModel):
-#     """A collection model to make serialization faster."""
+class MarketHistorySummaries(TopLevelDataSet):
+    """A collection of the most recent market history summaries.
 
-#     # TODO consider making this hold only one period? Or, put period as first key.
-#     region_id: int
-#     """The region ID where the market history summaries are located."""
-#     data: dict[int, dict[int, MarketHistorySummary]] = {}
-#     """A dictionary mapping type IDs to market history summaries indexed by time period."""
+    Summaries may have different effective dates, but they are all for the same region.
+    """
+
+    region_id: int
+    """The region ID where the market history summaries are located."""
+    data: dict[int, MarketHistorySummary] = {}
+    """A dictionary mapping type IDs to market history summaries."""
 
 
 class Activity_Name(Enum):
@@ -160,7 +206,7 @@ class Blueprint(BaseModel):
     activities: Activities
 
 
-class Blueprints(BaseModel):
+class Blueprints(TopLevelDataSet):
     """A collection model to make serialization faster."""
 
     data: dict[int, Blueprint]
@@ -179,7 +225,7 @@ class TypeInfo(BaseModel):
     published: bool
 
 
-class TypeInfos(BaseModel):
+class TypeInfos(TopLevelDataSet):
     """A collection model to make serialization faster."""
 
     data: dict[int, TypeInfo]
@@ -190,7 +236,7 @@ class TypeDescription(BaseModel):
     description: str
 
 
-class TypeDescriptions(BaseModel):
+class TypeDescriptions(TopLevelDataSet):
     """A collection model to make serialization faster."""
 
     data: dict[int, TypeDescription]
@@ -201,7 +247,7 @@ class MetaGroup(BaseModel):
     name: str
 
 
-class MetaGroups(BaseModel):
+class MetaGroups(TopLevelDataSet):
     """A collection model to make serialization faster."""
 
     data: dict[int, MetaGroup]
@@ -219,7 +265,7 @@ class Group(BaseModel):
     use_base_price: bool
 
 
-class Groups(BaseModel):
+class Groups(TopLevelDataSet):
     data: dict[int, Group]
 
 
@@ -229,7 +275,7 @@ class Category(BaseModel):
     published: bool
 
 
-class Categories(BaseModel):
+class Categories(TopLevelDataSet):
     data: dict[int, Category]
 
 
@@ -248,7 +294,7 @@ class MarketGroup(BaseModel):
     """The path is a tuple of market group IDs leading to this group, including the current group."""
 
 
-class MarketGroups(BaseModel):
+class MarketGroups(TopLevelDataSet):
     """A collection model to make serialization faster."""
 
     data: dict[int, MarketGroup]
@@ -273,12 +319,9 @@ class UniverseMarketPrice(BaseModel):
     """The average price of the item, -1.0 if not available."""
 
 
-class UniverseMarketPrices(BaseModel):
+class UniverseMarketPrices(TopLevelDataSet):
     """A collection of universe pricing."""
 
-    price_profile_id: UUID
-    date: str = ""
-    """The date the prices were downloaded from ESI, in ISO 8601 format."""
     data: dict[int, UniverseMarketPrice]
     """A dictionary mapping type IDs to adjusted and average market prices for the universe."""
 
@@ -301,17 +344,6 @@ class MarketOrderDetail(BaseModel):
     volume_remain: int  # Remaining volume of the order
 
 
-# class MarketOrderDict(BaseModel):
-#     """A collection model to make serialization faster."""
-
-#     region_id: int
-#     """The region ID where the market orders are located."""
-#     buy_orders: dict[int, list[MarketOrder]] = {}
-#     """A dictionary mapping type IDs to sequences of market buy orders."""
-#     sell_orders: dict[int, list[MarketOrder]] = {}
-#     """A dictionary mapping type IDs to sequences of market sell orders."""
-
-
 class MarketOrders(BaseModel):
     """A collection model for buy and sell market orders for one type in one region."""
 
@@ -325,8 +357,12 @@ class MarketOrders(BaseModel):
     """A list of market sell orders for the specified type."""
 
 
-class RegionalMarketOrders(BaseModel):
-    """A collection model for market orders multiple types in a specific region."""
+class RegionalMarketOrders(TopLevelDataSet):
+    """A collection model for market orders multiple types in a specific region.
+
+    The most efficient way to get market orders from esi is to request all orders for a region at once.
+    That makes this the default representation for storage of market orders in a region.
+    """
 
     region_id: int
     """The region ID where the market orders are located."""
@@ -379,7 +415,7 @@ class MarketOrderSummary(BaseModel):
     sell: MarketOrderSummaryDetails
 
 
-class MarketOrderSummaries(BaseModel):
+class MarketOrderSummaries(TopLevelDataSet):
     """A collection model to make serialization faster."""
 
     location_spec: Literal["region", "system", "station"] = "region"

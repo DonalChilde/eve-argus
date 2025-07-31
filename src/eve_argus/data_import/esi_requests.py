@@ -153,7 +153,9 @@ class EsiPublic:
             f"Initialized EsiPublic client in {perf_counter() - start:.6f} seconds. server status: {status!r}"
         )
 
-    def get_market_history(self, region_id: int, type_id: int) -> EAM.MarketHistory:
+    def get_market_history(
+        self, region_id: int, type_id: int
+    ) -> Sequence[EAM.MarketHistoryDetail]:
         """Get market history for a specific region and type."""
         request = EsiRequest(
             op_id="get_markets_region_id_history",
@@ -168,9 +170,7 @@ class EsiPublic:
         result = DI.market_history(
             region_id=region_id, type_id=type_id, data=response.data
         )
-        logger.info(
-            f"Retrieved {len(result.data)} market history records for {request!r}."
-        )
+        logger.info(f"Retrieved {len(result)} market history records for {request!r}.")
         return result
 
     def get_market_prices_universe(self) -> EAM.UniverseMarketPrices:
@@ -182,8 +182,11 @@ class EsiPublic:
         data = DI.market_prices_universe(response.data)
         logger.info(f"Retrieved {len(data)} market prices for {request!r}.")
         result = EAM.UniverseMarketPrices(
-            price_profile_id=uuid4(),
-            date=datetime.now(UTC).isoformat(),
+            data_set_id=uuid4(),
+            effective_date=datetime.now(UTC).isoformat(),
+            description="Universe market prices",
+            data_source=None,
+            data_type=EAM.DataTypes.UniverseMarketPrices,
             data={item.type_id: item for item in data},
         )
         return result
