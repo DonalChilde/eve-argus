@@ -27,7 +27,7 @@ def get_market_history(esi: EsiPublic, region_id: int, type_id: int):
 def get_market_prices_universe(esi: EsiPublic):
     print("\nGetting market prices for the entire universe.")
     start = perf_counter()
-    data = esi.get_market_prices_universe()
+    data = esi.get_universe_market_prices()
     argus_writer.market_prices_universe_to_json(data, overwrite=True)
     print(
         f"Wrote market prices to {save_path} in {perf_counter() - start:.6f} seconds."

@@ -91,7 +91,7 @@ class ArgusData:
         """Set the market prices universe data."""
         self._market_prices_universe = value
         self._update_manifest(value)
-        self.writer.market_prices_universe(value)
+        self.writer.universe_market_prices(value)
 
     @property
     def system_cost_indices(self) -> EAM.SystemCostIndices:

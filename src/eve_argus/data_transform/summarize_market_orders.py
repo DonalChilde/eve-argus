@@ -3,6 +3,7 @@
 from collections.abc import Iterable, Sequence
 from itertools import chain
 from typing import Literal, TypedDict
+from uuid import uuid4
 
 from eve_argus.models import argus as EAM
 
@@ -248,7 +249,14 @@ def calculate_order_summaries(
         EAM.MarketOrderSummaries: The summaries of the market orders.
     """
     result = EAM.MarketOrderSummaries(
-        location_spec=location_spec, location_id=location_id, data={}
+        data_set_id=uuid4(),
+        effective_date=regional_orders.effective_date,
+        description=f"Market order summaries for {location_spec} {location_id}",
+        data_type=EAM.DataTypes.MarketOrderSummaries,
+        data_source=regional_orders.data_set_id,
+        location_spec=location_spec,
+        location_id=location_id,
+        data={},
     )
     if type_ids is None:
         type_ids = regional_orders.orders.keys()

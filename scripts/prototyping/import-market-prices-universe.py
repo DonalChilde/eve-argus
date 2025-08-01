@@ -15,7 +15,7 @@ def main() -> None:
     start = perf_counter()
     esi = EsiPublic()
     print("Hello from import-market-prices-universe.py!")
-    data = esi.get_market_prices_universe()
+    data = esi.get_universe_market_prices()
     print(f"Retrieved {len(data)} market prices for the universe.")
     writer = ArgusFileWriter(argus_path=EVE_ARGUS_DATA)
     path_out = writer.market_prices_universe_to_json(market_prices=data)

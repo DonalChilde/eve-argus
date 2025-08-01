@@ -182,7 +182,7 @@ class ArgusFileWriter:
         )
         return path_out
 
-    def market_prices_universe(
+    def universe_market_prices(
         self, market_prices: EAM.UniverseMarketPrices, overwrite: bool = True
     ) -> Path:
         """Save market prices for the entire universe to JSON.
@@ -200,6 +200,27 @@ class ArgusFileWriter:
 
         validate_file_out(file_path=path_out, overwrite=overwrite)
         path_out.write_text(market_prices.model_dump_json(indent=2))
+        logger.info(
+            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+        )
+        return path_out
+
+    def type_id_subsets(
+        self, type_id_subsets: EAM.TypeIDSubsets, overwrite: bool = True
+    ) -> Path:
+        """Save type ID subsets to JSON.
+
+        Args:
+            type_id_subsets (EAM.TypeIDSubsets): The type ID subsets to save.
+            overwrite (bool, optional): Whether to overwrite existing files. Defaults to True.
+
+        Returns:
+            Path: The path to the saved JSON file.
+        """
+        start = perf_counter()
+        path_out = self.argus_path / ArgusFilePaths.TYPE_ID_SUBSETS
+        validate_file_out(file_path=path_out, overwrite=overwrite)
+        path_out.write_text(type_id_subsets.model_dump_json(indent=2))
         logger.info(
             "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
         )

@@ -94,6 +94,7 @@ def summarize_market_history_by_dates(
     Returns:
         EAM.MarketHistorySummary: The summarized market history.
     """
+
     missing = average = highest = lowest = order_count = volume = 0
     count = len(dates)
     for key in dates:

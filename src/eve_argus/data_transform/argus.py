@@ -4,7 +4,7 @@ from eve_argus.models import argus as EAM
 
 
 def type_id_subsets(
-    type_infos: EAM.TypeInfos, groups: EAM.Groups, blueprints: EAM.Blueprints
+    type_infos: EAM.TypeInfos, blueprints: EAM.Blueprints
 ) -> EAM.TypeIDSubsets:
     """Get type ID subsets from Argus data."""
 

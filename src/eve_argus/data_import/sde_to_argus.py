@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from eve_argus.data_transform import sde_to_argus as DI
+from eve_argus.data_transform.argus import type_id_subsets
 from eve_argus.file_io.argus_data_file_writer import ArgusFileWriter
 from eve_argus.file_io.sde_reader import SdeReader
 
@@ -68,3 +69,10 @@ def import_data_from_sde(
     )
     argus_writer.type_infos(argus_types)
     argus_writer.type_descriptions(argus_descriptions)
+
+    # update derived data
+    type_id_subsets_data = type_id_subsets(
+        type_infos=argus_types,
+        blueprints=argus_blueprints,
+    )
+    argus_writer.type_id_subsets(type_id_subsets_data)

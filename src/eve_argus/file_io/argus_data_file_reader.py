@@ -161,6 +161,21 @@ class ArgusFileReader:
         )
         return result
 
+    def type_id_subsets(self) -> EAM.TypeIDSubsets:
+        """Get type ID subsets from Argus data.
+
+        Returns:
+            EAM.TypeIDSubsets: The type ID subsets data.
+        """
+        start = perf_counter()
+        path_in = self.argus_path / ArgusFilePaths.TYPE_ID_SUBSETS
+        result = EAM.TypeIDSubsets.model_validate_json(path_in.read_text())
+        logger.info(
+            "Loaded type ID subsets in %s seconds",
+            f"{perf_counter() - start:.6f}",
+        )
+        return result
+
     # def type_ids_published(self) -> EAM.TypeIDSubset:
     #     """Load published type IDs from JSON.
 

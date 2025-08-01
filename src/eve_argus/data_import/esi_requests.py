@@ -173,7 +173,7 @@ class EsiPublic:
         logger.info(f"Retrieved {len(result)} market history records for {request!r}.")
         return result
 
-    def get_market_prices_universe(self) -> EAM.UniverseMarketPrices:
+    def get_universe_market_prices(self) -> EAM.UniverseMarketPrices:
         """Get market prices for the entire universe."""
         request = EsiRequest(op_id="get_markets_prices")
         response = _get_esi_data(

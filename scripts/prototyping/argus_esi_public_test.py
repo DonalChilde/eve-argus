@@ -9,10 +9,10 @@
 from pathlib import Path
 from time import perf_counter
 
-from eve_argus.calculations.market_history import (
+from eve_argus.data_import.esi_requests import EsiPublic
+from eve_argus.data_transform.summarize_market_history import (
     summarize_market_history_by_periods,
 )
-from eve_argus.data_import.esi_requests import EsiPublic
 from eve_argus.models import argus as EAM
 from eve_argus.snippets.file.csv import write_dicts_to_csv
 
