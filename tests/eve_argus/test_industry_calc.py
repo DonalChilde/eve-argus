@@ -2,7 +2,7 @@
 
 from pytest import raises
 
-from eve_argus.data_transform import industry_calculations
+from eve_argus.data_transform import industry_base_calculations
 
 ADJUSTED_PRICES = {
     34: 3.33,
@@ -48,15 +48,15 @@ def test_process_time_value() -> None:
     beginning_runs = 0
     desired_runs = 10
 
-    eiv = industry_calculations.eiv(
+    eiv = industry_base_calculations.eiv(
         base_materials=base_materials, adjusted_prices=adjusted_prices
     )
-    time_req = industry_calculations.base_research_time(
+    time_req = industry_base_calculations.base_research_time(
         bp_time=research_time,
         beginning_runs=beginning_runs,
         desired_runs=desired_runs,
     )
-    ptv = industry_calculations.process_time_value(
+    ptv = industry_base_calculations.process_time_value(
         time_required=time_req, eiv=eiv, base_time=research_time
     )
     expected = 23_979_399
@@ -69,25 +69,25 @@ def test_eiv() -> None:
     adjusted_prices = ADJUSTED_PRICES.copy()
 
     # Test with base materials
-    result = industry_calculations.eiv(materials, adjusted_prices)
+    result = industry_base_calculations.eiv(materials, adjusted_prices)
     expected = 32000 * 3.33 + 6000 * 16.47 + 2500 * 57.33 + 500 * 286.12
     assert result == expected
 
-    result = industry_calculations.eiv(materials, adjusted_prices, runs=2)
+    result = industry_base_calculations.eiv(materials, adjusted_prices, runs=2)
     expected = (32000 * 3.33 + 6000 * 16.47 + 2500 * 57.33 + 500 * 286.12) * 2
     assert result == expected
 
     # Test with empty materials
-    result = industry_calculations.eiv({}, adjusted_prices)
+    result = industry_base_calculations.eiv({}, adjusted_prices)
     assert result == 0.0
 
     # Test with empty adjusted prices
     with raises(ValueError):
-        result = industry_calculations.eiv(materials, {})
+        result = industry_base_calculations.eiv(materials, {})
         assert result == 0.0
 
     # Test with no materials and no prices
-    result = industry_calculations.eiv({}, {})
+    result = industry_base_calculations.eiv({}, {})
     assert result == 0.0
 
 
@@ -99,7 +99,7 @@ def test_base_research_time() -> None:
     expected = 105
 
     # Test with valid inputs
-    result = industry_calculations.base_research_time(
+    result = industry_base_calculations.base_research_time(
         bp_time, beginning_runs, desired_runs
     )
     assert result == expected
@@ -107,7 +107,7 @@ def test_base_research_time() -> None:
     beginning_runs = 1
     desired_runs = 2
     expected = 145
-    result = industry_calculations.base_research_time(
+    result = industry_base_calculations.base_research_time(
         bp_time, beginning_runs, desired_runs
     )
     assert result == expected
@@ -115,7 +115,7 @@ def test_base_research_time() -> None:
     beginning_runs = 0
     desired_runs = 10
     expected = 256000
-    result = industry_calculations.base_research_time(
+    result = industry_base_calculations.base_research_time(
         bp_time, beginning_runs, desired_runs
     )
     assert result == expected
@@ -131,7 +131,7 @@ def test_manufacturing_time() -> None:
     implants = 0.0
     rigs = 0.0
 
-    result = industry_calculations.manufacturing_time(
+    result = industry_base_calculations.manufacturing_time(
         base_time=base_time,
         runs=runs,
         te=te,
@@ -144,7 +144,7 @@ def test_manufacturing_time() -> None:
     assert result == expected
 
     runs = 2
-    result = industry_calculations.manufacturing_time(
+    result = industry_base_calculations.manufacturing_time(
         base_time=base_time,
         runs=runs,
         te=te,
@@ -167,7 +167,7 @@ def test_research_time() -> None:
     implants = 0.0
     rigs = 0.0
 
-    result = industry_calculations.research_time(
+    result = industry_base_calculations.research_time(
         base_time=base_time,
         beginning_runs=beginning_runs,
         desired_runs=desired_runs,
@@ -188,7 +188,7 @@ def test_manufacturing_materials_required() -> None:
     structure = 0.0
     rig = 0.0
 
-    result = industry_calculations.manufacturing_materials_required(
+    result = industry_base_calculations.manufacturing_materials_required(
         materials, runs, me, structure, rig
     )
     expected = TRISTAN["base_materials"]
@@ -201,7 +201,7 @@ def test_manufacturing_materials_required() -> None:
         36: 2250,
         37: 450,
     }
-    result = industry_calculations.manufacturing_materials_required(
+    result = industry_base_calculations.manufacturing_materials_required(
         materials, runs, me, structure, rig
     )
     assert result == expected
@@ -215,7 +215,7 @@ def test_manufacturing_materials_required() -> None:
         37: 8,
         38: 4,
     }
-    result = industry_calculations.manufacturing_materials_required(
+    result = industry_base_calculations.manufacturing_materials_required(
         materials, runs, me, structure, rig
     )
     assert result == expected
@@ -232,7 +232,7 @@ def test_manufacturing_cost() -> None:
     alpha_rate = 0.0025
     is_alpha = False
 
-    result = industry_calculations.manufacturing_job_cost(
+    result = industry_base_calculations.manufacturing_job_cost(
         eiv=eiv,
         system_cost_index=system_cost_index,
         structure_bonus=structure_bonus,
@@ -249,7 +249,7 @@ def test_manufacturing_cost() -> None:
 
     structure_bonus = 0.03
 
-    result = industry_calculations.manufacturing_job_cost(
+    result = industry_base_calculations.manufacturing_job_cost(
         eiv=eiv,
         system_cost_index=system_cost_index,
         structure_bonus=structure_bonus,
@@ -266,7 +266,7 @@ def test_manufacturing_cost() -> None:
 
     is_alpha = True
 
-    result = industry_calculations.manufacturing_job_cost(
+    result = industry_base_calculations.manufacturing_job_cost(
         eiv=eiv,
         system_cost_index=system_cost_index,
         structure_bonus=structure_bonus,
@@ -292,7 +292,7 @@ def test_research_job_cost() -> None:
     alpha_rate = 0.0025
     is_alpha = False
 
-    result = industry_calculations.research_job_cost(
+    result = industry_base_calculations.research_job_cost(
         ptv=ptv,
         system_cost_index=system_cost_index,
         structure_bonus=structure_bonus,
@@ -309,7 +309,7 @@ def test_research_job_cost() -> None:
 
     structure_bonus = 0.03
 
-    result = industry_calculations.research_job_cost(
+    result = industry_base_calculations.research_job_cost(
         ptv=ptv,
         system_cost_index=system_cost_index,
         structure_bonus=structure_bonus,
@@ -326,7 +326,7 @@ def test_research_job_cost() -> None:
 
     is_alpha = True
 
-    result = industry_calculations.research_job_cost(
+    result = industry_base_calculations.research_job_cost(
         ptv=ptv,
         system_cost_index=system_cost_index,
         structure_bonus=structure_bonus,
@@ -352,7 +352,7 @@ def test_invention_job_cost() -> None:
     alpha_rate = 0.0025
     is_alpha = False
 
-    result = industry_calculations.invention_job_cost(
+    result = industry_base_calculations.invention_job_cost(
         eiv=eiv,
         system_cost_index=system_cost_index,
         structure_bonus=structure_bonus,
@@ -369,7 +369,7 @@ def test_invention_job_cost() -> None:
 
     structure_bonus = 0.03
 
-    result = industry_calculations.invention_job_cost(
+    result = industry_base_calculations.invention_job_cost(
         eiv=eiv,
         system_cost_index=system_cost_index,
         structure_bonus=structure_bonus,
@@ -386,7 +386,7 @@ def test_invention_job_cost() -> None:
 
     is_alpha = True
 
-    result = industry_calculations.invention_job_cost(
+    result = industry_base_calculations.invention_job_cost(
         eiv=eiv,
         system_cost_index=system_cost_index,
         structure_bonus=structure_bonus,

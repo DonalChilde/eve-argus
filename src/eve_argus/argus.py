@@ -3,6 +3,7 @@
 import logging
 from pathlib import Path
 from time import perf_counter
+from typing import Any, Sequence
 
 from eve_argus import CONFIG
 from eve_argus.data_import.esi_requests import EsiPublic
@@ -89,3 +90,25 @@ class EveArgus:
         # Placeholder implementation for demonstration purposes.
         # FIXME: Replace with actual implementation.
         return f"Type Name for ID {type_id}"
+
+    def update_eiv(self) -> None:
+        """Update EIV data."""
+        start = perf_counter()
+        logger.info("Updating EIV data.")
+
+        # FIXME: Placeholder for EIV update logic
+
+    def update_unit_cost(
+        self,
+        material_prices: dict[int, int],
+        structure: Any,
+        character: Any,
+        type_ids: Sequence[int],
+    ) -> None:
+        """Update unit cost data."""
+        start = perf_counter()
+        logger.info("Updating unit cost data.")
+
+        # FIXME: Placeholder for unit cost update logic
+        # this stub is more of a reminder to implement the actual logic
+        # at the top level, the params are likely to be different.

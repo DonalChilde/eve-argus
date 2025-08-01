@@ -1,11 +1,15 @@
 """Code for importing data from SDE to Argus models."""
 
+import logging
 from pathlib import Path
 
 from eve_argus.data_transform import sde_to_argus as DI
 from eve_argus.data_transform.argus import type_id_subsets
 from eve_argus.file_io.argus_data_file_writer import ArgusFileWriter
 from eve_argus.file_io.sde_reader import SdeReader
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 def import_data_from_sde(
@@ -26,6 +30,10 @@ def import_data_from_sde(
     """
     # FIXME code to look for effective date and version data here.
     # TODO code to add version information to the argus data files.
+    logger.info("Importing data from SDE to Argus models.")
+    logger.info(
+        f"SDE Path: {sde_path}, Argus Path: {argus_path}, Language: {lang}, Effective Date: {effective_date}, SDE Version: {sde_version}"
+    )
 
     sde_reader = SdeReader(sde_path=sde_path)
     argus_writer = ArgusFileWriter(argus_path=argus_path)
