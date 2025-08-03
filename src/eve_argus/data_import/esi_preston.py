@@ -10,13 +10,11 @@ from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
 from time import perf_counter
-from typing import Any
 from uuid import uuid4
 
 import preston
 
-from eve_argus.data_transform import esi_to_argus as DI
-from eve_argus.models import argus as EAM
+from eve_argus.data_import.esi_client_protocol import EsiClientProtocol
 from eve_argus.models.esi import EsiAction, EsiRequest, EsiResponse
 from eve_argus.snippets.file.datetime_filename import file_safe_datetime_string
 
@@ -134,7 +132,9 @@ def _get_paged_esi_data(
     return paged_data
 
 
-class EsiPublic:
+class ArgusPreston(EsiClientProtocol):
+    """Class to handle ESI requests and responses using Preston client."""
+
     def __init__(
         self,
         user_agent: str = "Eve Argus testing",
@@ -142,7 +142,7 @@ class EsiPublic:
         debug_path: Path | None = None,
         preston_client: preston.Preston | None = None,
     ) -> None:
-        """Initialize the EsiPublic client.
+        """Initialize the ArgusPreston client.
 
         The preston client downloads the swagger.json file on first request, and stores it
         in client.spec, so this constructor will take some time on first use. A preconfigured
@@ -156,7 +156,7 @@ class EsiPublic:
             debug_path (Path | None): Path to save debug data.
             preston_client (preston.Preston | None): Optional existing Preston client.
         """
-        self.preston = (
+        self.preston_client = (
             preston_client if preston_client else preston.Preston(user_agent=user_agent)
         )
         self.debug = debug
@@ -164,118 +164,25 @@ class EsiPublic:
         start = perf_counter()
         # TODO trap server down error.
         # Do this to trigger download of swagger.json
-        status = self.preston.get_op("get_status")
+        status = self.preston_client.get_op("get_status")
         logger.info(
             f"Initialized EsiPublic client in {perf_counter() - start:.6f} seconds. server status: {status!r}"
         )
 
-    def get_market_history(
-        self, region_id: int, type_id: int
-    ) -> Sequence[EAM.MarketHistoryDetail]:
-        """Get market history for a specific region and type."""
-        request = EsiRequest(
-            request_id=uuid4(),
-            op_id="get_markets_region_id_history",
-            arguments={
-                "region_id": str(region_id),
-                "type_id": str(type_id),
-            },
+    def get_esi_data(
+        self,
+        esi_request: EsiRequest,
+    ) -> EsiAction:
+        """Get data from ESI for a single request."""
+        return _get_esi_data(
+            self.preston_client, esi_request, self.debug, self.debug_path
         )
-        response = _get_esi_data(
-            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
-        )
-        result = DI.market_history(
-            region_id=region_id, type_id=type_id, data=response.data
-        )
-        logger.info(f"Retrieved {len(result)} market history records for {request!r}.")
-        return result
 
-    def get_universe_market_prices(self) -> EAM.UniverseMarketPrices:
-        """Get market prices for the entire universe."""
-        request = EsiRequest(request_id=uuid4(), op_id="get_markets_prices")
-        response = _get_esi_data(
-            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
+    def get_paged_esi_data(
+        self,
+        esi_request: EsiRequest,
+    ) -> Sequence[EsiAction]:
+        """Get paged data from ESI."""
+        return _get_paged_esi_data(
+            self.preston_client, esi_request, self.debug, self.debug_path
         )
-        data = DI.market_prices_universe(response.data)
-        logger.info(f"Retrieved {len(data)} market prices for {request!r}.")
-        result = EAM.UniverseMarketPrices(
-            data_set_id=uuid4(),
-            effective_date=datetime.now(UTC).isoformat(),
-            description="Universe market prices",
-            data_source=None,
-            data_type=EAM.DataTypes.UniverseMarketPrices,
-            data={item.type_id: item for item in data},
-        )
-        return result
-
-    def get_region_market_types(self, region_id: int) -> Sequence[int]:
-        """Get type ids with active market orders for a specific region."""
-        request = EsiRequest(
-            request_id=uuid4(),
-            op_id="get_markets_region_id_types",
-            arguments={"region_id": str(region_id)},
-        )
-        response = _get_paged_esi_data(
-            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
-        )
-        paged_data: Sequence[Sequence[int]] = [x.data for x in response]
-        result = DI.region_market_types_from_esi(paged_data)
-        logger.info(f"Retrieved {len(result)} market types for {request!r}.")
-        return result
-
-    def get_market_orders_by_region(
-        self, region_id: int, order_type: str = "all"
-    ) -> EAM.RegionalMarketOrders:
-        """Get market orders for a specific region."""
-        request = EsiRequest(
-            request_id=uuid4(),
-            op_id="get_markets_region_id_orders",
-            arguments={"region_id": str(region_id), "order_type": order_type},
-        )
-        response = _get_paged_esi_data(
-            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
-        )
-        paged_data: Sequence[Sequence[dict[str, Any]]] = [x.data for x in response]
-        result = DI.region_market_orders_from_esi(region_id, paged_data)
-        logger.info(
-            f"Retrieved {sum(len(page) for page in paged_data)} for {request!r}."
-        )
-        return result
-
-    def get_market_orders_by_region_and_type(
-        self, region_id: int, type_id: int, order_type: str = "all"
-    ) -> EAM.MarketOrders:
-        """Get market orders for a specific type in a region."""
-        request = EsiRequest(
-            request_id=uuid4(),
-            op_id="get_markets_region_id_orders",
-            arguments={
-                "region_id": str(region_id),
-                "type_id": str(type_id),
-                "order_type": order_type,
-            },
-        )
-        response = _get_paged_esi_data(
-            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
-        )
-        paged_data: Sequence[Sequence[dict[str, Any]]] = [x.data for x in response]
-        result = DI.region_and_type_market_orders_from_esi(
-            region_id, type_id, paged_data
-        )
-        logger.info(
-            f"Retrieved {sum(len(page) for page in paged_data)} orders for {request!r}."
-        )
-        return result
-
-    def get_system_cost_indices(self) -> EAM.SystemCostIndices:
-        """Get system cost indices."""
-        request = EsiRequest(request_id=uuid4(), op_id="get_industry_systems")
-        response = _get_esi_data(
-            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
-        )
-        paged_data: Sequence[Sequence[dict[str, Any]]] = [x.data for x in response.data]
-        result = DI.system_cost_indices_from_esi(paged_data)
-        logger.info(
-            f"Retrieved {len(result.data)} system cost indices for {request!r}."
-        )
-        return result
