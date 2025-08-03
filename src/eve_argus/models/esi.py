@@ -1,32 +1,29 @@
 """ESI return data models."""
 
-from dataclasses import dataclass, field
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel
 
 
-# TODO change these to BaseModel, and use DebugRequest class for serialization.
-@dataclass(slots=True)
-class EsiRequest:
+class EsiRequest(BaseModel):
     """Base class for ESI requests."""
 
+    request_id: UUID
     op_id: str
-    arguments: dict[str, Any] = field(default_factory=dict)
+    arguments: dict[str, Any] = {}
 
 
-@dataclass(slots=True)
-class EsiResponse:
+class EsiResponse(BaseModel):
     """Base class for ESI responses."""
 
-    headers: dict[str, Any] = field(default_factory=dict)
+    # TODO enforce lowercase for header field names
+    headers: dict[str, Any] = {}
     data: Any = None
 
 
-class DebugRequest(BaseModel):
-    """A request and response for debugging and serializing purposes."""
+class EsiAction(BaseModel):
+    """Collection class to organize a single request and its response."""
 
     request: EsiRequest
-    """The ESI request being made."""
     response: EsiResponse
-    """The ESI response received."""
