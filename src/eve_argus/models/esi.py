@@ -27,3 +27,5 @@ class EsiAction(BaseModel):
 
     request: EsiRequest
     response: EsiResponse
+    sub_actions: list["EsiAction"] = []
+    """"A sub-action is a request that is made as part of the main request. e.g paged requests."""

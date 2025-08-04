@@ -14,7 +14,7 @@ from uuid import uuid4
 
 import preston
 
-from eve_argus.data_import.esi_client_protocol import EsiClientProtocol
+from eve_argus.esi_client.esi_client_protocol import EsiClientProtocol
 from eve_argus.models.esi import EsiAction, EsiRequest, EsiResponse
 from eve_argus.snippets.file.datetime_filename import file_safe_datetime_string
 
