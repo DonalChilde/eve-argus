@@ -6,8 +6,8 @@ from time import perf_counter
 from typing import Any, Sequence
 
 from eve_argus import CONFIG
+from eve_argus.argus_sde.argus_sde import import_data_from_sde
 from eve_argus.data_import.esi_requests import EsiPublic
-from eve_argus.data_import.sde_to_argus import import_data_from_sde
 from eve_argus.file_io.argus_data_file_reader import ArgusFileReader
 from eve_argus.file_io.argus_data_file_writer import ArgusFileWriter
 

@@ -1,10 +1,9 @@
 """Protocol required for ESI client requests and responses."""
 
 from collections.abc import Sequence
-from pathlib import Path
 from typing import Protocol
 
-from eve_argus.models.esi import EsiAction, EsiRequest
+from eve_argus.models.esi import EsiAction
 
 # Esi Client knows about paging, automatically handles it.
 
@@ -14,18 +13,11 @@ class EsiClientProtocol(Protocol):
 
     def get_esi_data(
         self,
-        request: EsiRequest,
-    ) -> EsiAction:
-        """Get operation data from ESI."""
+        action: EsiAction,
+    ) -> None:
+        """Perform a get operation against eve ESI."""
         ...
 
-    def get_esi_data_batch(self, requests: Sequence[EsiRequest]) -> Sequence[EsiAction]:
-        """Get operation data from ESI for a sequence of requests."""
-        ...
-
-    def get_paged_esi_data(
-        self,
-        request: EsiRequest,
-    ) -> Sequence[EsiAction]:
-        """Get paged operation data from ESI."""
+    def get_esi_data_batch(self, actions: Sequence[EsiAction]) -> None:
+        """Perform multiple get operations against eve ESI."""
         ...

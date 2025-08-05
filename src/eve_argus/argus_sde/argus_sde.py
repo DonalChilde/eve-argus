@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 
-from eve_argus.data_transform import sde_to_argus as DI
+from eve_argus.argus_sde import sde_to_argus as DI
 from eve_argus.data_transform.argus import type_id_subsets
 from eve_argus.file_io.argus_data_file_writer import ArgusFileWriter
 from eve_argus.file_io.sde_reader import SdeReader

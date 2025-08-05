@@ -21,6 +21,11 @@ class DataTypes(StrEnum):
     Static = "static"
 
 
+# etag: "d74ee14547cb1f6b1ee73e40c354bd72f3b35041220920dfd9170023"
+# expires: Mon, 04 Aug 2025 19:43:16 GMT
+# last-modified: Mon, 04 Aug 2025 18:43:16 GMT
+
+
 class TopLevelDataSet(BaseModel):
     """A top-level data set model for Argus."""
 

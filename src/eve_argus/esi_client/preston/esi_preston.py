@@ -3,10 +3,8 @@
 All code for woring with EsiResponse and EsiRequest models should live here.
 """
 
-import json
 import logging
 from collections.abc import Sequence
-from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
 from time import perf_counter
@@ -15,7 +13,7 @@ from uuid import uuid4
 import preston
 
 from eve_argus.esi_client.esi_client_protocol import EsiClientProtocol
-from eve_argus.models.esi import EsiAction, EsiRequest, EsiResponse
+from eve_argus.models.esi import DebugEsiAction, EsiAction, EsiRequest, EsiResponse
 from eve_argus.snippets.file.datetime_filename import file_safe_datetime_string
 
 logger = logging.getLogger(__name__)
@@ -31,7 +29,7 @@ def _get_esi_data(
     esi_request: EsiRequest,
     debug_save: bool = False,
     debug_path: Path | None = None,
-) -> EsiAction:
+) -> EsiResponse:
     """Helper function to get data from ESI using a Preston client."""
     start = perf_counter()
     logger.info(
@@ -39,11 +37,11 @@ def _get_esi_data(
     )
     data = preston_client.get_op(esi_request.op_id, **esi_request.arguments)
     # Enforce lowercase for header field names
+    # TODO check to see if cached response returns correct headers. Bet it doesnt.
     headers = {
         key.lower(): value for key, value in preston_client.stored_headers[0].items()
     }
     response = EsiResponse(headers=headers, data=data)
-    action = EsiAction(request=esi_request, response=response)
 
     logger.info(
         f"ESI operation {esi_request.op_id} completed in {perf_counter() - start:.6f} seconds"
@@ -52,15 +50,34 @@ def _get_esi_data(
         if debug_path is None:
             raise ValueError("debug_path must be provided when debug_save is True")
         _debug_save_esi_data(esi_request, response, debug_path)
-    return action
+    return response
+
+
+def _get_esi_data_bulk(
+    preston_client: preston.Preston,
+    esi_actions: Sequence[EsiAction],
+    debug_save: bool = False,
+    debug_path: Path | None = None,
+) -> None:
+    """Make multiple requests to ESI to fill response value for EsiActions."""
+    # TODO consider multithreaded requests to speed up bulk requests.
+    for esi_action in esi_actions:
+        response = _get_esi_data(
+            preston_client, esi_action.request, debug_save, debug_path
+        )
+        esi_action.response = response
+
+    return None
 
 
 def _debug_save_esi_data(
     esi_request: EsiRequest,
-    esi_response: EsiResponse | Sequence[EsiResponse],
+    esi_response: EsiResponse,
     debug_path: Path,
 ) -> None:
     """Save ESI request and response data for debugging."""
+    if not debug_path:
+        raise ValueError("debug_path must be provided to save debug data")
     debug_save_start = perf_counter()
     debug_path.mkdir(parents=True, exist_ok=True)
     file_name = (
@@ -69,67 +86,28 @@ def _debug_save_esi_data(
     file_path = debug_path / file_name
     logger.info(f"Saving debug data to {file_path}")
     with open(file_path, "w", encoding="utf-8") as file_out:
-        if isinstance(esi_response, Sequence):
-            # If response is a sequence, convert each item to a dict
-            file_data = {
-                "request": asdict(esi_request),
-                "response": [asdict(item) for item in esi_response],
-            }
-        elif isinstance(esi_response, EsiResponse):
-            # Otherwise, convert the single response to a dict
-            file_data = {
-                "request": asdict(esi_request),
-                "response": asdict(esi_response),
-            }
-        else:
-            raise TypeError("esi_response must be EsiResponse or Sequence[EsiResponse]")
-        json.dump(file_data, file_out, indent=2)
+        debug_action = DebugEsiAction(request=esi_request, response=esi_response)
+        file_out.write(debug_action.model_dump_json(indent=2))
     logger.info(
         f"Debug data saved to {file_path} in {perf_counter() - debug_save_start:.6f} seconds."
     )
 
 
-def _get_paged_esi_data(
-    preston_client: preston.Preston,
-    esi_request: EsiRequest,
-    debug_save: bool = False,
-    debug_path: Path | None = None,
-) -> Sequence[EsiAction]:
-    """Helper function to get paged data from ESI."""
-    start = perf_counter()
-    logger.info(
-        f"Requesting paged ESI operation {esi_request.op_id} with arguments {esi_request.arguments}"
-    )
-
-    paged_data: Sequence[EsiAction] = []
-    first_page = _get_esi_data(preston_client, esi_request)
-    paged_data.append(first_page)
-    # TODO check to see if there is a page header if only one page available
-    # TODO consider an error if 'x-pages' key not found when expected.
-    page_count = int(first_page.response.headers.get("x-pages", 1))
-    logger.info(f"Retrieved page 1 of {page_count} for operation {esi_request.op_id}")
+def _build_paged_requests(parent_action: EsiAction) -> None:
+    """Build a list of paged ESI requests from a parent action."""
+    if parent_action.response is None:
+        raise ValueError("Parent action must have a response to build paged requests.")
+    page_count = int(parent_action.response.headers.get("x-pages", 1))
     for page in range(2, page_count + 1):
-        new_esi_request = EsiRequest(
+        new_request = EsiRequest(
             request_id=uuid4(),
-            op_id=esi_request.op_id,
-            arguments={**esi_request.arguments},  # Copy existing arguments
+            op_id=parent_action.request.op_id,
+            arguments={**parent_action.request.arguments, "page": str(page)},
+            parent=parent_action.request.request_id,
         )
-        # Add or update the page argument
-        new_esi_request.arguments["page"] = str(page)
-        action = _get_esi_data(
-            preston_client,
-            new_esi_request,
-            debug_save=debug_save,
-            debug_path=debug_path,
-        )
-        paged_data.append(action)
-        logger.info(
-            f"Retrieved page {page} of {page_count} for operation {esi_request.op_id}"
-        )
-    logger.info(
-        f"Total pages retrieved for operation {esi_request.op_id}: {len(paged_data)} in {perf_counter() - start:.6f} seconds."
-    )
-    return paged_data
+        action = EsiAction(request=new_request)
+        parent_action.pages.append(action)
+    return None
 
 
 class ArgusPreston(EsiClientProtocol):
@@ -171,18 +149,26 @@ class ArgusPreston(EsiClientProtocol):
 
     def get_esi_data(
         self,
-        esi_request: EsiRequest,
-    ) -> EsiAction:
-        """Get data from ESI for a single request."""
-        return _get_esi_data(
-            self.preston_client, esi_request, self.debug, self.debug_path
-        )
+        action: EsiAction,
+    ) -> None:
+        """Get data from ESI.
 
-    def get_paged_esi_data(
-        self,
-        esi_request: EsiRequest,
-    ) -> Sequence[EsiAction]:
-        """Get paged data from ESI."""
-        return _get_paged_esi_data(
-            self.preston_client, esi_request, self.debug, self.debug_path
+        Paged data is detected and downloaded automatically.
+        The paged data is stored in the action.pages list.
+        If the response has an 'x-pages' header, it is assumed to be paged data.
+        """
+        response = _get_esi_data(
+            self.preston_client, action.request, self.debug, self.debug_path
         )
+        action.response = response
+        if "x-pages" in response.headers:
+            _build_paged_requests(action)
+            _get_esi_data_bulk(
+                self.preston_client, action.pages, self.debug, self.debug_path
+            )
+        return None
+
+    def get_esi_data_batch(self, actions: Sequence[EsiAction]) -> None:
+        """Get operation data from ESI for a sequence of requests."""
+        _get_esi_data_bulk(self.preston_client, actions, self.debug, self.debug_path)
+        return None

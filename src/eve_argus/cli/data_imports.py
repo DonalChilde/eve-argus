@@ -7,7 +7,7 @@ from typing import Annotated
 import typer
 
 from eve_argus import CONFIG
-from eve_argus.data_import.sde_to_argus import import_data_from_sde
+from eve_argus.argus_sde.argus_sde import import_data_from_sde
 
 app = typer.Typer()
 
