@@ -15,12 +15,22 @@ class ArgusEsi:
         """Initialize the Argus Esi client."""
         self.esi_client = esi_client
 
-    def market_history(self, region_id: int, type_id: int) -> EAM.MarketHistory:
+    def market_history(
+        self, region_id: int, type_id: int, etag: str = ""
+    ) -> EAM.MarketHistory | None:
         """Get market history for a specific region and type."""
-        action = EAA.market_history(region_id, type_id)
+        action = EAA.market_history(region_id, type_id, etag)
         self.esi_client.get_esi_data(action)
+
         if action.response is None:
             raise ValueError("No response received for market history request.")
+        if action.response.status_code == 304:
+            logger.debug(
+                "Market history for region %s and type %s has not changed.",
+                region_id,
+                type_id,
+            )
+            return None
         result = DI.market_history(
             region_id=region_id,
             type_id=type_id,
