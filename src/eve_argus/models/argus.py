@@ -19,6 +19,16 @@ class DataTypes(StrEnum):
     SystemCostIndices = "system_cost_indices"
     TypeIDSubsets = "type_id_subsets"
     Static = "static"
+    Blueprints = "blueprints"
+    TypeInfos = "type_infos"
+    TypeDescriptions = "type_descriptions"
+    MetaGroups = "meta_groups"
+    Groups = "groups"
+    Categories = "categories"
+    MarketGroups = "market_groups"
+    MarketHistory = "market_history"
+    MarketHistorySummaries = "market_history_summaries"
+    RegionalMarketTypes = "regional_market_types"
 
 
 # etag: "d74ee14547cb1f6b1ee73e40c354bd72f3b35041220920dfd9170023"
@@ -43,6 +53,15 @@ class TopLevelDataSet(BaseModel):
     """The type of data contained in this data set."""
     data_source: UUID | None = None
     """The source of the data, if applicable, as a UUID."""
+
+
+class RegionalMarketTypes(TopLevelDataSet):
+    """A collection of type IDs for items available in the market in a specific region."""
+
+    region_id: int
+    """The region ID where the market types are located."""
+    type_ids: set[int] = Field(default_factory=set)
+    """A set of type IDs available in the market in the specified region."""
 
 
 class TypeIDSubset(BaseModel):
@@ -384,6 +403,7 @@ class RegionalMarketOrders(TopLevelDataSet):
     region_id: int
     """The region ID where the market orders are located."""
     orders: dict[int, MarketOrders] = {}
+    """A dictionary mapping type IDs to market orders for that region."""
 
 
 class MarketOrderSummaryDetails(BaseModel):
