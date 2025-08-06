@@ -250,7 +250,7 @@ def calculate_order_summaries(
     """
     result = EAM.MarketOrderSummaries(
         data_set_id=uuid4(),
-        effective_date=regional_orders.effective_date,
+        last_modified=regional_orders.last_modified,
         description=f"Market order summaries for {location_spec} {location_id}",
         data_type=EAM.DataTypes.MarketOrderSummaries,
         data_source=regional_orders.data_set_id,

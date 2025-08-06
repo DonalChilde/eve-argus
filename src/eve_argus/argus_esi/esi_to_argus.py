@@ -53,7 +53,7 @@ def region_market_orders_from_esi(
     """Import market orders for a specific region from a sequence of dictionaries."""
     result = EAM.RegionalMarketOrders(
         data_set_id=uuid4(),
-        effective_date=datetime.now(UTC).isoformat(),
+        last_modified=datetime.now(UTC).isoformat(),
         data_type=EAM.DataTypes.RegionalMarketOrders,
         description=f"Regional market orders for {region_id}",
         data_source=None,
@@ -97,7 +97,7 @@ def system_cost_indices_from_esi(
     """Import system cost indices from a sequence of dictionaries."""
     result = EAM.SystemCostIndices(
         data_set_id=uuid4(),
-        effective_date=datetime.now(UTC).isoformat(),
+        last_modified=datetime.now(UTC).isoformat(),
         data_type=EAM.DataTypes.SystemCostIndices,
         description="System cost indices",
         data_source=None,

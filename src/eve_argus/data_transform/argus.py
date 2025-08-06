@@ -65,7 +65,7 @@ def type_id_subsets(
         ),
     )
     argus_type_id_subsets = EAM.TypeIDSubsets(
-        effective_date=type_infos.effective_date,
+        last_modified=type_infos.last_modified,
         data_set_id=uuid4(),
         data_type=EAM.DataTypes.TypeIDSubsets,
         data_source=type_infos.data_set_id,

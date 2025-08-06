@@ -30,7 +30,7 @@ def sde_types(
     """
     argus_types = EAM.TypeInfos(
         data_set_id=uuid4(),
-        effective_date=effective_date,
+        last_modified=effective_date,
         description=f"Argus type infos {lang=}",
         data_source=None,
         data_type=EAM.DataTypes.Static,
@@ -38,7 +38,7 @@ def sde_types(
     )
     argus_descriptions = EAM.TypeDescriptions(
         data_set_id=uuid4(),
-        effective_date=effective_date,
+        last_modified=effective_date,
         description=f"Argus type descriptions {lang=}",
         data_source=None,
         data_type=EAM.DataTypes.Static,
@@ -99,7 +99,7 @@ def blueprints(
     """
     blueprints = EAM.Blueprints(
         data_set_id=uuid4(),
-        effective_date=effective_date,
+        last_modified=effective_date,
         description=f"Argus blueprints",
         data_source=None,
         data_type=EAM.DataTypes.Static,
@@ -128,7 +128,7 @@ def market_groups(
     """
     market_groups = EAM.MarketGroups(
         data_set_id=uuid4(),
-        effective_date=effective_date,
+        last_modified=effective_date,
         description=f"Argus market groups {lang=}",
         data_source=None,
         data_type=EAM.DataTypes.Static,
@@ -179,7 +179,7 @@ def meta_groups(
     """
     argus_meta_groups = EAM.MetaGroups(
         data_set_id=uuid4(),
-        effective_date=effective_date,
+        last_modified=effective_date,
         description=f"Argus meta groups {lang=}",
         data_source=None,
         data_type=EAM.DataTypes.Static,
@@ -208,7 +208,7 @@ def groups(
     """
     argus_groups = EAM.Groups(
         data_set_id=uuid4(),
-        effective_date=effective_date,
+        last_modified=effective_date,
         description=f"Argus groups {lang=}",
         data_source=None,
         data_type=EAM.DataTypes.Static,
@@ -247,7 +247,7 @@ def categories(
     """
     argus_categories = EAM.Categories(
         data_set_id=uuid4(),
-        effective_date=effective_date,
+        last_modified=effective_date,
         description=f"Argus categories {lang=}",
         data_source=None,
         data_type=EAM.DataTypes.Static,

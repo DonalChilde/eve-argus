@@ -200,7 +200,7 @@ logger.addHandler(logging.NullHandler())
         logger.info(f"Retrieved {len(data)} market prices for {request!r}.")
         result = EAM.UniverseMarketPrices(
             data_set_id=uuid4(),
-            effective_date=datetime.now(UTC).isoformat(),
+            last_modified=datetime.now(UTC).isoformat(),
             description="Universe market prices",
             data_source=None,
             data_type=EAM.DataTypes.UniverseMarketPrices,

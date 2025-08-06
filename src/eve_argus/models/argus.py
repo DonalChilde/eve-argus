@@ -31,8 +31,12 @@ class TopLevelDataSet(BaseModel):
 
     data_set_id: UUID
     """The unique identifier for the data set."""
-    effective_date: str | None = None
-    """The effective date of the data set, in ISO 8601 format."""
+    last_modified: str | None = None
+    """The last modified date of the data set, in ISO 8601 format."""
+    etag: str | None = None
+    """The ETag for the data set, used for caching and validation."""
+    expires: str | None = None
+    """The expiration date of the data set, in ISO 8601 format."""
     description: str | None = None
     """An optional description of the data set."""
     data_type: DataTypes
