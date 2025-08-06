@@ -342,7 +342,7 @@ class ArgusFileReader:
 
     def market_history_summaries(
         self, region_id: int, tag: str = "all"
-    ) -> EAM.MarketHistorySummaries:
+    ) -> EAM.RegionalMarketHistorySummaries:
         """Load market history summaries for a specific region from JSON.
 
         Args:
@@ -360,7 +360,9 @@ class ArgusFileReader:
                 region_id=region_id, tag=tag
             )
         )
-        result = EAM.MarketHistorySummaries.model_validate_json(path_in.read_text())
+        result = EAM.RegionalMarketHistorySummaries.model_validate_json(
+            path_in.read_text()
+        )
         logger.info(
             "Loaded data from %s in %s seconds",
             path_in,

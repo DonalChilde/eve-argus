@@ -11,7 +11,7 @@ def summarize_regional_market_history(
     histories: EAM.MarketHistories,
     type_ids: Iterable[int] | None = None,
     periods: Sequence[int] = (10, 30, 60, 90),
-) -> EAM.MarketHistorySummaries:
+) -> EAM.RegionalMarketHistorySummaries:
     """Summarize market history by type and period of days.
 
     Args:
@@ -25,7 +25,7 @@ def summarize_regional_market_history(
     if type_ids is None:
         type_ids = histories.data.keys()
     region_id = histories.region_id
-    summaries = EAM.MarketHistorySummaries(
+    summaries = EAM.RegionalMarketHistorySummaries(
         region_id=region_id,
         data={},
     )

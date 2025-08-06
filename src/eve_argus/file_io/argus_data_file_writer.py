@@ -465,7 +465,7 @@ class ArgusFileWriter:
 
     def market_history_summaries(
         self,
-        market_history_summaries: EAM.MarketHistorySummaries,
+        market_history_summaries: EAM.RegionalMarketHistorySummaries,
         tag: str = "all",
         overwrite: bool = True,
     ) -> Path:

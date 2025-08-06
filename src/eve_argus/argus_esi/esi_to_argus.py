@@ -7,6 +7,7 @@ from typing import Any
 from uuid import uuid4
 
 from eve_argus.models import argus as EAM
+from eve_argus.models.esi import EsiAction
 
 
 def market_prices_universe(
@@ -27,8 +28,8 @@ def market_prices_universe(
 def market_history(
     region_id: int,
     type_id: int,
-    data: Sequence[dict[str, Any]],
-) -> Sequence[EAM.MarketHistoryDetail]:
+    data: EsiAction,
+) -> EAM.MarketHistory:
     """Import market history for a specific region and type from esi response."""
     result = [
         EAM.MarketHistoryDetail(region_id=region_id, type_id=type_id, **x) for x in data

@@ -125,26 +125,24 @@ class MarketHistoryDetail(BaseModel):
     volume: int
 
 
-@DeprecationWarning
 class MarketHistory(TopLevelDataSet):
-    """Market history for a specific region.
-
-    This structure can be used to store either a current snapshot of recent market history, or
-    a yearly archive of market history data
-
-    Not in current use. It's purpose was to store market history data to file,
-    but that is not a current goal. Later the option to stream market history data to a
-    jsonl file will be added.
-    """
+    """Market history for a specific region and type."""
 
     region_id: int
     """The region ID where the market history is located."""
-    max_date: str
-    """The maximum datetime of the market history records, in ISO 8601 format."""
-    min_date: str
-    """The minimum datetime of the market history records, in ISO 8601 format."""
-    data: dict[int, Sequence[MarketHistoryDetail]]
-    """A sequence of market history records indexed by type_id."""
+    type_id: int
+    """The type ID of the item."""
+    data: Sequence[MarketHistoryDetail]
+    """A sequence of market history records."""
+
+
+class RegionalMarketHistory:
+    """A collection of market history records for a specific region."""
+
+    region_id: int
+    """The region ID where the market history is located."""
+    data: dict[int, MarketHistory]
+    """A dictionary mapping type IDs to market history records for that region."""
 
 
 class MarketHistorySummary(BaseModel):
@@ -161,11 +159,11 @@ class MarketHistorySummary(BaseModel):
     lowest: float
     order_count: int
     volume: float
-    effective_date: str
-    """The UTC datetime that is the effective_date of the source data, in ISO 8601 format."""
+    last_modified: str
+    """The UTC datetime that is the last_modified of the source data, in ISO 8601 format."""
 
 
-class MarketHistorySummaries(TopLevelDataSet):
+class RegionalMarketHistorySummaries(TopLevelDataSet):
     """A collection of the most recent market history summaries.
 
     Summaries may have different effective dates, but they are all for the same region.
