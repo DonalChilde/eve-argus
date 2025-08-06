@@ -24,6 +24,6 @@ class ArgusEsi:
         result = DI.market_history(
             region_id=region_id,
             type_id=type_id,
-            data=action.response.data,
+            action=action.response.data,
         )
         return result

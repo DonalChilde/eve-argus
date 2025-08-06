@@ -6,106 +6,140 @@ from itertools import chain
 from typing import Any
 from uuid import uuid4
 
+from eve_argus.helpers.cache_headers import CacheFields, get_cache_fields
 from eve_argus.models import argus as EAM
 from eve_argus.models.esi import EsiAction
 
 
 def market_prices_universe(
-    data: Sequence[dict[str, Any]],
-) -> Sequence[EAM.UniverseMarketPrice]:
+    action: EsiAction,
+) -> EAM.UniverseMarketPrices:
     """Import market prices for the universe from a sequence of dictionaries."""
-    result: list[EAM.UniverseMarketPrice] = []
-    for item in data:
+    cache_fields = get_cache_fields(action.response)
+    result = EAM.UniverseMarketPrices(
+        **cache_fields,
+        data_set_id=uuid4(),
+        data_type=EAM.DataTypes.UniverseMarketPrices,
+        description="Universe market prices",
+        data_source=None,
+        data={},
+    )
+    if action.response is None or action.response.data is None:
+        return result
+    for item in action.response.data:
         prices = EAM.UniverseMarketPrice(
             type_id=item["type_id"],
             adjusted_price=item["adjusted_price"],
             average_price=item.get("average_price", -1.0),
         )
-        result.append(prices)
+        result.data[item["type_id"]] = prices
     return result
 
 
 def market_history(
     region_id: int,
     type_id: int,
-    data: EsiAction,
+    action: EsiAction,
 ) -> EAM.MarketHistory:
     """Import market history for a specific region and type from esi response."""
-    result = [
-        EAM.MarketHistoryDetail(region_id=region_id, type_id=type_id, **x) for x in data
+    cache_fields = get_cache_fields(action.response)
+    history = EAM.MarketHistory(
+        **cache_fields,
+        data_set_id=uuid4(),
+        data_type=EAM.DataTypes.MarketHistory,
+        description=f"Market history for region {region_id} and type {type_id}",
+        data_source=None,
+        region_id=region_id,
+        type_id=type_id,
+        data=[],
+    )
+    if action.response is None or action.response.data is None:
+        return history
+    history.data = [
+        EAM.MarketHistoryDetail(region_id=region_id, type_id=type_id, **x)
+        for x in action.response.data
     ]
 
-    return result
+    return history
 
 
 def region_market_types_from_esi(
-    paged_data: Sequence[Sequence[int]],
-) -> Sequence[int]:
+    region_id: int,
+    action: EsiAction,
+) -> EAM.RegionalMarketTypes:
     """Import region market types from a sequence of integers."""
+    cache_fields = get_cache_fields(action.response)
+    result = EAM.RegionalMarketTypes(
+        **cache_fields,
+        data_set_id=uuid4(),
+        data_type=EAM.DataTypes.RegionalMarketTypes,
+        description="Region market types",
+        data_source=None,
+        region_id=region_id,
+        type_ids=set(),
+    )
+    if action.response is None or action.response.data is None:
+        return result
+    # collect the lists of type IDs from the action response and its pages
+    type_lists: list[list[int]] = [
+        action.response.data if action.response and action.response.data else [],
+        *[page.response.data for page in action.pages if page.response],
+    ]
     # Flatten the list of lists into a single list of type IDs
-    flat_data = list(chain(*paged_data))
-    return flat_data
+    flat_data: list[int] = list(chain(*type_lists))
+    result.type_ids.update(flat_data)
+    return result
 
 
 def region_market_orders_from_esi(
     region_id: int,
-    paged_data: Sequence[Sequence[dict[str, Any]]],
+    action: EsiAction,
 ) -> EAM.RegionalMarketOrders:
     """Import market orders for a specific region from a sequence of dictionaries."""
+    cache_fields = get_cache_fields(action.response)
     result = EAM.RegionalMarketOrders(
+        **cache_fields,
         data_set_id=uuid4(),
-        last_modified=datetime.now(UTC).isoformat(),
         data_type=EAM.DataTypes.RegionalMarketOrders,
         description=f"Regional market orders for {region_id}",
         data_source=None,
         region_id=region_id,
         orders={},
     )
-    flattened_data = chain(*paged_data)
-    for item in flattened_data:
-        order = EAM.MarketOrderDetail(region_id=region_id, **item)
-        if order.type_id not in result.orders:
-            result.orders[order.type_id] = EAM.MarketOrders(
-                region_id=region_id, type_id=order.type_id
+    orders = [
+        action.response.data if action.response and action.response.data else [],
+        *[page.response.data for page in action.pages if page.response],
+    ]
+    flattened_data = chain(*orders)
+    for esi_order in flattened_data:
+        argus_order = EAM.MarketOrderDetail(region_id=region_id, **esi_order)
+        if argus_order.type_id not in result.orders:
+            result.orders[argus_order.type_id] = EAM.MarketOrders(
+                region_id=region_id, type_id=argus_order.type_id
             )
-        if order.is_buy_order:
-            result.orders[order.type_id].buy_orders.append(order)
+        if argus_order.is_buy_order:
+            result.orders[argus_order.type_id].buy_orders.append(argus_order)
         else:
-            result.orders[order.type_id].sell_orders.append(order)
-    return result
-
-
-def region_and_type_market_orders_from_esi(
-    region_id: int,
-    type_id: int,
-    paged_data: Sequence[Sequence[dict[str, Any]]],
-) -> EAM.MarketOrders:
-    """Import market orders for a specific region and type from a sequence of dictionaries."""
-    result = EAM.MarketOrders(region_id=region_id, type_id=type_id)
-    flattened_data = chain(*paged_data)
-    for item in flattened_data:
-        order = EAM.MarketOrderDetail(region_id=region_id, **item)
-        if order.is_buy_order:
-            result.buy_orders.append(order)
-        else:
-            result.sell_orders.append(order)
+            result.orders[argus_order.type_id].sell_orders.append(argus_order)
     return result
 
 
 def system_cost_indices_from_esi(
-    data: Sequence[dict[str, Any]],
+    action: EsiAction,
 ) -> EAM.SystemCostIndices:
     """Import system cost indices from a sequence of dictionaries."""
+    cache_fields = get_cache_fields(action.response)
     result = EAM.SystemCostIndices(
+        **cache_fields,
         data_set_id=uuid4(),
-        last_modified=datetime.now(UTC).isoformat(),
         data_type=EAM.DataTypes.SystemCostIndices,
         description="System cost indices",
         data_source=None,
         data={},
     )
-
-    for item in data:
+    if action.response is None or action.response.data is None:
+        return result
+    for item in action.response.data:
         system_id = item["solar_system_id"]
         result.data[system_id] = EAM.SystemCostIndex(
             system_id=system_id,

@@ -185,7 +185,7 @@ logger.addHandler(logging.NullHandler())
             self.preston, request, debug_save=self.debug, debug_path=self.debug_path
         )
         result = DI.market_history(
-            region_id=region_id, type_id=type_id, data=response.data
+            region_id=region_id, type_id=type_id, action=response.data
         )
         logger.info(f"Retrieved {len(result)} market history records for {request!r}.")
         return result
