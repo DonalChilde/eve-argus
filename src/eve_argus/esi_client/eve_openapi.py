@@ -1,4 +1,4 @@
-""""""
+"""Code to interact with the Eve Esi openapi spec."""
 
 import json
 from collections.abc import Sequence
@@ -7,12 +7,18 @@ from typing import Any, Literal
 
 
 class EveOpenApi:
-    def __init__(self, spec_path: Path) -> None:
+    def __init__(
+        self, spec_path: Path | None = None, spec: dict[str, Any] | None = None
+    ) -> None:
+        if spec_path is None and spec is None:
+            raise ValueError("Either spec_path or spec must be provided.")
         self.spec_path = spec_path
-        self.spec: dict[str, Any] = self._load_spec()
+        self.spec: dict[str, Any] = spec or self._load_spec()
 
     def _load_spec(self) -> dict[str, Any]:
         """Load the OpenAPI specification from the specified file."""
+        if self.spec_path is None or not self.spec_path.exists():
+            raise ValueError(f"Spec path is invalid: {self.spec_path}")
         with open(self.spec_path, encoding="utf-8") as file:
             return json.load(file)
 
@@ -232,3 +238,5 @@ class EveOpenApi:
             header["name"]: header
             for header in self.spec.get("paths", {}).get(op_id, {}).get("headers", {})
         }
+
+    # TODO list op_id, description, path, and query fields.
