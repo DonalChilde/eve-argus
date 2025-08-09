@@ -11,7 +11,9 @@ class EsiRequest(BaseModel):
 
     request_id: UUID
     op_id: str
-    arguments: dict[str, Any] = {}
+    path_args: dict[str, str] = {}
+    query_args: dict[str, str | int | float | None] = {}
+    headers: dict[str, str | None] = {}
     parent: UUID | None = None
     """The parent request ID, if this is a sub-request."""
 
