@@ -1,6 +1,7 @@
+"""A snippet for queued aiohttp requests, with per request callbacks."""
+
 import asyncio
 import logging
-import random
 from asyncio import Queue
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
@@ -18,8 +19,8 @@ logger.addHandler(logging.NullHandler())
 class AiohttpAction:
     method: Literal["GET", "POST", "PUT", "DELETE"]
     url: str
-    params: dict[str, str | int | float | None] = field(default_factory=dict)
-    headers: dict[str, str | None] = field(default_factory=dict)
+    params: dict[str, str | int | float] = field(default_factory=dict)
+    headers: dict[str, str] = field(default_factory=dict)
     callbacks: list[Callable[[aiohttp.ClientResponse, Queue], None]] = field(
         default_factory=list
     )
@@ -31,26 +32,37 @@ class AiohttpQueueSimple:
     def __init__(
         self,
         session: aiohttp.ClientSession | None = None,
-        queue: asyncio.Queue | None = None,
+        queue: asyncio.Queue[AiohttpAction] | None = None,
         worker_factory: Callable[[str, Queue], Awaitable[None]] | None = None,
     ) -> None:
-        self._queue = queue or asyncio.Queue()
+        """Provides a simple interface for processing aiohttp requests in a queue.
+
+        Args:
+            session (aiohttp.ClientSession | None): The aiohttp session to use.
+                If None, a new aiohttp.ClientSession will be created.
+            queue (asyncio.Queue[AiohttpAction] | None): The queue to use for actions.
+                If None, a new asyncio.Queue will be created.
+            worker_factory (Callable[[str, Queue], Awaitable[None]] | None): The factory
+                for creating worker tasks. If None, the default worker factory will be used.
+        """
+        self._queue = queue or asyncio.Queue[AiohttpAction]()
         self._session = session or aiohttp.ClientSession()
         self._worker_factory: Callable[[str, Queue], Awaitable[None]] = (
             worker_factory or self._worker
         )
         self._worker_count = 0
 
-    async def _worker(self, name: str, queue: Queue) -> None:
+    async def _worker(self, name: str, queue: Queue[AiohttpAction]) -> None:
         while True:
             aiohttp_action = await queue.get()
             task_start = perf_counter()
             if aiohttp_action is None:
-                # If there are no tasks in queue, sleep for a random short time waiting for a new task.
-                # This is to keep workers alive so that tasks can be added to the queue in real time.
-                # The random factor is to keep all the workers from making calls at the same time.
-                await asyncio.sleep(random.uniform(0.5, 1.0))
-                continue
+                # # If there are no tasks in queue, sleep for a random short time waiting for a new task.
+                # # This is to keep workers alive so that tasks can be added to the queue in real time.
+                # # The random factor is to keep all the workers from making calls at the same time.
+                # await asyncio.sleep(random.uniform(0.5, 1.0))
+                # continue
+                break
             logger.info(f"Worker {name} processing action: {aiohttp_action.uuid}")
             async with self._session as session:
                 async with session.request(
@@ -85,4 +97,10 @@ class AiohttpQueueSimple:
         self._worker_count = len(tasks)
 
     def do_actions(self, workers: int, actions: Sequence[AiohttpAction]) -> None:
+        """Start processing aiohttp actions in a queue with the specified number of workers.
+
+        Args:
+            workers (int): The number of worker tasks to create.
+            actions (Sequence[AiohttpAction]): The aiohttp actions to process.
+        """
         asyncio.run(self._run_tasks(workers, actions))
