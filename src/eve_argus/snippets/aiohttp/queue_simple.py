@@ -16,16 +16,29 @@ logger.addHandler(logging.NullHandler())
 
 
 @dataclass(slots=True)
-class AiohttpAction:
+class AiohttpRequest:
     method: Literal["GET", "POST", "PUT", "DELETE"]
     url: str
-    params: dict[str, str | int | float] = field(default_factory=dict)
-    headers: dict[str, str] = field(default_factory=dict)
-    callbacks: list[Callable[[aiohttp.ClientResponse, Queue], None]] = field(
-        default_factory=list
-    )
+    query_params: dict[str, str | int | float] = field(default_factory=dict)
+    headers: list[tuple[str, str]] = field(default_factory=list)
     kwargs: dict[str, Any] = field(default_factory=dict)
     uuid: UUID = field(default_factory=uuid4)
+
+
+@dataclass(slots=True)
+class AiohttpResponse:
+    status_code: int
+    status_reason: str | None
+    headers: Sequence[tuple[str, str]]
+    text: str
+    kwargs: dict[str, Any] = field(default_factory=dict)
+    uuid: UUID = field(default_factory=uuid4)
+
+
+@dataclass(slots=True)
+class AiohttpAction:
+    request: AiohttpRequest
+    response: AiohttpResponse | None = None
 
 
 class AiohttpQueueSimple:
@@ -57,29 +70,39 @@ class AiohttpQueueSimple:
             aiohttp_action = await queue.get()
             task_start = perf_counter()
             if aiohttp_action is None:
-                # # If there are no tasks in queue, sleep for a random short time waiting for a new task.
-                # # This is to keep workers alive so that tasks can be added to the queue in real time.
-                # # The random factor is to keep all the workers from making calls at the same time.
-                # await asyncio.sleep(random.uniform(0.5, 1.0))
-                # continue
+                logger.info(f"Worker {name} received shutdown signal.")
                 break
-            logger.info(f"Worker {name} processing action: {aiohttp_action.uuid}")
+            logger.info(
+                f"Worker {name} processing action: {aiohttp_action.request.uuid}"
+            )
             async with self._session as session:
                 async with session.request(
-                    aiohttp_action.method,
-                    aiohttp_action.url,
-                    params=aiohttp_action.params,
-                    headers=aiohttp_action.headers,
-                    **aiohttp_action.kwargs,
+                    aiohttp_action.request.method,
+                    aiohttp_action.request.url,
+                    params=aiohttp_action.request.query_params,
+                    headers=aiohttp_action.request.headers,
+                    **aiohttp_action.request.kwargs,
                 ) as response:
                     task_duration = perf_counter() - task_start
+                    async with response:
+                        logger.info(
+                            f"Worker {name} got status: {response.status}  reason: {response.reason} to action: {aiohttp_action.request.uuid} in {task_duration:.2f} seconds."
+                        )
+                        try:
+                            response.raise_for_status()
+                        except aiohttp.ClientError as e:
+                            logger.error(f"Worker {name} encountered an error: {e}")
+                            raise e
+
+                        aiohttp_action.response = AiohttpResponse(
+                            uuid=aiohttp_action.request.uuid,
+                            status_code=response.status,
+                            status_reason=response.reason,
+                            headers=list(response.headers.items()),
+                            text=await response.text(),
+                        )
                     logger.info(
-                        f"Worker {name} got status response {response.status} to action: {aiohttp_action.uuid} in {task_duration:.2f} seconds."
-                    )
-                    for callback in aiohttp_action.callbacks:
-                        callback(response, queue)
-                    logger.info(
-                        f"Worker {name} finished {len(aiohttp_action.callbacks)} callbacks for action: {aiohttp_action.uuid} in {perf_counter() - task_start:.2f} seconds."
+                        f"Worker {name} finished action: {aiohttp_action.request.uuid} in {perf_counter() - task_start:.2f} seconds."
                     )
             queue.task_done()
 
