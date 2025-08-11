@@ -169,113 +169,114 @@ logger.addHandler(logging.NullHandler())
 #             f"Initialized EsiPublic client in {perf_counter() - start:.6f} seconds. server status: {status!r}"
 #         )
 
-    def get_market_history(
-        self, region_id: int, type_id: int
-    ) -> Sequence[EAM.MarketHistoryDetail]:
-        """Get market history for a specific region and type."""
-        request = EsiRequest(
-            request_id=uuid4(),
-            op_id="get_markets_region_id_history",
-            arguments={
-                "region_id": str(region_id),
-                "type_id": str(type_id),
-            },
-        )
-        response = _get_esi_data(
-            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
-        )
-        result = DI.market_history(
-            region_id=region_id, type_id=type_id, action=response.data
-        )
-        logger.info(f"Retrieved {len(result)} market history records for {request!r}.")
-        return result
 
-    def get_universe_market_prices(self) -> EAM.UniverseMarketPrices:
-        """Get market prices for the entire universe."""
-        request = EsiRequest(request_id=uuid4(), op_id="get_markets_prices")
-        response = _get_esi_data(
-            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
-        )
-        data = DI.market_prices_universe(response.data)
-        logger.info(f"Retrieved {len(data)} market prices for {request!r}.")
-        result = EAM.UniverseMarketPrices(
-            data_set_id=uuid4(),
-            last_modified=datetime.now(UTC).isoformat(),
-            description="Universe market prices",
-            data_source=None,
-            data_type=EAM.DataTypes.UniverseMarketPrices,
-            data={item.type_id: item for item in data},
-        )
-        return result
+# def get_market_history(
+#     self, region_id: int, type_id: int
+# ) -> Sequence[EAM.MarketHistoryDetail]:
+#     """Get market history for a specific region and type."""
+#     request = EsiRequest(
+#         request_id=uuid4(),
+#         op_id="get_markets_region_id_history",
+#         arguments={
+#             "region_id": str(region_id),
+#             "type_id": str(type_id),
+#         },
+#     )
+#     response = _get_esi_data(
+#         self.preston, request, debug_save=self.debug, debug_path=self.debug_path
+#     )
+#     result = DI.market_history(
+#         region_id=region_id, type_id=type_id, action=response.data
+#     )
+#     logger.info(f"Retrieved {len(result)} market history records for {request!r}.")
+#     return result
 
-    def get_region_market_types(self, region_id: int) -> Sequence[int]:
-        """Get type ids with active market orders for a specific region."""
-        request = EsiRequest(
-            request_id=uuid4(),
-            op_id="get_markets_region_id_types",
-            arguments={"region_id": str(region_id)},
-        )
-        response = _get_paged_esi_data(
-            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
-        )
-        paged_data: Sequence[Sequence[int]] = [x.data for x in response]
-        result = DI.region_market_types_from_esi(paged_data)
-        logger.info(f"Retrieved {len(result)} market types for {request!r}.")
-        return result
+# def get_universe_market_prices(self) -> EAM.UniverseMarketPrices:
+#     """Get market prices for the entire universe."""
+#     request = EsiRequest(request_id=uuid4(), op_id="get_markets_prices")
+#     response = _get_esi_data(
+#         self.preston, request, debug_save=self.debug, debug_path=self.debug_path
+#     )
+#     data = DI.market_prices_universe(response.data)
+#     logger.info(f"Retrieved {len(data)} market prices for {request!r}.")
+#     result = EAM.UniverseMarketPrices(
+#         data_set_id=uuid4(),
+#         last_modified=datetime.now(UTC).isoformat(),
+#         description="Universe market prices",
+#         data_source=None,
+#         data_type=EAM.DataTypes.UniverseMarketPrices,
+#         data={item.type_id: item for item in data},
+#     )
+#     return result
 
-    def get_market_orders_by_region(
-        self, region_id: int, order_type: str = "all"
-    ) -> EAM.RegionalMarketOrders:
-        """Get market orders for a specific region."""
-        request = EsiRequest(
-            request_id=uuid4(),
-            op_id="get_markets_region_id_orders",
-            arguments={"region_id": str(region_id), "order_type": order_type},
-        )
-        response = _get_paged_esi_data(
-            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
-        )
-        paged_data: Sequence[Sequence[dict[str, Any]]] = [x.data for x in response]
-        result = DI.region_market_orders_from_esi(region_id, paged_data)
-        logger.info(
-            f"Retrieved {sum(len(page) for page in paged_data)} for {request!r}."
-        )
-        return result
+# def get_region_market_types(self, region_id: int) -> Sequence[int]:
+#     """Get type ids with active market orders for a specific region."""
+#     request = EsiRequest(
+#         request_id=uuid4(),
+#         op_id="get_markets_region_id_types",
+#         arguments={"region_id": str(region_id)},
+#     )
+#     response = _get_paged_esi_data(
+#         self.preston, request, debug_save=self.debug, debug_path=self.debug_path
+#     )
+#     paged_data: Sequence[Sequence[int]] = [x.data for x in response]
+#     result = DI.region_market_types_from_esi(paged_data)
+#     logger.info(f"Retrieved {len(result)} market types for {request!r}.")
+#     return result
 
-    def get_market_orders_by_region_and_type(
-        self, region_id: int, type_id: int, order_type: str = "all"
-    ) -> EAM.MarketOrders:
-        """Get market orders for a specific type in a region."""
-        request = EsiRequest(
-            request_id=uuid4(),
-            op_id="get_markets_region_id_orders",
-            arguments={
-                "region_id": str(region_id),
-                "type_id": str(type_id),
-                "order_type": order_type,
-            },
-        )
-        response = _get_paged_esi_data(
-            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
-        )
-        paged_data: Sequence[Sequence[dict[str, Any]]] = [x.data for x in response]
-        result = DI.region_and_type_market_orders_from_esi(
-            region_id, type_id, paged_data
-        )
-        logger.info(
-            f"Retrieved {sum(len(page) for page in paged_data)} orders for {request!r}."
-        )
-        return result
+# def get_market_orders_by_region(
+#     self, region_id: int, order_type: str = "all"
+# ) -> EAM.RegionalMarketOrders:
+#     """Get market orders for a specific region."""
+#     request = EsiRequest(
+#         request_id=uuid4(),
+#         op_id="get_markets_region_id_orders",
+#         arguments={"region_id": str(region_id), "order_type": order_type},
+#     )
+#     response = _get_paged_esi_data(
+#         self.preston, request, debug_save=self.debug, debug_path=self.debug_path
+#     )
+#     paged_data: Sequence[Sequence[dict[str, Any]]] = [x.data for x in response]
+#     result = DI.region_market_orders_from_esi(region_id, paged_data)
+#     logger.info(
+#         f"Retrieved {sum(len(page) for page in paged_data)} for {request!r}."
+#     )
+#     return result
 
-    def get_system_cost_indices(self) -> EAM.SystemCostIndices:
-        """Get system cost indices."""
-        request = EsiRequest(request_id=uuid4(), op_id="get_industry_systems")
-        response = _get_esi_data(
-            self.preston, request, debug_save=self.debug, debug_path=self.debug_path
-        )
-        paged_data: Sequence[Sequence[dict[str, Any]]] = [x.data for x in response.data]
-        result = DI.system_cost_indices_from_esi(paged_data)
-        logger.info(
-            f"Retrieved {len(result.data)} system cost indices for {request!r}."
-        )
-        return result
+# def get_market_orders_by_region_and_type(
+#     self, region_id: int, type_id: int, order_type: str = "all"
+# ) -> EAM.MarketOrders:
+#     """Get market orders for a specific type in a region."""
+#     request = EsiRequest(
+#         request_id=uuid4(),
+#         op_id="get_markets_region_id_orders",
+#         arguments={
+#             "region_id": str(region_id),
+#             "type_id": str(type_id),
+#             "order_type": order_type,
+#         },
+#     )
+#     response = _get_paged_esi_data(
+#         self.preston, request, debug_save=self.debug, debug_path=self.debug_path
+#     )
+#     paged_data: Sequence[Sequence[dict[str, Any]]] = [x.data for x in response]
+#     result = DI.region_and_type_market_orders_from_esi(
+#         region_id, type_id, paged_data
+#     )
+#     logger.info(
+#         f"Retrieved {sum(len(page) for page in paged_data)} orders for {request!r}."
+#     )
+#     return result
+
+# def get_system_cost_indices(self) -> EAM.SystemCostIndices:
+#     """Get system cost indices."""
+#     request = EsiRequest(request_id=uuid4(), op_id="get_industry_systems")
+#     response = _get_esi_data(
+#         self.preston, request, debug_save=self.debug, debug_path=self.debug_path
+#     )
+#     paged_data: Sequence[Sequence[dict[str, Any]]] = [x.data for x in response.data]
+#     result = DI.system_cost_indices_from_esi(paged_data)
+#     logger.info(
+#         f"Retrieved {len(result.data)} system cost indices for {request!r}."
+#     )
+#     return result
