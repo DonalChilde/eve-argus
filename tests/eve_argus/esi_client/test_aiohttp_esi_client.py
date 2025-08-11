@@ -2,6 +2,8 @@
 
 from uuid import uuid4
 
+import pytest
+
 from eve_argus.esi_client.argus_aiohttp.esi_cache import EsiMemoryCache
 from eve_argus.esi_client.argus_aiohttp.esi_client import ArgusAiohttpClient
 from eve_argus.esi_client.eve_openapi import EveOpenApi
@@ -42,6 +44,7 @@ def test_get_operation(esi_schema):
     assert action.response.source == "cache"
 
 
+@pytest.mark.slow
 def test_get_paged_operation(esi_schema):
     api_spec = EveOpenApi(spec=esi_schema)
     base_url = "https://esi.evetech.net/latest/"
@@ -74,6 +77,3 @@ def test_get_paged_operation(esi_schema):
 
     esi_client.get_op(action, cache_result=True, override_cached=False)
     assert action.response.source == "cache"
-
-
-#'Tue, 12 Aug 2025 11:05:00 GMT'
