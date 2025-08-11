@@ -9,10 +9,19 @@ from eve_argus.helpers.esi_datetime import parse_esi_datetime
 from eve_argus.models.esi import EsiAction, EsiResponse
 from eve_argus.snippets.aiohttp.queue_simple import (
     AiohttpAction,
-    AiohttpQueueSimple,
     AiohttpRequest,
     AiohttpResponse,
+    do_actions,
 )
+
+
+def cache_expired_or_missing(cached_result: EsiResponse | None) -> bool:
+    """Check if the cached result is expired or missing."""
+    if cached_result is None:
+        return True
+    if datetime.fromisoformat(cached_result.expires) < datetime.now(UTC):
+        return True
+    return False
 
 
 class ArgusAiohttpClient(EsiClientProtocol):
@@ -20,14 +29,12 @@ class ArgusAiohttpClient(EsiClientProtocol):
 
     def __init__(
         self,
-        network_client: AiohttpQueueSimple,
         cache: EsiCacheProtocol,
         api_spec: EveOpenApi,
         base_url: str,
         max_connections: int = 50,
         request_divisor: int = 5,
     ) -> None:
-        self.network_client = network_client
         self.cache = cache
         self.api_spec = api_spec
         self.base_url = base_url
@@ -45,17 +52,9 @@ class ArgusAiohttpClient(EsiClientProtocol):
         etag = ""
         if cached_result is not None:
             etag = cached_result.etag
-        if all(
-            (
-                cached_result is not None,
-                override_cached != True,
-                parse_esi_datetime(cached_result.expires) > datetime.now(UTC),  # type: ignore
-            )
-        ):
-            esi_action.response = cached_result
-        else:
+        if override_cached or cache_expired_or_missing(cached_result):
             aiohttp_action = self._build_aiohttp_action(esi_action, etag=etag)
-            self.network_client.do_actions(1, (aiohttp_action,))
+            do_actions(1, (aiohttp_action,))
             if aiohttp_action.response is None:
                 raise ValueError(
                     "Aiohttp action response is None, when response should be complete."
@@ -73,17 +72,19 @@ class ArgusAiohttpClient(EsiClientProtocol):
                         "ESI action response is None, when response should be complete."
                     )
                 self.cache.set(str(esi_action.request.cache_key), esi_action.response)
+        else:
+            esi_action.response = cached_result
         return esi_action
 
     def _calculate_max_workers(self, tasks: int) -> int:
-        return max(self.max_connections, max(1, tasks // self.request_divisor))
+        return min(self.max_connections, max(1, tasks // self.request_divisor))
 
     def _do_paged_actions(self, paged_actions: Sequence[AiohttpAction]) -> None:
         """Perform the paged actions."""
         if not paged_actions:
             return
         worker_count = self._calculate_max_workers(len(paged_actions))
-        self.network_client.do_actions(worker_count, paged_actions)
+        do_actions(worker_count, paged_actions)
 
     def _process_get_responses(
         self,
