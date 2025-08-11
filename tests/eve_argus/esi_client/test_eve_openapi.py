@@ -7,10 +7,24 @@ def test_get_url(esi_schema):
     op_id = "GetMarketsRegionIdHistory"
     path_params = {"region_id": 10000002}
     query_params = {"type_id": 34}
-    url = client.get_url(
+    url_with_query = client.get_url(
         base_url=base_url,
         op_id=op_id,
         path_params=path_params,
         query_params=query_params,
+        include_query=True,
     )
-    assert url == "https://esi.evetech.net/latest/markets/10000002/history?type_id=34"
+    assert (
+        url_with_query
+        == "https://esi.evetech.net/latest/markets/10000002/history?type_id=34"
+    )
+    url_without_query = client.get_url(
+        base_url=base_url,
+        op_id=op_id,
+        path_params=path_params,
+        query_params=query_params,
+        include_query=False,
+    )
+    assert (
+        url_without_query == "https://esi.evetech.net/latest/markets/10000002/history"
+    )
