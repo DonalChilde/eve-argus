@@ -30,7 +30,7 @@ class EsiResponse(BaseModel):
 
     request_id: UUID
     request_url: str
-    source: Literal["cache", "api"] = "api"
+    source: Literal["cache", "api", "not_set"] = "not_set"
     cache_key: UUID | None
     """The cache key for the request/response, if available."""
     text: list[str] = []
