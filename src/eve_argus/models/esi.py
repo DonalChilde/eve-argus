@@ -12,7 +12,7 @@ class EsiRequest(BaseModel):
     request_id: UUID
     op_id: str
     method: Literal["GET", "POST", "PUT", "DELETE"]
-    path_params: dict[str, str] = {}
+    path_params: dict[str, str | int | float] = {}
     query_params: dict[str, str | int | float] = {}
     headers: dict[str, str | None] = {}
     parent: UUID | None = None
