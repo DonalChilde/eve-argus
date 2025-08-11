@@ -1,6 +1,11 @@
+import json
+from importlib import resources
 from pathlib import Path
+from typing import Any
 
 import pytest
+
+from tests.resources import RESOURCES_ANCHOR
 
 # Add an option to mark slow tests, so that they don't run every time.
 
@@ -32,3 +37,12 @@ def test_output_dir_(tmp_path_factory) -> Path:
     """Make a temp directory for output data."""
     test_app_data_dir = tmp_path_factory.mktemp("eve-argus")
     return test_app_data_dir
+
+
+@pytest.fixture(scope="session", name="esi_schema")
+def esi_schema_() -> dict[str, Any]:
+    """Load the ESI OpenAPI schema for testing."""
+    file_resource = resources.files(RESOURCES_ANCHOR).joinpath("schema/openapi.json")
+    with resources.as_file(file_resource) as schema_path:
+        with open(schema_path, encoding="utf-8") as file:
+            return json.load(file)
