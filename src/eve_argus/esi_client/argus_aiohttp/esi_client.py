@@ -92,7 +92,7 @@ class ArgusAiohttpClient(EsiClientProtocol):
         aiohttp_action: AiohttpAction,
         paged_actions: Sequence[AiohttpAction],
     ) -> None:
-        """Process the responses from the GET requests.
+        """Process the responses from the live GET requests.
 
         Combines the results of the initial get action, and any resulting paged actions.
         etag, last_modified, and expires are taken from the primary response.
@@ -119,6 +119,7 @@ class ArgusAiohttpClient(EsiClientProtocol):
         last_modified = (
             parse_esi_datetime(last_modified).isoformat() if last_modified else ""
         )
+
         esi_action.response = EsiResponse(
             request_id=esi_action.request.request_id,
             request_url=aiohttp_action.request.url,
