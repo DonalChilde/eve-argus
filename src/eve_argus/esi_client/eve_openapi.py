@@ -169,6 +169,7 @@ class EveOpenApi:
         op_id: str,
         path_params: Mapping[str, str | int | float],
         query_params: Mapping[str, str | int | float],
+        include_query: bool = False,
     ) -> str:
         """Build a complete URL by combining the base URL, operation ID, path parameters, and query parameters.
 
@@ -178,25 +179,28 @@ class EveOpenApi:
             operation (Literal["get", "put", "post", "delete"]): The HTTP operation type.
             path_params (dict[str, str]): A dictionary of path parameters to include in the URL.
             query_params (dict[str, str]): A dictionary of query parameters to include in the URL.
+            include_query (bool): Whether to include the query parameters in the URL.
 
         Returns:
             str: The constructed URL.
         """
         self._check_path_params(op_id=op_id, path_params=path_params)
+        self._check_query(op_id=op_id, query_params=query_params)
         # Build the path by replacing placeholders with actual values
         path_template = self._collect_path(op_id)
         path = path_template.format(**path_params)
 
         resolved_url = f"{base_url.strip('/')}/{path.strip('/')}"
 
-        # Construct the query string from the query parameters
-        self._check_query(op_id=op_id, query_params=query_params)
-        query_string = "&".join(
-            [f"{key}={value}" for key, value in query_params.items()]
-        )
+        if include_query:
+            # Construct the query string from the query parameters
+            query_string = "&".join(
+                [f"{key}={value}" for key, value in query_params.items()]
+            )
+            # Combine the path and query string into the final URL
+            return f"{resolved_url}?{query_string}" if query_string else resolved_url
 
-        # Combine the path and query string into the final URL
-        return f"{resolved_url}?{query_string}" if query_string else resolved_url
+        return resolved_url
 
     def _collect_operation_headers(self, op_id: str) -> dict[str, dict[str, Any]]:
         """Collect the headers for the given operation ID from the schema.
