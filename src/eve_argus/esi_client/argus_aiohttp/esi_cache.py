@@ -1,3 +1,5 @@
+"""Cache for Esi get requests."""
+
 from eve_argus.esi_client.esi_client_protocol import EsiCacheProtocol
 from eve_argus.models.esi import EsiResponse
 
@@ -19,3 +21,7 @@ class EsiMemoryCache(EsiCacheProtocol):
     def clear(self) -> None:
         """Clear the entire cache."""
         self._cache.clear()
+
+    def remove(self, key: str) -> None:
+        """Remove a cached response by its key."""
+        self._cache.pop(key, None)
