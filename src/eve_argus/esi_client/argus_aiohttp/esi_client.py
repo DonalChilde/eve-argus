@@ -2,9 +2,12 @@
 
 from collections.abc import Sequence
 from datetime import UTC, datetime
+from uuid import UUID
 
 from eve_argus.esi_client.esi_client_protocol import EsiCacheProtocol, EsiClientProtocol
 from eve_argus.esi_client.eve_openapi import EveOpenApi
+from eve_argus.helpers.cache_id_from_url import cache_id_from_url
+from eve_argus.helpers.esi_cache_url import compile_cache_url
 from eve_argus.helpers.esi_datetime import parse_esi_datetime
 from eve_argus.models.esi import EsiAction, EsiResponse
 from eve_argus.snippets.aiohttp.queue_simple import (
@@ -41,17 +44,27 @@ class ArgusAiohttpClient(EsiClientProtocol):
         self.max_connections = max_connections
         self.request_divisor = request_divisor
 
+    def _compile_cache_key(self, esi_action: EsiAction) -> UUID:
+        """Compile the cache key for a given ESI action."""
+        cache_url = compile_cache_url(
+            base_url=self.base_url,
+            request=esi_action.request,
+            open_api=self.api_spec,
+        )
+        return cache_id_from_url(cache_url)
+
     def get_op(
         self,
         esi_action: EsiAction,
-        cache_result: bool = True,
+        cache_results: bool = True,
         override_cached: bool = False,
     ) -> EsiAction:
         """Perform a get operation against eve ESI."""
-        cached_result = self.cache.get(str(esi_action.request.cache_key))
-        etag = ""
-        if cached_result is not None:
-            etag = cached_result.etag
+        if esi_action.request.method != "GET":
+            raise ValueError("Only GET requests are supported in this function.")
+        cache_key = self._compile_cache_key(esi_action)
+        cached_result = self.cache.get(str(cache_key))
+        etag = cached_result.etag if cached_result else ""
         if override_cached or cache_expired_or_missing(cached_result):
             aiohttp_action = self._build_aiohttp_action(esi_action, etag=etag)
             do_actions(1, (aiohttp_action,))
@@ -65,13 +78,15 @@ class ArgusAiohttpClient(EsiClientProtocol):
             else:
                 paged_actions = self._build_paged_actions(aiohttp_action)
                 self._do_paged_actions(paged_actions)
-                self._process_get_responses(esi_action, aiohttp_action, paged_actions)
-            if cache_result:
+                self._process_get_responses(
+                    esi_action, aiohttp_action, paged_actions, cache_key=cache_key
+                )
+            if cache_results:
                 if esi_action.response is None:
                     raise ValueError(
                         "ESI action response is None, when response should be complete."
                     )
-                self.cache.set(str(esi_action.request.cache_key), esi_action.response)
+                self.cache.set(str(cache_key), esi_action.response)
         else:
             esi_action.response = cached_result
         return esi_action
@@ -91,6 +106,7 @@ class ArgusAiohttpClient(EsiClientProtocol):
         esi_action: EsiAction,
         aiohttp_action: AiohttpAction,
         paged_actions: Sequence[AiohttpAction],
+        cache_key: UUID,
     ) -> None:
         """Process the responses from the live GET requests.
 
@@ -124,7 +140,7 @@ class ArgusAiohttpClient(EsiClientProtocol):
             request_id=esi_action.request.request_id,
             request_url=aiohttp_action.request.url,
             source="api",
-            cache_key=esi_action.request.cache_key,
+            cache_key=cache_key,
             text=text,
             expires=expires,
             etag=etag,
