@@ -23,6 +23,7 @@ class AiohttpRequest:
     headers: list[tuple[str, str]] = field(default_factory=list)
     kwargs: dict[str, Any] = field(default_factory=dict)
     uuid: UUID = field(default_factory=uuid4)
+    parent_uuid: UUID | None = None
 
 
 @dataclass(slots=True)
