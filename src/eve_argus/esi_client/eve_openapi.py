@@ -174,6 +174,24 @@ class EveOpenApi(EveOpenApiProtocol):
                     )
         return True
 
+    def validate_operation(
+        self,
+        op_id: str,
+        path_params: Mapping[str, str | int | float],
+        query_params: Mapping[str, str | int | float],
+    ) -> bool:
+        valid = all(
+            (
+                self._check_path_params(op_id=op_id, path_params=path_params),
+                self._check_query(op_id=op_id, query_params=query_params),
+            ),
+        )
+        return valid
+
+    def validate_operation_headers(self, op_id: str, headers: dict[str, str]) -> bool:
+        # FIXME implement validation logic
+        return True
+
     def get_url(
         self,
         base_url: str,
@@ -195,8 +213,9 @@ class EveOpenApi(EveOpenApiProtocol):
         Returns:
             str: The constructed URL.
         """
-        self._check_path_params(op_id=op_id, path_params=path_params)
-        self._check_query(op_id=op_id, query_params=query_params)
+        self.validate_operation(
+            op_id=op_id, path_params=path_params, query_params=query_params
+        )
         # Build the path by replacing placeholders with actual values
         path_template = self._collect_path(op_id)
         path = path_template.format(**path_params)
