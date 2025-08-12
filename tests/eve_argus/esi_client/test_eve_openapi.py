@@ -28,3 +28,53 @@ def test_get_url(esi_schema):
     assert (
         url_without_query == "https://esi.evetech.net/latest/markets/10000002/history"
     )
+
+
+def test_get_url_sorts_query_params():
+    # Minimal inline spec with two query params 'a' and 'b'
+    spec = {
+        "paths": {
+            "/foo/{id}": {
+                "get": {
+                    "operationId": "GetFoo",
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "in": "path",
+                            "required": True,
+                            "schema": {"type": "integer"},
+                        },
+                        {
+                            "name": "b",
+                            "in": "query",
+                            "required": False,
+                            "schema": {"type": "string"},
+                        },
+                        {
+                            "name": "a",
+                            "in": "query",
+                            "required": False,
+                            "schema": {"type": "string"},
+                        },
+                    ],
+                }
+            }
+        }
+    }
+
+    client = EveOpenApi(spec=spec)
+    base_url = "https://example.com"
+    op_id = "GetFoo"
+    path_params = {"id": 1}
+
+    # Provide query params in reverse order to ensure sorting takes effect
+    qp = {"b": 2, "a": 1}
+    url_with_query = client.get_url(
+        base_url=base_url,
+        op_id=op_id,
+        path_params=path_params,
+        query_params=qp,
+        include_query=True,
+    )
+
+    assert url_with_query == "https://example.com/foo/1?a=1&b=2"

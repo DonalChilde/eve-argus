@@ -194,9 +194,9 @@ class EveOpenApi:
 
         if include_query:
             # Construct the query string from the query parameters
-            query_string = "&".join(
-                [f"{key}={value}" for key, value in query_params.items()]
-            )
+            # Sort keys so URL is stable regardless of dict insertion order
+            query_items = sorted(query_params.items(), key=lambda kv: kv[0])
+            query_string = "&".join([f"{key}={value}" for key, value in query_items])
             # Combine the path and query string into the final URL
             return f"{resolved_url}?{query_string}" if query_string else resolved_url
 
