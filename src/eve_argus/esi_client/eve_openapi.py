@@ -3,7 +3,14 @@
 import json
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Protocol, TypedDict
+from typing import Any, Literal, Protocol, TypedDict
+from uuid import UUID, uuid4
+
+from eve_argus.models.esi import EsiRequest
+
+# FIXME decide on validation signalling. right now the functions return a bool, and throw an exception.
+# FIXME add common response headers to _collect_response_headers and _collect_operation_headers
+# TODO output a table of operation_ids,paths, descriptions, and valid inputs.
 
 
 class ByOpId(TypedDict):
@@ -21,18 +28,111 @@ class EveOpenApiProtocol(Protocol):
         path_params: Mapping[str, str | int | float],
         query_params: Mapping[str, str | int | float],
         include_query: bool = False,
-    ) -> str: ...
+    ) -> str:
+        """Build the URL for the given operation ID."""
+        ...
+
+    def validate_operation(
+        self,
+        op_id: str,
+        path_params: Mapping[str, str | int | float],
+        query_params: Mapping[str, str | int | float],
+    ) -> bool:
+        """Validate the operation parameters."""
+        ...
+
+    def validate_operation_headers(
+        self, op_id: str, headers: dict[str, str | None]
+    ) -> bool:
+        """Validate the operation headers."""
+        ...
+
+    def build_esi_request(
+        self,
+        op_id: str,
+        method: Literal["GET", "POST", "PUT", "DELETE"],
+        path_params: dict[str, str | int | float],
+        query_params: dict[str, str | int | float],
+        headers: dict[str, str | None],
+        parent_id: UUID | None = None,
+    ) -> EsiRequest:
+        """Build an ESI request object."""
+        ...
 
 
 class EveOpenApi(EveOpenApiProtocol):
     def __init__(
         self, spec_path: Path | None = None, spec: dict[str, Any] | None = None
     ) -> None:
+        """Initialize the EveOpenApi client."""
         if spec_path is None and spec is None:
             raise ValueError("Either spec_path or spec must be provided.")
         self.spec_path = spec_path
         self.spec: dict[str, Any] = spec or self._load_spec()
         self.by_op_id: dict[str, ByOpId] = self._index_by_op_id()
+
+    def _resolve_ref(self, reference: str) -> dict[str, Any]:
+        """Resolve a JSON reference (RFC 6901) to its definition in the spec."""
+        if reference.startswith("#/"):
+            # Resolve internal reference
+            parts = reference[2:].split("/")
+            return self._resolve_internal_ref(parts)
+        return {}
+
+    def _resolve_internal_ref(self, parts: list[str]) -> dict[str, Any]:
+        """Resolve an internal JSON reference given as a list of path parts."""
+        obj = self.spec
+        for part in parts:
+            if isinstance(obj, dict):
+                obj = obj.get(part)
+            else:
+                return {}
+        return obj if isinstance(obj, dict) else {}
+
+    def _common_response_headers(self) -> dict[str, dict[str, Any]]:
+        response_headers = {}
+        for header in self.spec.get("components", {}).get("headers", {}).values():
+            response_headers[header["name"]] = header
+        return response_headers
+
+    def _common_request_headers(self) -> dict[str, dict[str, Any]]:
+        request_headers = {}
+        for header in self.spec.get("components", {}).get("headers", {}).values():
+            if header.get("in") == "header":
+                request_headers[header["name"]] = header
+        return request_headers
+
+    def _operation_specific_response_parameters(
+        self, operation_id: str
+    ) -> dict[str, dict[str, Any]]:
+        """Get the response headers specific to the given operation ID."""
+        operation = self.by_op_id.get(operation_id, {})
+        response_headers: dict[str, dict[str, Any]] = {}
+        for key, value in (
+            operation.get("operation", {})
+            .get("responses", {})
+            .get("200", {})
+            .get("headers", {})
+            .items()
+        ):
+            if "$ref" in value:
+                response_headers[key] = self._resolve_ref(value["$ref"])
+            else:
+                response_headers[key] = value
+        return response_headers
+
+    def _operation_specific_request_parameters(
+        self, operation_id: str
+    ) -> dict[str, dict[str, Any]]:
+        """Get the request parameters specific to the given operation ID."""
+        operation = self.by_op_id.get(operation_id, {})
+        request_parameters: dict[str, dict[str, Any]] = {}
+        for key, value in operation.get("operation", {}).get("parameters", []):
+            if "$ref" in value:
+                request_parameters[key] = self._resolve_ref(value["$ref"])
+            else:
+                request_parameters[key] = value
+        return request_parameters
 
     def _index_by_op_id(self) -> dict[str, ByOpId]:
         """Index the operations by their ID."""
@@ -174,12 +274,39 @@ class EveOpenApi(EveOpenApiProtocol):
                     )
         return True
 
+    def build_esi_request(
+        self,
+        op_id: str,
+        method: Literal["GET", "POST", "PUT", "DELETE"],
+        path_params: dict[str, str | int | float],
+        query_params: dict[str, str | int | float],
+        headers: dict[str, str | None],
+        parent_id: UUID | None = None,
+    ) -> EsiRequest:
+        """Build an ESI request object."""
+        self.validate_operation(
+            op_id=op_id,
+            path_params=path_params,
+            query_params=query_params,
+        )
+        self.validate_operation_headers(op_id=op_id, headers=headers)
+        return EsiRequest(
+            request_id=uuid4(),
+            op_id=op_id,
+            method=method,
+            path_params=path_params,
+            query_params=query_params,
+            headers=headers,
+            parent_id=parent_id,
+        )
+
     def validate_operation(
         self,
         op_id: str,
         path_params: Mapping[str, str | int | float],
         query_params: Mapping[str, str | int | float],
     ) -> bool:
+        """Validate the operation parameters."""
         valid = all(
             (
                 self._check_path_params(op_id=op_id, path_params=path_params),
@@ -188,7 +315,10 @@ class EveOpenApi(EveOpenApiProtocol):
         )
         return valid
 
-    def validate_operation_headers(self, op_id: str, headers: dict[str, str]) -> bool:
+    def validate_operation_headers(
+        self, op_id: str, headers: dict[str, str | None]
+    ) -> bool:
+        """Validate the operation headers."""
         # FIXME implement validation logic
         return True
 
@@ -246,8 +376,10 @@ class EveOpenApi(EveOpenApiProtocol):
             for header in self.spec.get("paths", {}).get(op_id, {}).get("headers", [])
         }
 
-    def _collect_response_headers(self, op_id: str) -> dict[str, dict[str, Any]]:
-        """Collect the response headers for the given operation ID from the schema.
+    def _collect_valid_response_headers(self, op_id: str) -> dict[str, dict[str, Any]]:
+        """Collect the possible response headers for the given operation ID from the schema.
+
+        Includes headers in common, and those specific to the operation.
 
         Args:
             op_id (str): The operation ID.
@@ -263,21 +395,3 @@ class EveOpenApi(EveOpenApiProtocol):
             .get("responses", {})
             .get("headers", {})
         }
-
-    # def _collect_operation_headers(self, op_id: str) -> dict[str, dict[str, Any]]:
-    #     """Collect the headers for the given operation ID from the schema.
-
-    #     Args:
-    #         op_id (str): The operation ID.
-
-    #     Returns:
-    #         dict[str, dict[str, Any]]: A dictionary of headers.
-    #     """
-    #     # FIXME resolve full header infomation, both common and specific.
-    #     return {
-    #         header["name"]: header
-    #         for header in self.spec.get("paths", {}).get(op_id, {}).get("headers", {})
-    #     }
-
-    # TODO list op_id, description, path, and query fields.
-    # TODO add common response headers to _collect_response_headers and _collect_operation_headers
