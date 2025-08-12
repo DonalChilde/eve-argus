@@ -3,7 +3,7 @@
 import json
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any, Protocol, TypedDict
 
 
 class ByOpId(TypedDict):
@@ -13,7 +13,18 @@ class ByOpId(TypedDict):
     operation: dict[str, Any]
 
 
-class EveOpenApi:
+class EveOpenApiProtocol(Protocol):
+    def get_url(
+        self,
+        base_url: str,
+        op_id: str,
+        path_params: Mapping[str, str | int | float],
+        query_params: Mapping[str, str | int | float],
+        include_query: bool = False,
+    ) -> str: ...
+
+
+class EveOpenApi(EveOpenApiProtocol):
     def __init__(
         self, spec_path: Path | None = None, spec: dict[str, Any] | None = None
     ) -> None:
