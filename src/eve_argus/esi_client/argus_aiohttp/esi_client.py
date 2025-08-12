@@ -2,7 +2,7 @@
 
 from collections.abc import Sequence
 from datetime import UTC, datetime
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from eve_argus.esi_client.esi_client_protocol import EsiCacheProtocol, EsiClientProtocol
 from eve_argus.esi_client.eve_openapi import EveOpenApi
@@ -164,7 +164,8 @@ class ArgusAiohttpClient(EsiClientProtocol):
                             "page": page,
                         },
                         headers=aiohttp_action.request.headers,
-                        uuid=aiohttp_action.request.uuid,
+                        uuid=uuid4(),
+                        parent_uuid=aiohttp_action.request.uuid,
                     )
                 )
                 paged_actions.append(page_request_action)
