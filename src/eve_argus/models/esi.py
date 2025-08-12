@@ -17,8 +17,8 @@ class EsiRequest(BaseModel):
     headers: dict[str, str | None] = {}
     parent: UUID | None = None
     """The parent request ID, if this is a sub-request."""
-    cache_key: UUID | None
-    """The cache key for the request/response, if available."""
+    # cache_key: UUID | None = None
+    # """The cache key for the GET request/response, if available."""
 
 
 class EsiResponse(BaseModel):
@@ -32,7 +32,7 @@ class EsiResponse(BaseModel):
     request_url: str
     source: Literal["cache", "api", "not_set"] = "not_set"
     cache_key: UUID | None
-    """The cache key for the request/response, if available."""
+    """The cache key for the GET request/response, if available."""
     text: list[str] = []
     """The response body as a list of strings."""
     expires: str
