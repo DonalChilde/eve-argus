@@ -3,7 +3,9 @@
 import json
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Protocol, TypedDict
+from typing import Any, TypedDict
+
+from eve_argus.esi_schema.eve_openapi_protocol import EveOpenApiProtocol
 
 # FIXME decide on validation signalling. right now the functions return a bool, and throw an exception.
 # TODO output a table of operation_ids,paths, descriptions, and valid inputs.
@@ -14,28 +16,6 @@ class ByOpId(TypedDict):
     method: str
     path: str
     operation: dict[str, Any]
-
-
-class EveOpenApiProtocol(Protocol):
-    def get_url(
-        self,
-        base_url: str,
-        op_id: str,
-        path_params: Mapping[str, str | int | float],
-        query_params: Mapping[str, str | int | float],
-        include_query: bool = False,
-    ) -> str:
-        """Build the URL for the given operation ID."""
-        ...
-
-    def validate_operation(
-        self,
-        op_id: str,
-        path_params: Mapping[str, str | int | float],
-        query_params: Mapping[str, str | int | float],
-    ) -> bool:
-        """Validate the operation parameters."""
-        ...
 
     # def validate_operation_headers(
     #     self, op_id: str, headers: dict[str, str | None]
