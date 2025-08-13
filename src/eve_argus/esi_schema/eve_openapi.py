@@ -5,12 +5,16 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, TypedDict
 
-from eve_argus.esi_schema.eve_openapi_protocol import EveOpenApiProtocol
+from eve_argus.esi_schema.eve_openapi_protocol import (
+    EveOpenApiProtocol,
+    SplitParameters,
+)
 
 # FIXME decide on validation signalling. right now the functions return a bool, and throw an exception.
 # TODO output a table of operation_ids,paths, descriptions, and valid inputs.
 
 
+# TODO add a function that returns this, and move to Protocol.
 class ByOpId(TypedDict):
     operationId: str
     method: str
@@ -272,6 +276,11 @@ class EveOpenApi(EveOpenApiProtocol):
                         f"Missing required query parameters: {query_params=}, {possible_params=}"
                     )
         return True
+
+    def split_parameters(
+        self, op_id: str, parameters: Mapping[str, str | int | float]
+    ) -> SplitParameters:
+        raise NotImplementedError("Subclasses must implement split_parameters")
 
     def validate_operation(
         self,

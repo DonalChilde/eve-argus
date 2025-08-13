@@ -7,7 +7,6 @@ def type_id_subsets(
     type_infos: EAM.TypeInfos, blueprints: EAM.Blueprints
 ) -> EAM.TypeIDSubsets:
     """Get type ID subsets from Argus data."""
-
     published = EAM.TypeIDSubset(
         description="published type_ids", type_ids=published_type_ids(type_infos)
     )

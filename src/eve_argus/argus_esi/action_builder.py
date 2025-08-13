@@ -13,3 +13,12 @@ class ArgusEsiActionBuilder:
     def get_markets_prices(self, esi_action: EsiAction) -> EsiAction:
         """Get the market prices for a given ESI action."""
         # Build the request
+
+
+def build_request(
+    operation_id: str, parameters: dict[str, str], eve_openapi: EveOpenApiProtocol
+) -> EsiRequest:
+    """Build an EsiRequest object."""
+    # add a helper function to EveOpenApiProtocol that verifys and splits parameters.
+    # split the parameters into path, query, and header dicts using the EveOpenApiProtocol.
+    # Assemble the request
