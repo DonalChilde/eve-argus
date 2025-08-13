@@ -4,10 +4,12 @@ from uuid import uuid4
 
 import pytest
 
-from eve_argus.esi_client.argus_aiohttp.esi_client import ArgusAiohttpClient
-from eve_argus.esi_schema.eve_openapi import EveOpenApi
 from eve_argus.eve_argus_esi.esi_cache.esi_memory_cache import EsiMemoryCache
+from eve_argus.eve_argus_esi.esi_client.argus_aiohttp.esi_client import (
+    ArgusAiohttpClient,
+)
 from eve_argus.eve_argus_esi.esi_models import EsiAction, EsiRequest
+from eve_argus.eve_argus_esi.esi_schema.eve_openapi import EveOpenApi
 from eve_argus.helpers.cache_id_from_url import cache_id_from_url
 from eve_argus.helpers.esi_cache_url import compile_cache_url
 

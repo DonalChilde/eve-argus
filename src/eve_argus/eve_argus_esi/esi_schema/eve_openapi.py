@@ -5,7 +5,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, TypedDict
 
-from eve_argus.esi_schema.eve_openapi_protocol import (
+from eve_argus.eve_argus_esi.esi_schema.eve_openapi_protocol import (
     EveOpenApiProtocol,
     SplitParameters,
 )

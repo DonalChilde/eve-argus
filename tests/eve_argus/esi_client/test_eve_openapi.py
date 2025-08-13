@@ -1,4 +1,4 @@
-from eve_argus.esi_schema.eve_openapi import EveOpenApi
+from eve_argus.eve_argus_esi.esi_schema.eve_openapi import EveOpenApi
 
 
 def test_get_url(esi_schema):

@@ -5,7 +5,7 @@ Covers:
 - _resolve_internal_ref for valid paths and non-dict leaf behavior
 """
 
-from eve_argus.esi_schema.eve_openapi import EveOpenApi
+from eve_argus.eve_argus_esi.esi_schema.eve_openapi import EveOpenApi
 
 
 def test_resolve_ref_components_headers_etag(esi_schema):
