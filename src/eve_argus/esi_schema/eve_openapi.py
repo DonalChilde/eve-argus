@@ -40,11 +40,11 @@ class EveOpenApiProtocol(Protocol):
         """Validate the operation parameters."""
         ...
 
-    def validate_operation_headers(
-        self, op_id: str, headers: dict[str, str | None]
-    ) -> bool:
-        """Validate the operation headers."""
-        ...
+    # def validate_operation_headers(
+    #     self, op_id: str, headers: dict[str, str | None]
+    # ) -> bool:
+    #     """Validate the operation headers."""
+    #     ...
 
     def build_esi_request(
         self,
@@ -171,7 +171,7 @@ class EveOpenApi(EveOpenApiProtocol):
         path_parameters = {}
         for key, param in op_parameters.items():
             if param.get("in") == "path":
-                path_parameters[param[key]] = param
+                path_parameters[key] = param
         return path_parameters
 
     def _check_path_params(
@@ -237,7 +237,7 @@ class EveOpenApi(EveOpenApiProtocol):
         query_params = {}
         for key, param in operation_parameters.items():
             if param.get("in") == "query":
-                query_params[param[key]] = param
+                query_params[key] = param
         return query_params
 
     def _check_query(
@@ -287,7 +287,7 @@ class EveOpenApi(EveOpenApiProtocol):
             path_params=path_params,
             query_params=query_params,
         )
-        self.validate_operation_headers(op_id=op_id, headers=headers)
+
         return EsiRequest(
             request_id=uuid4(),
             op_id=op_id,
@@ -313,22 +313,24 @@ class EveOpenApi(EveOpenApiProtocol):
         )
         return valid
 
-    def validate_operation_headers(
-        self, op_id: str, headers: dict[str, str | None]
-    ) -> bool:
-        """Validate the operation headers."""
-        # FIXME this will fail on user-agent, not correct.
-        possible_headers = self._collect_request_headers(op_id=op_id)
-        for key, value in headers.items():
-            if key not in possible_headers:
-                raise ValueError(
-                    f"Unrecognized header parameter: {key}, {possible_headers=}"
-                )
-            if possible_headers[key].get("required", False) and value is None:
-                raise ValueError(
-                    f"Missing required header parameter: {key}, {possible_headers=}"
-                )
-        return True
+    # def validate_operation_headers(
+    #     self, op_id: str, headers: dict[str, str | None]
+    # ) -> bool:
+    #     """Validate the operation headers."""
+    #     # FIXME this will fail on user-agent, not correct.
+    #     possible_headers = self._collect_request_headers(op_id=op_id)
+    #     for key, value in headers.items():
+    #         # This check is disabled
+
+    #         # if key not in possible_headers:
+    #         #     raise ValueError(
+    #         #         f"Unrecognized header parameter: {key}, {possible_headers=}"
+    #         #     )
+    #         if possible_headers[key].get("required", False) and value is None:
+    #             raise ValueError(
+    #                 f"Missing required header parameter: {key}, {possible_headers=}"
+    #             )
+    #     return True
 
     def get_url(
         self,

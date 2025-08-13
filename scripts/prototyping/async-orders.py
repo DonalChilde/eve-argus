@@ -15,7 +15,7 @@ from uuid import uuid4
 
 import aiohttp
 
-from eve_argus.esi_client.eve_openapi import EveOpenApi
+from eve_argus.esi_schema.eve_openapi import EveOpenApi
 from eve_argus.models.esi import EsiAction, EsiRequest, EsiResponse
 from eve_argus.snippets.aiohttp.queue_simple import AiohttpAction, AiohttpQueueSimple
 

@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from eve_argus.esi_client.eve_openapi import EveOpenApiProtocol
+from eve_argus.esi_schema.eve_openapi import EveOpenApiProtocol
 from eve_argus.models.esi import EsiAction, EsiRequest, EsiResponse
 
 
