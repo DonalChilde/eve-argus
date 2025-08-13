@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 from typing import Protocol
 
-from eve_argus.models.esi import EsiAction
+from eve_argus.eve_argus_esi.esi_models import EsiAction
 
 # Esi Client knows about paging, automatically handles it.
 

@@ -3,7 +3,7 @@
 from typing import Literal
 
 from eve_argus.esi_schema.eve_openapi import EveOpenApiProtocol
-from eve_argus.models.esi import EsiAction, EsiRequest, EsiResponse
+from eve_argus.eve_argus_esi.esi_models import EsiAction, EsiRequest, EsiResponse
 
 
 class ArgusEsiActionBuilder:

@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from asyncio import Queue
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from time import perf_counter
 from typing import Any, Literal

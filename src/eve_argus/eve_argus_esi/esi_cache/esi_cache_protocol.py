@@ -1,8 +1,8 @@
-"""Esi Cache Protocol."""
+"""Eve Argus ESI Cache Protocol."""
 
 from typing import Protocol
 
-from eve_argus.models.esi import EsiResponse
+from eve_argus.eve_argus_esi.esi_models import EsiResponse
 
 
 class EsiCacheProtocol(Protocol):

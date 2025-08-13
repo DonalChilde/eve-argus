@@ -4,19 +4,20 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from eve_argus.esi_cache.esi_cache_protocol import EsiCacheProtocol
-from eve_argus.esi_client.esi_client_protocol import EsiClientProtocol
-from eve_argus.esi_schema.eve_openapi import EveOpenApi
+from eve_argus.eve_argus_esi.esi_cache.esi_cache_protocol import EsiCacheProtocol
+from eve_argus.eve_argus_esi.esi_models import EsiAction, EsiResponse
 from eve_argus.helpers.cache_id_from_url import cache_id_from_url
 from eve_argus.helpers.esi_cache_url import compile_cache_url
 from eve_argus.helpers.esi_datetime import parse_esi_datetime
-from eve_argus.models.esi import EsiAction, EsiResponse
 from eve_argus.snippets.aiohttp.queue_simple import (
     AiohttpAction,
     AiohttpRequest,
     AiohttpResponse,
     do_actions,
 )
+
+from ...esi_schema.eve_openapi import EveOpenApi
+from ..esi_client_protocol import EsiClientProtocol
 
 
 def cache_expired_or_missing(cached_result: EsiResponse | None) -> bool:

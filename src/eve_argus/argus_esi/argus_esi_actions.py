@@ -2,7 +2,7 @@
 
 from uuid import uuid4
 
-from eve_argus.models.esi import EsiAction, EsiRequest
+from eve_argus.eve_argus_esi.esi_models import EsiAction, EsiRequest
 
 
 def market_history(region_id: int, type_id: int, etag: str = "") -> EsiAction:

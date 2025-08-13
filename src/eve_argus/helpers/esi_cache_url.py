@@ -1,5 +1,5 @@
-from eve_argus.esi_schema.eve_openapi import EveOpenApiProtocol
-from eve_argus.models.esi import EsiRequest
+from eve_argus.eve_argus_esi.esi_models import EsiRequest
+from eve_argus.eve_argus_esi.esi_schema.eve_openapi_protocol import EveOpenApiProtocol
 
 
 def compile_cache_url(

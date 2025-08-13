@@ -10,7 +10,7 @@ from typing import cast
 
 import preston
 
-from eve_argus.models.esi import MarketHistory
+from eve_argus.eve_argus_esi.esi_models import MarketHistory
 from eve_argus.snippets.file.csv import write_dicts_to_csv
 
 type_ids = [34, 35, 36, 37, 38, 39]

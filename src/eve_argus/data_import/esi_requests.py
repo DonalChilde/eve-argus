@@ -16,8 +16,8 @@ from uuid import uuid4
 import preston
 
 from eve_argus.argus_esi import esi_to_argus as DI
+from eve_argus.eve_argus_esi.esi_models import EsiAction, EsiRequest, EsiResponse
 from eve_argus.models import argus as EAM
-from eve_argus.models.esi import EsiAction, EsiRequest, EsiResponse
 from eve_argus.snippets.file.datetime_filename import file_safe_datetime_string
 
 logger = logging.getLogger(__name__)
