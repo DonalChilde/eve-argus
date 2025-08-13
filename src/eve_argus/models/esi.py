@@ -15,7 +15,7 @@ class EsiRequest(BaseModel):
     path_params: dict[str, str | int | float] = {}
     query_params: dict[str, str | int | float] = {}
     headers: dict[str, str | None] = {}
-    parent: UUID | None = None
+    parent_id: UUID | None = None
     """The parent request ID, if this is a sub-request."""
     # cache_key: UUID | None = None
     # """The cache key for the GET request/response, if available."""

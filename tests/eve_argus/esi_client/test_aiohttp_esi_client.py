@@ -20,6 +20,7 @@ def test_get_operation(esi_schema):
         api_spec=api_spec,
         base_url=base_url,
         cache=cache,
+        user_agent_prefix="Testing...",
     )
     op_id = "GetMarketsRegionIdHistory"
     path_params = {"region_id": 10000002}
@@ -62,6 +63,7 @@ def test_get_paged_operation(esi_schema):
         api_spec=api_spec,
         base_url=base_url,
         cache=cache,
+        user_agent_prefix="Testing...",
     )
     op_id = "GetMarketsRegionIdOrders"
     path_params = {"region_id": 10000002}

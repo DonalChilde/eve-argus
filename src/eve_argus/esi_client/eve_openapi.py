@@ -9,7 +9,6 @@ from uuid import UUID, uuid4
 from eve_argus.models.esi import EsiRequest
 
 # FIXME decide on validation signalling. right now the functions return a bool, and throw an exception.
-# FIXME add common response headers to _collect_response_headers and _collect_operation_headers
 # TODO output a table of operation_ids,paths, descriptions, and valid inputs.
 
 
@@ -127,11 +126,12 @@ class EveOpenApi(EveOpenApiProtocol):
         """Get the request parameters specific to the given operation ID."""
         operation = self.by_op_id.get(operation_id, {})
         request_parameters: dict[str, dict[str, Any]] = {}
-        for key, value in operation.get("operation", {}).get("parameters", []):
+        for value in operation.get("operation", {}).get("parameters", []):
             if "$ref" in value:
-                request_parameters[key] = self._resolve_ref(value["$ref"])
+                value = self._resolve_ref(value["$ref"])
+                request_parameters[value["name"]] = value
             else:
-                request_parameters[key] = value
+                request_parameters[value["name"]] = value
         return request_parameters
 
     def _index_by_op_id(self) -> dict[str, ByOpId]:
@@ -167,14 +167,12 @@ class EveOpenApi(EveOpenApiProtocol):
         """
         # Get the path parameters from the spec
         # path parameters must have unique names, so we use a dict to enforce this.
-        op_path_params = (
-            self.by_op_id.get(op_id, {}).get("operation", {}).get("parameters", [])
-        )
-        return {
-            param["name"]: param
-            for param in op_path_params
-            if param.get("in") == "path"
-        }
+        op_parameters = self._operation_specific_request_parameters(operation_id=op_id)
+        path_parameters = {}
+        for key, param in op_parameters.items():
+            if param.get("in") == "path":
+                path_parameters[param[key]] = param
+        return path_parameters
 
     def _check_path_params(
         self,
@@ -233,14 +231,14 @@ class EveOpenApi(EveOpenApiProtocol):
         # Get the query parameters from the spec
         # Query strings do not have to have unique names, but Eve esi uses unique names
         # for query parameters, and they are all defined in the operation path.
-        op_query_params = (
-            self.by_op_id.get(op_id, {}).get("operation", {}).get("parameters", [])
+        operation_parameters = self._operation_specific_request_parameters(
+            operation_id=op_id
         )
-        return {
-            param["name"]: param
-            for param in op_query_params
-            if param.get("in") == "query"
-        }
+        query_params = {}
+        for key, param in operation_parameters.items():
+            if param.get("in") == "query":
+                query_params[param[key]] = param
+        return query_params
 
     def _check_query(
         self,
@@ -319,7 +317,17 @@ class EveOpenApi(EveOpenApiProtocol):
         self, op_id: str, headers: dict[str, str | None]
     ) -> bool:
         """Validate the operation headers."""
-        # FIXME implement validation logic
+        # FIXME this will fail on user-agent, not correct.
+        possible_headers = self._collect_request_headers(op_id=op_id)
+        for key, value in headers.items():
+            if key not in possible_headers:
+                raise ValueError(
+                    f"Unrecognized header parameter: {key}, {possible_headers=}"
+                )
+            if possible_headers[key].get("required", False) and value is None:
+                raise ValueError(
+                    f"Missing required header parameter: {key}, {possible_headers=}"
+                )
         return True
 
     def get_url(
@@ -362,7 +370,7 @@ class EveOpenApi(EveOpenApiProtocol):
 
         return resolved_url
 
-    def _collect_operation_headers(self, op_id: str) -> dict[str, dict[str, Any]]:
+    def _collect_request_headers(self, op_id: str) -> dict[str, dict[str, Any]]:
         """Collect the headers for the given operation ID from the schema.
 
         Args:
@@ -371,12 +379,14 @@ class EveOpenApi(EveOpenApiProtocol):
         Returns:
             dict[str, dict[str, Any]]: A dictionary of headers.
         """
-        return {
-            header["name"]: header
-            for header in self.spec.get("paths", {}).get(op_id, {}).get("headers", [])
-        }
+        request_parameters = self._operation_specific_request_parameters(op_id)
+        request_headers = {}
+        for key, param in request_parameters.items():
+            if param.get("in") == "header":
+                request_headers[key] = param
+        return request_headers
 
-    def _collect_valid_response_headers(self, op_id: str) -> dict[str, dict[str, Any]]:
+    def _collect_response_headers(self, op_id: str) -> dict[str, dict[str, Any]]:
         """Collect the possible response headers for the given operation ID from the schema.
 
         Includes headers in common, and those specific to the operation.
@@ -387,11 +397,9 @@ class EveOpenApi(EveOpenApiProtocol):
         Returns:
             dict[str, dict[str, Any]]: A dictionary of response headers.
         """
-        # FIXME resolve full header infomation, both common and specific.
-        return {
-            header["name"]: header
-            for header in self.spec.get("paths", {})
-            .get(op_id, {})
-            .get("responses", {})
-            .get("headers", {})
-        }
+        response_parameters = self._operation_specific_response_parameters(op_id)
+        response_headers = {}
+        for key, param in response_parameters.items():
+            if param.get("in") == "header":
+                response_headers[key] = param
+        return response_headers

@@ -103,7 +103,7 @@ def _build_paged_requests(parent_action: EsiAction) -> None:
             request_id=uuid4(),
             op_id=parent_action.request.op_id,
             arguments={**parent_action.request.arguments, "page": str(page)},
-            parent=parent_action.request.request_id,
+            parent_id=parent_action.request.request_id,
         )
         action = EsiAction(request=new_request)
         parent_action.pages.append(action)

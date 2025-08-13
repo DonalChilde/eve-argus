@@ -30,11 +30,14 @@ def cache_expired_or_missing(cached_result: EsiResponse | None) -> bool:
 class ArgusAiohttpClient(EsiClientProtocol):
     """Aiohttp-based implementation of the ESI client protocol."""
 
+    USER_AGENT: str = "Eve Argus (pfmsoft.dev@gmail.com; +https://github.com/DonalChilde/eve-argus; eve:Donal Childe)"
+
     def __init__(
         self,
         cache: EsiCacheProtocol,
         api_spec: EveOpenApi,
         base_url: str,
+        user_agent_prefix: str,
         max_connections: int = 50,
         request_divisor: int = 5,
     ) -> None:
@@ -43,6 +46,7 @@ class ArgusAiohttpClient(EsiClientProtocol):
         self.base_url = base_url
         self.max_connections = max_connections
         self.request_divisor = request_divisor
+        self.user_agent_prefix = user_agent_prefix
 
     def _compile_cache_key(self, esi_action: EsiAction) -> UUID:
         """Compile the cache key for a given ESI action."""
@@ -53,6 +57,12 @@ class ArgusAiohttpClient(EsiClientProtocol):
         )
         return cache_id_from_url(cache_url)
 
+    def _inject_user_agent(self, esi_action: EsiAction) -> None:
+        """Inject the User-Agent header into the ESI action."""
+        esi_action.request.headers["User-Agent"] = (
+            f"{self.user_agent_prefix} -> {self.USER_AGENT}"
+        )
+
     def get_op(
         self,
         esi_action: EsiAction,
@@ -60,6 +70,7 @@ class ArgusAiohttpClient(EsiClientProtocol):
         override_cached: bool = False,
     ) -> EsiAction:
         """Perform a get operation against eve ESI."""
+        self._inject_user_agent(esi_action)
         if esi_action.request.method != "GET":
             raise ValueError("Only GET requests are supported in this function.")
         cache_key = self._compile_cache_key(esi_action)
