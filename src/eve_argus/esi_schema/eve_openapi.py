@@ -3,10 +3,7 @@
 import json
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Literal, Protocol, TypedDict
-from uuid import UUID, uuid4
-
-from eve_argus.models.esi import EsiRequest
+from typing import Any, Protocol, TypedDict
 
 # FIXME decide on validation signalling. right now the functions return a bool, and throw an exception.
 # TODO output a table of operation_ids,paths, descriptions, and valid inputs.
@@ -45,18 +42,6 @@ class EveOpenApiProtocol(Protocol):
     # ) -> bool:
     #     """Validate the operation headers."""
     #     ...
-
-    def build_esi_request(
-        self,
-        op_id: str,
-        method: Literal["GET", "POST", "PUT", "DELETE"],
-        path_params: dict[str, str | int | float],
-        query_params: dict[str, str | int | float],
-        headers: dict[str, str | None],
-        parent_id: UUID | None = None,
-    ) -> EsiRequest:
-        """Build an ESI request object."""
-        ...
 
 
 class EveOpenApi(EveOpenApiProtocol):
@@ -163,7 +148,25 @@ class EveOpenApi(EveOpenApiProtocol):
             op_id (str): The operation ID.
 
         Returns:
-            dict[str, str]: A dictionary of path parameters.
+            dict[str, dict[str, Any]]: A dictionary of path parameter definitions keyed by
+            parameter name.
+
+        Example:
+            For ``op_id='GetMarketsRegionIdHistory'`` (path ``/markets/{region_id}/history``)
+            this function returns a mapping like:
+
+                {
+                    "region_id": {
+                        "in": "path",
+                        "name": "region_id",
+                        "required": True,
+                        "schema": {
+                            "description": "Return statistics in this region",
+                            "format": "int64",
+                            "type": "integer"
+                        }
+                    }
+                }
         """
         # Get the path parameters from the spec
         # path parameters must have unique names, so we use a dict to enforce this.
@@ -226,7 +229,25 @@ class EveOpenApi(EveOpenApiProtocol):
             op_id (str): The operation ID.
 
         Returns:
-            dict[str, str]: A dictionary of query parameters.
+            dict[str, dict[str, Any]]: A dictionary of query parameter definitions
+            keyed by parameter name.
+
+        Example:
+            For ``op_id='GetMarketsRegionIdHistory'`` (path ``/markets/{region_id}/history``)
+            this function returns a mapping like:
+
+                {
+                    "type_id": {
+                        "in": "query",
+                        "name": "type_id",
+                        "required": True,
+                        "schema": {
+                            "description": "Return statistics for this type",
+                            "format": "int64",
+                            "type": "integer"
+                        }
+                    }
+                }
         """
         # Get the query parameters from the spec
         # Query strings do not have to have unique names, but Eve esi uses unique names
@@ -272,32 +293,6 @@ class EveOpenApi(EveOpenApiProtocol):
                     )
         return True
 
-    def build_esi_request(
-        self,
-        op_id: str,
-        method: Literal["GET", "POST", "PUT", "DELETE"],
-        path_params: dict[str, str | int | float],
-        query_params: dict[str, str | int | float],
-        headers: dict[str, str | None],
-        parent_id: UUID | None = None,
-    ) -> EsiRequest:
-        """Build an ESI request object."""
-        self.validate_operation(
-            op_id=op_id,
-            path_params=path_params,
-            query_params=query_params,
-        )
-
-        return EsiRequest(
-            request_id=uuid4(),
-            op_id=op_id,
-            method=method,
-            path_params=path_params,
-            query_params=query_params,
-            headers=headers,
-            parent_id=parent_id,
-        )
-
     def validate_operation(
         self,
         op_id: str,
@@ -312,25 +307,6 @@ class EveOpenApi(EveOpenApiProtocol):
             ),
         )
         return valid
-
-    # def validate_operation_headers(
-    #     self, op_id: str, headers: dict[str, str | None]
-    # ) -> bool:
-    #     """Validate the operation headers."""
-    #     # FIXME this will fail on user-agent, not correct.
-    #     possible_headers = self._collect_request_headers(op_id=op_id)
-    #     for key, value in headers.items():
-    #         # This check is disabled
-
-    #         # if key not in possible_headers:
-    #         #     raise ValueError(
-    #         #         f"Unrecognized header parameter: {key}, {possible_headers=}"
-    #         #     )
-    #         if possible_headers[key].get("required", False) and value is None:
-    #             raise ValueError(
-    #                 f"Missing required header parameter: {key}, {possible_headers=}"
-    #             )
-    #     return True
 
     def get_url(
         self,
