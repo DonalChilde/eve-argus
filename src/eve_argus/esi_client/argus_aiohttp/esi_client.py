@@ -4,7 +4,8 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from eve_argus.esi_client.esi_client_protocol import EsiCacheProtocol, EsiClientProtocol
+from eve_argus.esi_cache.esi_cache_protocol import EsiCacheProtocol
+from eve_argus.esi_client.esi_client_protocol import EsiClientProtocol
 from eve_argus.esi_schema.eve_openapi import EveOpenApi
 from eve_argus.helpers.cache_id_from_url import cache_id_from_url
 from eve_argus.helpers.esi_cache_url import compile_cache_url

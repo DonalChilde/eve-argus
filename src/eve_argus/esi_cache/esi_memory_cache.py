@@ -3,7 +3,7 @@
 import logging
 from copy import deepcopy
 
-from eve_argus.esi_client.esi_client_protocol import EsiCacheProtocol
+from eve_argus.esi_cache.esi_cache_protocol import EsiCacheProtocol
 from eve_argus.models.esi import EsiResponse
 
 logger = logging.getLogger(__name__)

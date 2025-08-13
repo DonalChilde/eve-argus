@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 from typing import Protocol
 
-from eve_argus.models.esi import EsiAction, EsiResponse
+from eve_argus.models.esi import EsiAction
 
 # Esi Client knows about paging, automatically handles it.
 
@@ -27,24 +27,4 @@ class EsiClientProtocol(Protocol):
         override_cached: bool = False,
     ) -> Sequence[EsiAction]:
         """Perform multiple get operations against eve ESI."""
-        ...
-
-
-class EsiCacheProtocol(Protocol):
-    """Protocol for ESI cache operations."""
-
-    def get(self, key: str) -> EsiResponse | None:
-        """Get an EsiResponse from the cache."""
-        ...
-
-    def set(self, key: str, value: EsiResponse) -> None:
-        """Set an EsiResponse in the cache."""
-        ...
-
-    def remove(self, key: str) -> None:
-        """Remove an EsiResponse from the cache."""
-        ...
-
-    def clear(self) -> None:
-        """Clear the cache."""
         ...
