@@ -8,11 +8,13 @@ from itertools import chain
 from typing import Any
 from uuid import uuid4
 
-from eve_argus.eve_argus_esi.esi_models import EsiAction
+from eve_argus.eve_argus_esi.esi_models import EsiAction, EsiResponse
 from eve_argus.models import argus as EAM
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
+
+
 # def market_prices_universe(
 #     action: EsiAction,
 # ) -> EAM.UniverseMarketPrices:
@@ -36,6 +38,66 @@ logger.addHandler(logging.NullHandler())
 #         )
 #         result.data[item["type_id"]] = prices
 #     return result
+def _validate_response(response: EsiResponse) -> None:
+    if response is None or not response.text:
+        logger.error(
+            "EsiResponse is None or empty, cannot process. %r",
+            response,
+        )
+        raise ValueError("EsiResponse is None or empty, cannot process.")
+    if response.source == "esi_cache" and response.cache_key is None:
+        logger.error(
+            "EsiResponse is from cache but has no cache key, cannot process. %r",
+            response,
+        )
+        raise ValueError(
+            "EsiResponse is from cache but has no cache key, cannot process."
+        )
+
+
+def universe_market_prices(response: EsiResponse) -> EAM.UniverseMarketPrices:
+    """Import adjusted and average market prices for the Eve universe from esi response.
+
+    ```python
+    schema = {
+        "MarketsPricesGet": {
+            "items": {
+                "properties": {
+                    "adjusted_price": {"format": "double", "type": "number"},
+                    "average_price": {"format": "double", "type": "number"},
+                    "type_id": {"format": "int64", "type": "integer"},
+                },
+                "required": ["type_id"],
+                "type": "object",
+            },
+            "type": "array",
+        }
+    }
+    ```
+    more docs
+    """
+    _validate_response(response)
+
+    result = EAM.UniverseMarketPrices(
+        data_set_id=uuid4(),
+        data_type=EAM.DataTypes.UniverseMarketPrices,
+        description="Adjusted and average market prices for the Eve universe",
+        data_source_type=response.source,
+        data_source=response.cache_key or response.request_id,
+        data={},
+        last_modified=response.last_modified,
+        expires=response.expires,
+        etag=response.etag,
+    )
+    json_data = json.loads(response.text[0] if response else "[]")
+    for item in json_data:
+        prices = EAM.UniverseMarketPrice(
+            type_id=item["type_id"],
+            adjusted_price=item["adjusted_price"],
+            average_price=item.get("average_price", -1.0),
+        )
+        result.data[item["type_id"]] = prices
+    return result
 
 
 def market_history(
