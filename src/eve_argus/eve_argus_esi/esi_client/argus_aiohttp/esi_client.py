@@ -229,3 +229,4 @@ class ArgusAiohttpClient(EsiClientProtocol):
     ) -> Sequence[EsiAction]:
         """Perform multiple get operations against eve ESI."""
         ...
+        # do the actions, then scan the responses for paged actions. do those.

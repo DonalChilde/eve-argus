@@ -14,7 +14,7 @@ class EsiClientProtocol(Protocol):
     def get_op(
         self,
         action: EsiAction,
-        cache_result: bool = True,
+        cache_results: bool = True,
         override_cached: bool = False,
     ) -> EsiAction:
         """Perform a get operation against eve ESI."""
@@ -23,7 +23,7 @@ class EsiClientProtocol(Protocol):
     def get_ops(
         self,
         actions: Sequence[EsiAction],
-        cache_result: bool = True,
+        cache_results: bool = True,
         override_cached: bool = False,
     ) -> Sequence[EsiAction]:
         """Perform multiple get operations against eve ESI."""
