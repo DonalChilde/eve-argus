@@ -51,6 +51,7 @@ class TopLevelDataSet(BaseModel):
     """An optional description of the data set."""
     data_type: DataTypes
     """The type of data contained in this data set."""
+    data_source_type: Literal["esi_api", "esi_cache", "sde", "not_set"] = "not_set"
     data_source: UUID | None = None
     """The source of the data, if applicable, as a UUID."""
 
