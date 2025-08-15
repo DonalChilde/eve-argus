@@ -50,10 +50,10 @@ def test_get_operation(esi_schema):
     assert action.response.request_id == action.request.request_id
     assert action.response.cache_key == test_cache_key
     assert len(action.response.text) == 1
-    assert action.response.source == "api"
+    assert action.response.source == "esi_api"
 
     esi_client.get_op(action, cache_results=True, override_cached=False)
-    assert action.response.source == "cache"
+    assert action.response.source == "esi_cache"
 
 
 @pytest.mark.slow
@@ -91,7 +91,7 @@ def test_get_paged_operation(esi_schema):
     assert action.response.request_id == action.request.request_id
     assert action.response.cache_key == test_cache_key
     assert len(action.response.text) > 5
-    assert action.response.source == "api"
+    assert action.response.source == "esi_api"
 
     esi_client.get_op(action, cache_results=True, override_cached=False)
-    assert action.response.source == "cache"
+    assert action.response.source == "esi_cache"

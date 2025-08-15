@@ -27,7 +27,7 @@ class EsiMemoryCache(EsiCacheProtocol):
     def set(self, key: str, value: EsiResponse) -> None:
         """Store a response in the cache with its key."""
         copied_value = deepcopy(value)
-        copied_value.source = "cache"
+        copied_value.source = "esi_cache"
         self._cache[key] = copied_value
 
     def clear(self) -> None:

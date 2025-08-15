@@ -152,7 +152,7 @@ class ArgusAiohttpClient(EsiClientProtocol):
         esi_action.response = EsiResponse(
             request_id=esi_action.request.request_id,
             request_url=aiohttp_action.request.url,
-            source="api",
+            source="esi_api",
             cache_key=cache_key,
             text=text,
             expires=expires,
