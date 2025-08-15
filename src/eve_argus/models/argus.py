@@ -109,18 +109,24 @@ class SystemCostIndex(BaseModel):
 
     system_id: int
     """The solar system ID."""
-    manufacturing: float
-    """The manufacturing cost index."""
-    research_material: float
-    """The research material cost index."""
-    research_time: float
-    """The research time cost index."""
     copying: float
     """The copying cost index."""
+    duplicating: float
+    """The duplicating cost index."""
     invention: float
     """The invention cost index."""
+    manufacturing: float
+    """The manufacturing cost index."""
     reaction: float
     """The reaction cost index."""
+    researching_material_efficiency: float
+    """The research material efficiency cost index."""
+    researching_technology: float
+    """The research technology cost index."""
+    researching_time_efficiency: float
+    """The research time efficiency cost index."""
+    reverse_engineering: float
+    """The reverse engineering cost index."""
 
 
 class SystemCostIndices(TopLevelDataSet):
