@@ -1,6 +1,7 @@
 import pytest
 
-from eve_argus.argus_esi.argus_esi import ArgusEsi
+# from eve_argus.argus_esi.argus_esi import ArgusEsi
+from eve_argus.argus_esi.argus_esi import market_history
 from eve_argus.eve_argus_esi.esi_cache.esi_memory_cache import EsiMemoryCache
 from eve_argus.eve_argus_esi.esi_client.argus_aiohttp.esi_client import (
     ArgusAiohttpClient,
@@ -30,20 +31,20 @@ def esi_client_(eve_openapi, esi_cache) -> EsiClientProtocol:
     return esi_client
 
 
-@pytest.fixture(scope="module", name="argus_esi")
-def argus_esi_(esi_client) -> ArgusEsi:
-    return ArgusEsi(esi_client=esi_client)
+# @pytest.fixture(scope="module", name="argus_esi")
+# def argus_esi_(esi_client) -> ArgusEsi:
+#     return ArgusEsi(esi_client=esi_client)
 
 
-def test_market_history(argus_esi: ArgusEsi):
+def test_market_history(esi_client: EsiClientProtocol):
     region_id = 10000002  # The Forge
     type_id = 34  # Tritanium
-    market_history = argus_esi.market_history(region_id, type_id)
-    print(f"{market_history!r}")
-    assert market_history is not None
-    assert market_history.region_id == region_id
-    assert market_history.type_id == type_id
-    assert market_history.last_modified is not None
-    assert market_history.expires is not None
-    assert market_history.etag is not None
-    assert len(market_history.data) > 0
+    market_history_data = market_history(esi_client, region_id, type_id)
+    print(f"{market_history_data!r}")
+    assert market_history_data is not None
+    assert market_history_data.region_id == region_id
+    assert market_history_data.type_id == type_id
+    assert market_history_data.last_modified is not None
+    assert market_history_data.expires is not None
+    assert market_history_data.etag is not None
+    assert len(market_history_data.data) > 0
