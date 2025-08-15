@@ -1,6 +1,7 @@
 """Top level api to get data from ESI using an Argus ESI client."""
 
 import logging
+from datetime import UTC, datetime
 
 from eve_argus.argus_esi import esi_to_argus as DI
 from eve_argus.argus_esi import request_builder as RB
@@ -10,14 +11,76 @@ from eve_argus.models import argus as EAM
 
 logger = logging.getLogger(__name__)
 
+## Cache thoughts.
+# - ESI responses include an ETag header for caching.
+# - If the client has a cached response with the same ETag, it can use that instead of making a new request.
+# - The client should handle ETag matching and caching logic.
+# - The ESI response also offer an expires field that can be used to determine when to invalidate the cache.
+# - The expires field can be checked locally, but the etag field must be checked with the server.
 
-class ArgusEsi:
-    def __init__(self, esi_client: EsiClientProtocol):
-        """Initialize the Argus Esi client."""
-        self.esi_client = esi_client
 
-    def market_history(self, region_id: int, type_id: int) -> EAM.MarketHistory:
-        """Get market history for a specific region and type."""
-        action = EsiAction(request=RB.market_history(region_id, type_id))
-        self.esi_client.get_op(action, cache_results=True, override_cached=False)
-        return DI.market_history(action)
+def is_expired(obj: EAM.TopLevelDataSet) -> bool:
+    """Check to see if the Argus dataset is expired."""
+    if obj.expires:
+        return datetime.fromisoformat(obj.expires).astimezone(UTC) < datetime.now(UTC)
+    return False
+
+
+def market_history(
+    esi_client: EsiClientProtocol,
+    region_id: int,
+    type_id: int,
+    etag: str = "",
+    cache_results=True,
+    override_cached=False,
+) -> EAM.MarketHistory:
+    """Get market history for a specific region and type."""
+    action = EsiAction(request=RB.market_history(region_id, type_id, etag))
+    # TODO handle etag match signal from esi_client
+    esi_client.get_op(
+        action, cache_results=cache_results, override_cached=override_cached
+    )
+    return DI.market_history(action)
+
+
+def market_prices(
+    esi_client: EsiClientProtocol,
+    etag: str = "",
+    cache_results=True,
+    override_cached=False,
+) -> EAM.UniverseMarketPrices:
+    """Get market prices for the entire universe."""
+    action = EsiAction(request=RB.market_prices(etag))
+    esi_client.get_op(
+        action, cache_results=cache_results, override_cached=override_cached
+    )
+    return DI.market_prices(action)
+
+
+def market_orders(
+    esi_client: EsiClientProtocol,
+    region_id: int,
+    etag: str = "",
+    cache_results=True,
+    override_cached=False,
+) -> EAM.RegionalMarketOrders:
+    """Get market orders for a specific region."""
+    action = EsiAction(request=RB.market_orders(region_id, etag))
+    esi_client.get_op(
+        action, cache_results=cache_results, override_cached=override_cached
+    )
+    return DI.market_orders(action)
+
+
+def system_cost_indices(
+    esi_client: EsiClientProtocol,
+    etag: str = "",
+    cache_results=True,
+    override_cached=False,
+) -> EAM.SystemCostIndices:
+    """Get system cost indices for the Eve universe."""
+    action = EsiAction(request=RB.system_cost_indices(etag))
+    esi_client.get_op(
+        action, cache_results=cache_results, override_cached=override_cached
+    )
+    return DI.system_cost_indices(action)

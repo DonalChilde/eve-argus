@@ -2,10 +2,6 @@
 
 import json
 import logging
-from collections.abc import Sequence
-from datetime import UTC, datetime
-from itertools import chain
-from typing import Any
 from uuid import uuid4
 
 from eve_argus.eve_argus_esi.esi_models import EsiAction, EsiResponse
@@ -38,7 +34,7 @@ logger.addHandler(logging.NullHandler())
 #         )
 #         result.data[item["type_id"]] = prices
 #     return result
-def _validate_response(response: EsiResponse) -> None:
+def _validate_response(response: EsiResponse | None) -> EsiResponse:
     if response is None or not response.text:
         logger.error(
             "EsiResponse is None or empty, cannot process. %r",
@@ -53,13 +49,14 @@ def _validate_response(response: EsiResponse) -> None:
         raise ValueError(
             "EsiResponse is from cache but has no cache key, cannot process."
         )
+    return response
 
 
-def universe_market_prices(response: EsiResponse) -> EAM.UniverseMarketPrices:
+def market_prices(action: EsiAction) -> EAM.UniverseMarketPrices:
     """Import adjusted and average market prices for the Eve universe from esi response.
 
     ```python
-    schema = {
+    response_schema = {
         "MarketsPricesGet": {
             "items": {
                 "properties": {
@@ -74,9 +71,8 @@ def universe_market_prices(response: EsiResponse) -> EAM.UniverseMarketPrices:
         }
     }
     ```
-    more docs
     """
-    _validate_response(response)
+    response = _validate_response(action.response)
 
     result = EAM.UniverseMarketPrices(
         data_set_id=uuid4(),
@@ -103,19 +99,52 @@ def universe_market_prices(response: EsiResponse) -> EAM.UniverseMarketPrices:
 def market_history(
     action: EsiAction,
 ) -> EAM.MarketHistory:
-    """Import market history for a specific region and type from esi response."""
-    if action.response is None or not action.response.text:
-        logger.error(
-            "EsiAction response is None or empty, cannot process market history. %r",
-            action,
-        )
-        raise ValueError(
-            "EsiAction response is None or empty, cannot process market history."
-        )
+    """Import market history for a specific region and type from esi response.
+
+        ```python
+        response_schema = {
+        "MarketsRegionIdHistoryGet": {
+            "items": {
+                "properties": {
+                    "average": {"format": "double", "type": "number"},
+                    "date": {
+                        "description": "The date of this historical statistic entry",
+                        "format": "date",
+                        "type": "string",
+                    },
+                    "highest": {"format": "double", "type": "number"},
+                    "lowest": {"format": "double", "type": "number"},
+                    "order_count": {
+                        "description": "Total number of orders happened that day",
+                        "format": "int64",
+                        "type": "integer",
+                    },
+                    "volume": {
+                        "description": "Total",
+                        "format": "int64",
+                        "type": "integer",
+                    },
+                },
+                "required": [
+                    "date",
+                    "order_count",
+                    "volume",
+                    "highest",
+                    "average",
+                    "lowest",
+                ],
+                "type": "object",
+            },
+            "type": "array",
+        }
+    }
+        ```
+    """
+    response = _validate_response(action.response)
     region_id = int(action.request.path_params["region_id"])
     type_id = int(action.request.query_params["type_id"])
     data: list[EAM.MarketHistoryDetail] = []
-    json_data = json.loads(action.response.text[0] if action.response else "[]")
+    json_data = json.loads(response.text[0] if response else "[]")
     for item in json_data:
         data.append(
             EAM.MarketHistoryDetail(region_id=region_id, type_id=type_id, **item)
@@ -123,17 +152,181 @@ def market_history(
 
     history = EAM.MarketHistory(
         data_set_id=uuid4(),
-        data_type=EAM.DataTypes.MarketHistory,
+        last_modified=response.last_modified,
+        etag=response.etag,
+        expires=response.expires,
         description=f"Market history for region {region_id} and type {type_id}",
-        data_source=None,
+        data_type=EAM.DataTypes.MarketHistory,
+        data_source_type=response.source,
+        data_source=response.cache_key or response.request_id,
         region_id=region_id,
         type_id=type_id,
         data=data,
-        last_modified=action.response.last_modified,
-        expires=action.response.expires,
-        etag=action.response.etag,
     )
     return history
+
+
+def market_orders(action: EsiAction) -> EAM.RegionalMarketOrders:
+    """Import market orders for a specific region from esi response.
+
+    ```python
+    response_schema = {
+        "MarketsRegionIdOrdersGet": {
+            "items": {
+                "properties": {
+                    "duration": {"format": "int64", "type": "integer"},
+                    "is_buy_order": {"type": "boolean"},
+                    "issued": {"format": "date-time", "type": "string"},
+                    "location_id": {"format": "int64", "type": "integer"},
+                    "min_volume": {"format": "int64", "type": "integer"},
+                    "order_id": {"format": "int64", "type": "integer"},
+                    "price": {"format": "double", "type": "number"},
+                    "range": {
+                        "enum": [
+                            "station",
+                            "region",
+                            "solarsystem",
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            "5",
+                            "10",
+                            "20",
+                            "30",
+                            "40",
+                        ],
+                        "type": "string",
+                    },
+                    "system_id": {
+                        "description": "The solar system this order was placed",
+                        "format": "int64",
+                        "type": "integer",
+                    },
+                    "type_id": {"format": "int64", "type": "integer"},
+                    "volume_remain": {"format": "int64", "type": "integer"},
+                    "volume_total": {"format": "int64", "type": "integer"},
+                },
+                "required": [
+                    "order_id",
+                    "type_id",
+                    "location_id",
+                    "system_id",
+                    "volume_total",
+                    "volume_remain",
+                    "min_volume",
+                    "price",
+                    "is_buy_order",
+                    "duration",
+                    "issued",
+                    "range",
+                ],
+                "type": "object",
+            },
+            "type": "array",
+        }
+    }
+    ```
+    """
+    response = _validate_response(action.response)
+    if "type_id" in action.request.query_params:
+        raise ValueError(
+            "Market orders for a specific type are not supported in this function."
+        )
+    region_id = int(action.request.path_params["region_id"])
+    result = EAM.RegionalMarketOrders(
+        data_set_id=uuid4(),
+        last_modified=response.last_modified,
+        expires=response.expires,
+        etag=response.etag,
+        description=f"Market orders for region {region_id}",
+        data_type=EAM.DataTypes.RegionalMarketOrders,
+        data_source_type=response.source,
+        data_source=response.cache_key or response.request_id,
+        region_id=region_id,
+        orders={},
+    )
+
+    for text_line in response.text:
+        json_orders = json.loads(text_line)
+        for json_order in json_orders:
+            type_id = json_order["type_id"]
+            order = EAM.MarketOrderDetail(
+                region_id=region_id, type_id=type_id, **json_order
+            )
+            if order.type_id not in result.orders:
+                result.orders[order.type_id] = EAM.MarketOrders(
+                    region_id=region_id, type_id=order.type_id
+                )
+            if order.is_buy_order:
+                result.orders[order.type_id].buy_orders.append(order)
+            else:
+                result.orders[order.type_id].sell_orders.append(order)
+
+    return result
+
+
+def system_cost_indices(action: EsiAction) -> EAM.SystemCostIndices:
+    """Import system cost indices from esi response.
+
+    ```python
+    response_schema = {
+        "GetIndustrySystems": {
+            "items": {
+                "properties": {
+                    "cost_indices": {
+                        "items": {
+                            "description": "cost_indice object",
+                            "properties": {
+                                "activity": {
+                                    "enum": [
+                                        "copying",
+                                        "duplicating",
+                                        "invention",
+                                        "manufacturing",
+                                        "none",
+                                        "reaction",
+                                        "researching_material_efficiency",
+                                        "researching_technology",
+                                        "researching_time_efficiency",
+                                        "reverse_engineering",
+                                    ],
+                                    "type": "string",
+                                },
+                                "cost_index": {"format": "double", "type": "number"},
+                            },
+                            "required": ["activity", "cost_index"],
+                            "type": "object",
+                        },
+                        "type": "array",
+                    },
+                    "solar_system_id": {"format": "int64", "type": "integer"},
+                },
+                "required": ["solar_system_id", "cost_indices"],
+                "type": "object",
+            },
+            "type": "array",
+        }
+    }
+    ```
+    """
+    response = _validate_response(action.response)
+    result = EAM.SystemCostIndices(
+        data_set_id=uuid4(),
+        last_modified=response.last_modified,
+        expires=response.expires,
+        etag=response.etag,
+        description="System cost indices for manufacturing, research, and reactions",
+        data_type=EAM.DataTypes.SystemCostIndices,
+        data_source_type=response.source,
+        data_source=response.cache_key or response.request_id,
+        data={},
+    )
+    json_data = json.loads(response.text[0] if response else "{}")
+    for sci in json_data:
+        system_id = sci["solar_system_id"]
+        result.data[system_id] = EAM.SystemCostIndex(system_id=system_id, **sci)
+    return result
 
 
 # def region_market_types_from_esi(
