@@ -2,6 +2,7 @@
 
 This snippet should do one or more queued aiohttp requests.
 Basic rate limits can be achieved by controlling the number of concurrent requests.
+The AiohttpAction objects are used to pass the results of the requests back to the caller.
 Workers can signal a failure such that all remaining tasks are skipped in the next task loop.
 Skipped actions result in:
     AiohttpResponse = None
@@ -38,6 +39,7 @@ class AiohttpRequest:
     request_id: UUID = field(default_factory=uuid4)
     parent_id: UUID | None = None
     external_id: UUID | None = None
+    """A UUID used to match an AiohttpRequest with an external request."""
 
 
 @dataclass(slots=True)
@@ -46,7 +48,9 @@ class AiohttpResponse:
     status_reason: str | None
     headers: Sequence[tuple[str, str]]
     text: str
+    """The response body as a string."""
     kwargs: dict[str, Any] = field(default_factory=dict)
+    """Any additional commands to pass to Aiohttp.ClientSession.request."""
     uuid: UUID = field(default_factory=uuid4)
     request_id: UUID | None = None
 
@@ -119,7 +123,8 @@ class SimpleAiohttpActionRunner:
                     self.runner_status = (
                         Signals.WORKER_SHUTDOWN
                     )  # Signal to stop the workers
-                    raise e
+                    # Do not re-raise so that the queue can continue processing
+                    # remaining tasks, which will be marked as skipped on next loop.
                 finally:
                     aiohttp_action.response = AiohttpResponse(
                         uuid=aiohttp_action.request.request_id,
@@ -129,6 +134,7 @@ class SimpleAiohttpActionRunner:
                         text=await response.text(),
                         request_id=aiohttp_action.request.request_id,
                     )
+                    aiohttp_action.request_status.current_state = RequestState.FINISHED
                     logger.info(
                         f"Worker {name} got status: {response.status}  reason: "
                         f"{response.reason} for action: {aiohttp_action.request.request_id} "
