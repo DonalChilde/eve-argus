@@ -162,11 +162,16 @@ class MarketHistory(TopLevelDataSet):
     """A sequence of market history records."""
 
 
-class RegionalMarketHistory:
-    """A collection of market history records for a specific region."""
+class RegionalMarketHistory(BaseModel):
+    """A collection of market history records for a specific region.
+
+    Can be a limited set of possible type_ids.
+    """
 
     region_id: int
     """The region ID where the market history is located."""
+    description: str
+    """A description of the dataset."""
     data: dict[int, MarketHistory]
     """A dictionary mapping type IDs to market history records for that region."""
 

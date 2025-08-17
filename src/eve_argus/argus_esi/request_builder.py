@@ -1,5 +1,6 @@
 """This module contains functions to build EsiAction objects."""
 
+from typing import Sequence
 from uuid import uuid4
 
 from eve_argus.eve_argus_esi.esi_models import EsiRequest
@@ -11,6 +12,16 @@ def _inject_etag(request: EsiRequest, etag: str) -> None:
     """Inject the ETag into the action."""
     if etag:
         request.headers["If-None-Match"] = etag
+
+
+def market_history_batch(
+    region_id: int, type_ids: Sequence[int]
+) -> Sequence[EsiRequest]:
+    """Get the market history for multiple items in a specific region."""
+    requests = []
+    for type_id in type_ids:
+        requests.append(market_history(region_id, type_id))
+    return requests
 
 
 def market_history(region_id: int, type_id: int, etag: str = "") -> EsiRequest:

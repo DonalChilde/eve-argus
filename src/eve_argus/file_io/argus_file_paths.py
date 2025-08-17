@@ -45,3 +45,4 @@ class ArgusFilePaths(StrEnum):
     MARKET_ORDERS = "${region_id}-${type_id}-market-orders.json"
     MARKET_HISTORY_SUMMARIES = "${region_id}-${tag}-market-history-summaries.json"
     MARKET_ORDER_SUMMARIES = "${region_id}-${tag}-market-order-summaries.json"
+    REGIONAL_MARKET_HISTORY = "${region_id}-market-history.json"

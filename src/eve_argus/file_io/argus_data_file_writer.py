@@ -529,5 +529,35 @@ class ArgusFileWriter:
         )
         return path_out
 
+    def regional_market_history(
+        self,
+        regional_market_history: EAM.RegionalMarketHistory,
+        overwrite: bool = True,
+    ) -> Path:
+        """Save regional market history to JSON.
+
+        Args:
+            regional_market_history (EAM.RegionalMarketHistory): The regional market history data to save.
+            overwrite (bool, optional): Whether to overwrite existing files. Defaults to True.
+
+        Returns:
+            Path: The path to the saved JSON file.
+        """
+        start = perf_counter()
+        region_id = regional_market_history.region_id
+        path_out = (
+            self.argus_path
+            / ArgusFilePaths.ESI_DATA
+            / Template(ArgusFilePaths.REGIONAL_MARKET_HISTORY).substitute(
+                region_id=region_id
+            )
+        )
+        validate_file_out(file_path=path_out, overwrite=overwrite)
+        path_out.write_text(regional_market_history.model_dump_json(indent=2))
+        logger.info(
+            "Saved data to %s in %s seconds", path_out, f"{perf_counter() - start:.6f}"
+        )
+        return path_out
+
 
 # FIXME refactor typeidsubset, unused markethistory.

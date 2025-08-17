@@ -1,6 +1,7 @@
 """Top level api to get data from ESI using an Argus ESI client."""
 
 import logging
+from collections.abc import Sequence
 from datetime import UTC, datetime
 
 from eve_argus.argus_esi import esi_to_argus as DI
@@ -24,6 +25,29 @@ def is_expired(obj: EAM.TopLevelDataSet) -> bool:
     if obj.expires:
         return datetime.fromisoformat(obj.expires).astimezone(UTC) < datetime.now(UTC)
     return False
+
+
+def regional_market_history(
+    esi_client: EsiClientProtocol,
+    region_id: int,
+    type_ids: Sequence[int],
+    description: str = "",
+    cache_results=True,
+    override_cached=False,
+) -> EAM.RegionalMarketHistory:
+    """Get market histories for a specific region, and multiple types."""
+    requests = RB.market_history_batch(region_id, type_ids)
+    actions = [EsiAction(request=x) for x in requests]
+    esi_client.get_ops(
+        actions=actions, cache_results=cache_results, override_cached=override_cached
+    )
+    result = EAM.RegionalMarketHistory(
+        region_id=region_id, description=description, data={}
+    )
+    for action in actions:
+        history = DI.market_history(action)
+        result.data[history.type_id] = history
+    return result
 
 
 def market_history(
