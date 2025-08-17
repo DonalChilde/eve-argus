@@ -224,9 +224,11 @@ class ArgusAiohttpClient(EsiClientProtocol):
     def get_ops(
         self,
         actions: Sequence[EsiAction],
-        cache_result: bool = True,
+        cache_results: bool = True,
         override_cached: bool = False,
     ) -> Sequence[EsiAction]:
         """Perform multiple get operations against eve ESI."""
         ...
         # do the actions, then scan the responses for paged actions. do those.
+        # for now, dont worry about cache
+        # refactor http request to support external key for matching after the fact.
