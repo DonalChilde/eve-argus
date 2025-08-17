@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 
 from eve_argus.eve_argus_esi.esi_cache.esi_cache_protocol import EsiCacheProtocol
 from eve_argus.eve_argus_esi.esi_models import EsiAction, EsiResponse
-from eve_argus.eve_argus_esi.snippets.aiohttp.queue_simple_2 import (
+from eve_argus.eve_argus_esi.snippets.aiohttp.queue_simple import (
     AiohttpAction,
     AiohttpRequest,
     AiohttpRequestStatus,
