@@ -250,10 +250,7 @@ def market_orders(action: EsiAction) -> EAM.RegionalMarketOrders:
     for text_line in response.text:
         json_orders = json.loads(text_line)
         for json_order in json_orders:
-            type_id = json_order["type_id"]
-            order = EAM.MarketOrderDetail(
-                region_id=region_id, type_id=type_id, **json_order
-            )
+            order = EAM.MarketOrderDetail(region_id=region_id, **json_order)
             if order.type_id not in result.orders:
                 result.orders[order.type_id] = EAM.MarketOrders(
                     region_id=region_id, type_id=order.type_id
