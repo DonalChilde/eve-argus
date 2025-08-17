@@ -6,11 +6,12 @@ from uuid import UUID, uuid4
 
 from eve_argus.eve_argus_esi.esi_cache.esi_cache_protocol import EsiCacheProtocol
 from eve_argus.eve_argus_esi.esi_models import EsiAction, EsiResponse
-from eve_argus.eve_argus_esi.snippets.aiohttp.queue_simple import (
+from eve_argus.eve_argus_esi.snippets.aiohttp.queue_simple_2 import (
     AiohttpAction,
     AiohttpRequest,
+    AiohttpRequestStatus,
     AiohttpResponse,
-    do_actions,
+    SimpleAiohttpActionRunner,
 )
 from eve_argus.helpers.cache_id_from_url import cache_id_from_url
 from eve_argus.helpers.esi_cache_url import compile_cache_url
@@ -59,11 +60,32 @@ class ArgusAiohttpClient(EsiClientProtocol):
         )
         return cache_id_from_url(cache_url)
 
-    def _inject_user_agent(self, esi_action: EsiAction) -> None:
-        """Inject the User-Agent header into the ESI action."""
-        esi_action.request.headers["User-Agent"] = (
-            f"{self.user_agent_prefix} -> {self.USER_AGENT}"
-        )
+    # def _inject_user_agent(self, aiohttp_action: AiohttpAction) -> None:
+    #     """Inject the User-Agent header into the aiohttp action."""
+    #     aiohttp_action.request.headers.append(
+    #         ("User-Agent", f"{self.user_agent_prefix} -> {self.USER_AGENT}")
+    #     )
+
+    def _do_actions(
+        self, esi_actions: dict[UUID, EsiAction]
+    ) -> dict[UUID, AiohttpAction]:
+        """Convert ESI actions to Aiohttp actions, and perform those actions.
+
+        Returns a dict of Aiohttp actions, indexed by EsiAction.EsiRequest.request_id.
+        If an http error >= 400 occurs, the AiohttpAction may have response=None
+        for skipped actions, or a response with status etc for failed actions.
+        """
+        aiohttp_actions: dict[UUID, AiohttpAction] = {}
+        for esi_action in esi_actions.values():
+            aiohttp_action = self._build_aiohttp_action(esi_action)
+            if aiohttp_action.request.external_id is None:
+                raise ValueError("Aiohttp action external_id is None.")
+            # The external_id is the EsiAction.EsiRequest.request_id
+            aiohttp_actions[aiohttp_action.request.external_id] = aiohttp_action
+        max_workers = self._calculate_max_workers(len(aiohttp_actions))
+        action_runner = SimpleAiohttpActionRunner()
+        action_runner.do_actions(max_workers, aiohttp_actions.values())
+        return aiohttp_actions
 
     def get_op(
         self,
@@ -72,7 +94,6 @@ class ArgusAiohttpClient(EsiClientProtocol):
         override_cached: bool = False,
     ) -> EsiAction:
         """Perform a get operation against eve ESI."""
-        self._inject_user_agent(esi_action)
         if esi_action.request.method != "GET":
             raise ValueError("Only GET requests are supported in this function.")
         cache_key = self._compile_cache_key(esi_action)
@@ -80,7 +101,8 @@ class ArgusAiohttpClient(EsiClientProtocol):
         etag = cached_result.etag if cached_result else ""
         if override_cached or cache_expired_or_missing(cached_result):
             aiohttp_action = self._build_aiohttp_action(esi_action, etag=etag)
-            do_actions(1, (aiohttp_action,))
+            action_runner = SimpleAiohttpActionRunner()
+            action_runner.do_actions(1, (aiohttp_action,))
             if aiohttp_action.response is None:
                 raise ValueError(
                     "Aiohttp action response is None, when response should be complete."
@@ -112,7 +134,8 @@ class ArgusAiohttpClient(EsiClientProtocol):
         if not paged_actions:
             return
         worker_count = self._calculate_max_workers(len(paged_actions))
-        do_actions(worker_count, paged_actions)
+        action_runner = SimpleAiohttpActionRunner()
+        action_runner.do_actions(worker_count, paged_actions)
 
     def _process_get_responses(
         self,
@@ -177,9 +200,10 @@ class ArgusAiohttpClient(EsiClientProtocol):
                             "page": page,
                         },
                         headers=aiohttp_action.request.headers,
-                        uuid=uuid4(),
-                        parent_uuid=aiohttp_action.request.uuid,
-                    )
+                        request_id=uuid4(),
+                        parent_id=aiohttp_action.request.request_id,
+                    ),
+                    request_status=AiohttpRequestStatus(),
                 )
                 paged_actions.append(page_request_action)
         return paged_actions
@@ -208,8 +232,10 @@ class ArgusAiohttpClient(EsiClientProtocol):
         )
         headers = {
             **action.request.headers,
-            "If-None-Match": etag,
+            "User-Agent": f"{self.user_agent_prefix} -> {self.USER_AGENT}",
         }
+        if etag:
+            headers["If-None-Match"] = etag
         return AiohttpAction(
             AiohttpRequest(
                 method=action.request.method,
@@ -218,7 +244,9 @@ class ArgusAiohttpClient(EsiClientProtocol):
                     (key, value) for key, value in headers.items() if value is not None
                 ],
                 query_params=action.request.query_params,
-            )
+                external_id=action.request.request_id,  # Use the action's request_id UUID as external_id
+            ),
+            request_status=AiohttpRequestStatus(),
         )
 
     def get_ops(
@@ -232,3 +260,5 @@ class ArgusAiohttpClient(EsiClientProtocol):
         # do the actions, then scan the responses for paged actions. do those.
         # for now, dont worry about cache
         # refactor http request to support external key for matching after the fact.
+
+        # 1.

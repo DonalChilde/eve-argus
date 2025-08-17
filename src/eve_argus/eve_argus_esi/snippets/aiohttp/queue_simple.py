@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from asyncio import Queue
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from time import perf_counter
@@ -20,14 +20,16 @@ logger.addHandler(logging.NullHandler())
 
 @dataclass(slots=True)
 class AiohttpRequest:
+    """Aiohttp request data class."""
+
     method: Literal["GET", "POST", "PUT", "DELETE"]
     url: str
     query_params: dict[str, str | int | float] = field(default_factory=dict)
     headers: list[tuple[str, str]] = field(default_factory=list)
     kwargs: dict[str, Any] = field(default_factory=dict)
-    uuid: UUID = field(default_factory=uuid4)
-    parent_uuid: UUID | None = None
-    external_uuid: UUID | None = None
+    request_id: UUID = field(default_factory=uuid4)
+    parent_id: UUID | None = None
+    external_id: UUID | None = None
 
 
 @dataclass(slots=True)
@@ -38,12 +40,30 @@ class AiohttpResponse:
     text: str
     kwargs: dict[str, Any] = field(default_factory=dict)
     uuid: UUID = field(default_factory=uuid4)
-    request_uuid: UUID | None = None
+    request_id: UUID | None = None
+
+
+class RequestState(StrEnum):
+    """Request status codes for aiohttp requests."""
+
+    NEW = "NEW"
+    WORKING = "WORKING"
+    FINISHED = "FINISHED"
+    SKIPPED = "SKIPPED"
+
+
+@dataclass(slots=True)
+class AiohttpRequestStatus:
+    request_count: int = 0
+    success_count: int = 0
+    failure_count: int = 0
+    current_state: RequestState = RequestState.NEW
 
 
 @dataclass(slots=True)
 class AiohttpAction:
     request: AiohttpRequest
+    request_status: AiohttpRequestStatus
     response: AiohttpResponse | None = None
 
 
@@ -59,59 +79,79 @@ async def stop_on_bad_requests_worker(
     This worker processes aiohttp actions. If raise_for_status() triggers an error
     on the response, it will be logged and all the workers will receive
     Signals.WORKER_SHUTDOWN the next time they process an action. This is to prevent
-    excessive bad requests when the server may have signalled a malformed request.
+    excessive bad requests when the server may have signalled a malformed request. All
+    remaining tasks will be skipped.
     """
+    skip_tasks = False
     while True:
         aiohttp_action = await queue.get()
         task_start = perf_counter()
+
         if aiohttp_action is Signals.WORKER_SHUTDOWN:
             logger.info(f"Worker {name} received shutdown signal.")
             queue.put_nowait(Signals.WORKER_SHUTDOWN)  # Signal to stop the workers
-            break
-        logger.info(
-            f"Worker {name} processing action: {aiohttp_action.request.uuid} url: {aiohttp_action.request.url}"
-        )
-        async with session.request(
-            aiohttp_action.request.method,
-            aiohttp_action.request.url,
-            params=aiohttp_action.request.query_params,
-            headers=aiohttp_action.request.headers,
-            **aiohttp_action.request.kwargs,
-        ) as response:
-            task_duration = perf_counter() - task_start
-            async with response:
-                logger.info(
-                    f"Worker {name} got status: {response.status}  reason: {response.reason} for action: {aiohttp_action.request.uuid} in {task_duration:.2f} seconds."
-                )
-                try:
-                    response.raise_for_status()
-                except aiohttp.ClientError as e:
-                    logger.error(
-                        f"Worker {name} encountered an error: {e} with {aiohttp_action!r}"
-                    )
-                    logger.error(f"Worker {name} Triggering shutdown signal.")
-                    queue.put_nowait(
-                        Signals.WORKER_SHUTDOWN
-                    )  # Signal to stop the workers
-                    raise e
-                finally:
-                    aiohttp_action.response = AiohttpResponse(
-                        uuid=aiohttp_action.request.uuid,
-                        status_code=response.status,
-                        status_reason=response.reason,
-                        headers=list(response.headers.items()),
-                        text=await response.text(),
-                        request_uuid=aiohttp_action.request.uuid,
-                    )
+            skip_tasks = True
+        elif skip_tasks:
+            aiohttp_action.request_status.current_state = RequestState.SKIPPED
             logger.info(
-                f"Worker {name} finished action: {aiohttp_action.request.uuid} in {perf_counter() - task_start:.2f} seconds."
+                f"Worker {name} skipping action: {aiohttp_action.request.request_id} "
+                f"url: {aiohttp_action.request.url}"
             )
+        else:
+            aiohttp_action.request_status.current_state = RequestState.WORKING
+            logger.info(
+                f"Worker {name} processing action: {aiohttp_action.request.request_id} "
+                f"url: {aiohttp_action.request.url}"
+            )
+
+            async with session.request(
+                aiohttp_action.request.method,
+                aiohttp_action.request.url,
+                params=aiohttp_action.request.query_params,
+                headers=aiohttp_action.request.headers,
+                **aiohttp_action.request.kwargs,
+            ) as response:
+                async with response:
+                    try:
+                        aiohttp_action.request_status.request_count += 1
+                        response.raise_for_status()
+                        aiohttp_action.request_status.success_count += 1
+                    except aiohttp.ClientError as e:
+                        aiohttp_action.request_status.failure_count += 1
+                        aiohttp_action.request_status.current_state = (
+                            RequestState.FINISHED
+                        )
+                        logger.error(
+                            f"Worker {name} encountered an error: {e} with {aiohttp_action!r}"
+                        )
+                        logger.error(f"Worker {name} Triggering shutdown signal.")
+                        queue.put_nowait(
+                            Signals.WORKER_SHUTDOWN
+                        )  # Signal to stop the workers
+                        raise e
+                    finally:
+                        aiohttp_action.response = AiohttpResponse(
+                            uuid=aiohttp_action.request.request_id,
+                            status_code=response.status,
+                            status_reason=response.reason,
+                            headers=list(response.headers.items()),
+                            text=await response.text(),
+                            request_id=aiohttp_action.request.request_id,
+                        )
+
+                        logger.info(
+                            f"Worker {name} got status: {response.status}  reason: {response.reason} for action: {aiohttp_action.request.request_id} in {task_duration:.2f} seconds."
+                        )
+                        task_duration = perf_counter() - task_start
+                logger.info(
+                    f"Worker {name} finished action: {aiohttp_action.request.request_id} in {perf_counter() - task_start:.2f} seconds."
+                )
         queue.task_done()
 
 
 async def run_tasks(
     workers: int,
-    actions: Sequence[AiohttpAction],
+    actions: Iterable[AiohttpAction],
 ) -> None:
     """Run the worker tasks with the specified number of workers and actions."""
     queue = asyncio.Queue[AiohttpAction | Signals]()
@@ -132,7 +172,7 @@ async def run_tasks(
         task.cancel()
 
 
-def do_actions(workers: int, actions: Sequence[AiohttpAction]) -> None:
+def do_actions(workers: int, actions: Iterable[AiohttpAction]) -> None:
     """Start processing aiohttp actions in a queue with the specified number of workers.
 
     Args:
