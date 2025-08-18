@@ -1,9 +1,25 @@
 """ESI return data models."""
 
-from typing import Any, Literal
-from uuid import UUID, uuid4
+from enum import StrEnum
+from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel
+
+
+class EsiCacheMetadata(BaseModel):
+    """Represents a cache metadata for ESI GET requests/responses."""
+
+    key: UUID
+    """The cache key UUID, built from the get request url."""
+    expires: str
+    """The expiration time for the cache key in ISO 8601 format."""
+    etag: str
+    """The ETag for the cached response."""
+    last_modified: str
+    """The last modified time for the cached response in ISO 8601 format."""
+    last_checked: str
+    """The last time this ESI route was checked in ISO 8601 format."""
 
 
 class EsiRequest(BaseModel):
@@ -17,8 +33,6 @@ class EsiRequest(BaseModel):
     headers: dict[str, str | None] = {}
     parent_id: UUID | None = None
     """The parent request ID, if this is a sub-request."""
-    # cache_key: UUID | None = None
-    # """The cache key for the GET request/response, if available."""
 
 
 class EsiResponse(BaseModel):
@@ -28,16 +42,34 @@ class EsiResponse(BaseModel):
     The text field is a list to support paged requests.
     """
 
-    request_id: UUID
     request_url: str
-    source: Literal["esi_cache", "esi_api", "not_set"] = "not_set"
     cache_key: UUID | None
     """The cache key for the GET request/response, if available."""
     text: list[str] = []
-    """The response body as a list of strings."""
-    expires: str
-    etag: str
-    last_modified: str
+    """The response body as a list of strings to support paged requests."""
+
+
+class ResponseDataSource(StrEnum):
+    """Represents the source of the ESI response data."""
+
+    CACHE = "esi_cache"
+    """The response was served from the esi client cache."""
+    API = "esi_api"
+    """The response was fetched from the ESI API."""
+    EXTERNAL = "external"
+    """Valid response data exists in an external source. This happens when a valid `etag` or
+    `expires` is passed in from outside the esi client."""
+
+
+class CacheMetadataSource(StrEnum):
+    """Represents the source of the ESI cache metadata."""
+
+    API = "esi_api"
+    """The cache metadata was fetched from the ESI API."""
+    EXTERNAL = "external"
+    """The cache metadata was provided from an external source."""
+    CACHE = "esi_cache"
+    """The cache metadata was served from the esi client cache."""
 
 
 class EsiAction(BaseModel):
@@ -46,13 +78,8 @@ class EsiAction(BaseModel):
     request: EsiRequest
     response: EsiResponse | None = None
     """The response to the request, if available."""
-    pages: list["EsiAction"] = []
-    """"A list of pages of data for the parent request."""
-
-
-class DebugEsiAction(BaseModel):
-    """A version of EsiAction without the subactions for debugging purposes."""
-
-    request: EsiRequest
-    response: EsiResponse | None = None
-    """The response to the request, if available."""
+    cache_metadata: EsiCacheMetadata | None = None
+    """The cache key for the GET request/response, if available."""
+    metadata_source: CacheMetadataSource | None = None
+    response_source: ResponseDataSource | None = None
+    """The source of the ESI response data."""

@@ -2,7 +2,8 @@
 
 import json
 import logging
-from uuid import uuid4
+from typing import TypedDict
+from uuid import UUID, uuid4
 
 from eve_argus.eve_argus_esi.esi_models import EsiAction, EsiResponse
 from eve_argus.models import argus as EAM
@@ -34,22 +35,43 @@ logger.addHandler(logging.NullHandler())
 #         )
 #         result.data[item["type_id"]] = prices
 #     return result
-def _validate_response(response: EsiResponse | None) -> EsiResponse:
-    if response is None or not response.text:
+def _validate_action(action: EsiAction) -> None:
+    if action.response is None or not action.response.text:
         logger.error(
             "EsiResponse is None or empty, cannot process. %r",
-            response,
+            action,
         )
         raise ValueError("EsiResponse is None or empty, cannot process.")
-    if response.source == "esi_cache" and response.cache_key is None:
-        logger.error(
-            "EsiResponse is from cache but has no cache key, cannot process. %r",
-            response,
-        )
-        raise ValueError(
-            "EsiResponse is from cache but has no cache key, cannot process."
-        )
-    return response
+
+
+class ExtractedMetadata(TypedDict):
+    expires: str
+    """The expiration time for the cache key in ISO 8601 format."""
+    etag: str
+    """The ETag for the cached response."""
+    last_modified: str
+    """The last modified time for the cached response in ISO 8601 format."""
+    last_checked: str
+    """The last time this ESI route was checked in ISO 8601 format."""
+    data_source: UUID | None
+
+
+def extract_metadata(action: EsiAction) -> ExtractedMetadata:
+    """Get the values from the EsiAction cache metadata.
+
+    Use cache key as data_source, then pop out the key.
+    """
+    if action.cache_metadata is None:
+        return {}  # type: ignore
+    metadata = action.cache_metadata
+    result: ExtractedMetadata = {
+        "expires": metadata.expires,
+        "etag": metadata.etag,
+        "last_modified": metadata.last_modified,
+        "last_checked": metadata.last_checked,
+        "data_source": metadata.key,
+    }
+    return result
 
 
 def market_prices(action: EsiAction) -> EAM.UniverseMarketPrices:
@@ -72,20 +94,15 @@ def market_prices(action: EsiAction) -> EAM.UniverseMarketPrices:
     }
     ```
     """
-    response = _validate_response(action.response)
-
+    _validate_action(action)
+    meta_dict = extract_metadata(action)
     result = EAM.UniverseMarketPrices(
+        **meta_dict,
         data_set_id=uuid4(),
-        data_type=EAM.DataTypes.UniverseMarketPrices,
         description="Adjusted and average market prices for the Eve universe",
-        data_source_type=response.source,
-        data_source=response.cache_key or response.request_id,
         data={},
-        last_modified=response.last_modified,
-        expires=response.expires,
-        etag=response.etag,
     )
-    json_data = json.loads(response.text[0] if response else "[]")
+    json_data = json.loads(action.response.text[0] if action.response else "[]")
     for item in json_data:
         prices = EAM.UniverseMarketPrice(
             type_id=item["type_id"],
@@ -140,25 +157,21 @@ def market_history(
     }
         ```
     """
-    response = _validate_response(action.response)
+    _validate_action(action)
+    meta_dict = extract_metadata(action)
     region_id = int(action.request.path_params["region_id"])
     type_id = int(action.request.query_params["type_id"])
     data: list[EAM.MarketHistoryDetail] = []
-    json_data = json.loads(response.text[0] if response else "[]")
+    json_data = json.loads(action.response.text[0] if action.response else "[]")
     for item in json_data:
         data.append(
             EAM.MarketHistoryDetail(region_id=region_id, type_id=type_id, **item)
         )
 
     history = EAM.MarketHistory(
+        **meta_dict,
         data_set_id=uuid4(),
-        last_modified=response.last_modified,
-        etag=response.etag,
-        expires=response.expires,
         description=f"Market history for region {region_id} and type {type_id}",
-        data_type=EAM.DataTypes.MarketHistory,
-        data_source_type=response.source,
-        data_source=response.cache_key or response.request_id,
         region_id=region_id,
         type_id=type_id,
         data=data,
@@ -228,26 +241,23 @@ def market_orders(action: EsiAction) -> EAM.RegionalMarketOrders:
     }
     ```
     """
-    response = _validate_response(action.response)
+    _validate_action(action)
+    meta_dict = extract_metadata(action)
     if "type_id" in action.request.query_params:
         raise ValueError(
             "Market orders for a specific type are not supported in this function."
         )
+    response = action.response
     region_id = int(action.request.path_params["region_id"])
     result = EAM.RegionalMarketOrders(
+        **meta_dict,
         data_set_id=uuid4(),
-        last_modified=response.last_modified,
-        expires=response.expires,
-        etag=response.etag,
         description=f"Market orders for region {region_id}",
-        data_type=EAM.DataTypes.RegionalMarketOrders,
-        data_source_type=response.source,
-        data_source=response.cache_key or response.request_id,
         region_id=region_id,
         orders={},
     )
 
-    for text_line in response.text:
+    for text_line in response.text if response else []:
         json_orders = json.loads(text_line)
         for json_order in json_orders:
             order = EAM.MarketOrderDetail(region_id=region_id, **json_order)
@@ -307,16 +317,13 @@ def system_cost_indices(action: EsiAction) -> EAM.SystemCostIndices:
     }
     ```
     """
-    response = _validate_response(action.response)
+    _validate_action(action)
+    meta_dict = extract_metadata(action)
+    response = action.response
     result = EAM.SystemCostIndices(
+        **meta_dict,
         data_set_id=uuid4(),
-        last_modified=response.last_modified,
-        expires=response.expires,
-        etag=response.etag,
         description="System cost indices for manufacturing, research, and reactions",
-        data_type=EAM.DataTypes.SystemCostIndices,
-        data_source_type=response.source,
-        data_source=response.cache_key or response.request_id,
         data={},
     )
     json_data = json.loads(response.text[0] if response else "{}")

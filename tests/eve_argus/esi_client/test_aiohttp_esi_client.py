@@ -5,10 +5,10 @@ from uuid import uuid4
 import pytest
 
 from eve_argus.eve_argus_esi.esi_cache.esi_memory_cache import EsiMemoryCache
-from eve_argus.eve_argus_esi.esi_client.argus_aiohttp.esi_client import (
+from eve_argus.eve_argus_esi.esi_client.aiohttp_client import (
     ArgusAiohttpClient,
 )
-from eve_argus.eve_argus_esi.esi_models import EsiAction, EsiRequest
+from eve_argus.eve_argus_esi.esi_models import EsiAction, EsiRequest, ResponseDataSource
 from eve_argus.eve_argus_esi.esi_schema.eve_openapi import EveOpenApi
 from eve_argus.helpers.cache_id_from_url import cache_id_from_url
 from eve_argus.helpers.esi_cache_url import compile_cache_url
@@ -44,16 +44,16 @@ def test_get_operation(esi_schema):
         open_api=esi_client.api_spec,
     )
     test_cache_key = cache_id_from_url(cache_url)
-
-    esi_client.get_op(action, cache_results=True, override_cached=False)
+    actions = {action.request.request_id: action}
+    esi_client.get_operations(actions, cache_results=True, override_cached=False)
     assert action.response is not None
-    assert action.response.request_id == action.request.request_id
     assert action.response.cache_key == test_cache_key
     assert len(action.response.text) == 1
-    assert action.response.source == "esi_api"
+    assert action.response_source == ResponseDataSource.API
 
-    esi_client.get_op(action, cache_results=True, override_cached=False)
-    assert action.response.source == "esi_cache"
+    FOO = "FOO"
+    esi_client.get_operations(actions, cache_results=True, override_cached=False)
+    assert action.response_source == ResponseDataSource.CACHE
 
 
 @pytest.mark.slow
@@ -85,13 +85,13 @@ def test_get_paged_operation(esi_schema):
         request=action.request,
         open_api=esi_client.api_spec,
     )
+    actions = {action.request.request_id: action}
     test_cache_key = cache_id_from_url(cache_url)
-    esi_client.get_op(action, cache_results=True, override_cached=False)
+    esi_client.get_operations(actions, cache_results=True, override_cached=False)
     assert action.response is not None
-    assert action.response.request_id == action.request.request_id
     assert action.response.cache_key == test_cache_key
     assert len(action.response.text) > 5
-    assert action.response.source == "esi_api"
+    assert action.response_source == ResponseDataSource.API
 
-    esi_client.get_op(action, cache_results=True, override_cached=False)
-    assert action.response.source == "esi_cache"
+    esi_client.get_operations(actions, cache_results=True, override_cached=False)
+    assert action.response_source == ResponseDataSource.CACHE

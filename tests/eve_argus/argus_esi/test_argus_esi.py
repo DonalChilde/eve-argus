@@ -3,7 +3,7 @@ import pytest
 # from eve_argus.argus_esi.argus_esi import ArgusEsi
 from eve_argus.argus_esi.argus_esi import market_history
 from eve_argus.eve_argus_esi.esi_cache.esi_memory_cache import EsiMemoryCache
-from eve_argus.eve_argus_esi.esi_client.argus_aiohttp.esi_client import (
+from eve_argus.eve_argus_esi.esi_client.aiohttp_client import (
     ArgusAiohttpClient,
 )
 from eve_argus.eve_argus_esi.esi_client.esi_client_protocol import EsiClientProtocol
@@ -40,7 +40,7 @@ def test_market_history(esi_client: EsiClientProtocol):
     region_id = 10000002  # The Forge
     type_id = 34  # Tritanium
     market_history_data = market_history(esi_client, region_id, type_id)
-    print(f"{market_history_data!r}")
+    print(f"{market_history_data!s}")
     assert market_history_data is not None
     assert market_history_data.region_id == region_id
     assert market_history_data.type_id == type_id

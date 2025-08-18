@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+# TODO rethink and update argus model? split static and esi derived data?
+
 
 class DataTypes(StrEnum):
     """Data types for Argus."""
@@ -43,15 +45,14 @@ class TopLevelDataSet(BaseModel):
     """The unique identifier for the data set."""
     last_modified: str | None = None
     """The last modified date of the data set, in ISO 8601 format."""
+    last_checked: str | None = None
+    """The last checked date of the data set, in ISO 8601 format."""
     etag: str | None = None
     """The ETag for the data set, used for caching and validation."""
     expires: str | None = None
     """The expiration date of the data set, in ISO 8601 format."""
     description: str | None = None
     """An optional description of the data set."""
-    data_type: DataTypes
-    """The type of data contained in this data set."""
-    data_source_type: Literal["esi_api", "esi_cache", "sde", "not_set"] = "not_set"
     data_source: UUID | None = None
     """The source of the data, if applicable, as a UUID."""
 

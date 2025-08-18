@@ -2,6 +2,7 @@
 
 from collections.abc import Sequence
 from typing import Protocol
+from uuid import UUID
 
 from eve_argus.eve_argus_esi.esi_models import EsiAction
 
@@ -11,18 +12,18 @@ from eve_argus.eve_argus_esi.esi_models import EsiAction
 class EsiClientProtocol(Protocol):
     """Protocol for ESI client operations."""
 
-    def get_op(
-        self,
-        action: EsiAction,
-        cache_results: bool = True,
-        override_cached: bool = False,
-    ) -> EsiAction:
-        """Perform a get operation against eve ESI."""
-        ...
+    # def get_op(
+    #     self,
+    #     action: EsiAction,
+    #     cache_results: bool = True,
+    #     override_cached: bool = False,
+    # ) -> EsiAction:
+    #     """Perform a get operation against eve ESI."""
+    #     ...
 
-    def get_ops(
+    def get_operations(
         self,
-        actions: Sequence[EsiAction],
+        actions: dict[UUID, EsiAction],
         cache_results: bool = True,
         override_cached: bool = False,
     ) -> Sequence[EsiAction]:

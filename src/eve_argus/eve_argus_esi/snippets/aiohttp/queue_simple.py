@@ -14,6 +14,7 @@ import logging
 from asyncio import Queue
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from enum import StrEnum
 from time import perf_counter
 from typing import Any, Literal
@@ -36,6 +37,7 @@ class AiohttpRequest:
     query_params: dict[str, str | int | float] = field(default_factory=dict)
     headers: list[tuple[str, str]] = field(default_factory=list)
     kwargs: dict[str, Any] = field(default_factory=dict)
+    """Any additional commands to pass to Aiohttp.ClientSession.request."""
     request_id: UUID = field(default_factory=uuid4)
     parent_id: UUID | None = None
     external_id: UUID | None = None
@@ -49,8 +51,9 @@ class AiohttpResponse:
     headers: Sequence[tuple[str, str]]
     text: str
     """The response body as a string."""
-    kwargs: dict[str, Any] = field(default_factory=dict)
-    """Any additional commands to pass to Aiohttp.ClientSession.request."""
+    response_completed: str
+    """The datetime the response completed, in UTC, in ISO Format."""
+
     uuid: UUID = field(default_factory=uuid4)
     request_id: UUID | None = None
 
@@ -133,6 +136,7 @@ class SimpleAiohttpActionRunner:
                         headers=list(response.headers.items()),
                         text=await response.text(),
                         request_id=aiohttp_action.request.request_id,
+                        response_completed=datetime.now(UTC).isoformat(),
                     )
                     aiohttp_action.request_status.current_state = RequestState.FINISHED
                     logger.info(

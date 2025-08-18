@@ -8,7 +8,7 @@ from time import perf_counter
 
 from eve_argus.argus_esi.argus_esi import market_orders
 from eve_argus.eve_argus_esi.esi_cache.esi_memory_cache import EsiMemoryCache
-from eve_argus.eve_argus_esi.esi_client.argus_aiohttp.esi_client import (
+from eve_argus.eve_argus_esi.esi_client.aiohttp_client import (
     ArgusAiohttpClient,
 )
 from eve_argus.eve_argus_esi.esi_schema.eve_openapi import EveOpenApi

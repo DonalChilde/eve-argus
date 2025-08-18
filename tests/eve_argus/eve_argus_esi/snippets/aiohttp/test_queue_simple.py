@@ -9,6 +9,7 @@ These tests cover:
 
 import threading
 import time
+from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import pytest
@@ -124,6 +125,7 @@ def test_simple_aiohttp_action_runner_limits_workers(monkeypatch):
             headers=[],
             text="ok",
             request_id=aiohttp_action.request.request_id,
+            response_completed=datetime.now(UTC).isoformat(),
         )
         # allow overlap
         import asyncio
@@ -167,6 +169,7 @@ def test_simple_aiohttp_action_runner_skips_after_failure(monkeypatch):
                 headers=[],
                 text="bad",
                 request_id=aiohttp_action.request.request_id,
+                response_completed=datetime.now(UTC).isoformat(),
             )
         else:
             # Would succeed, but we expect skip logic in worker to prevent calling this branch
@@ -179,6 +182,7 @@ def test_simple_aiohttp_action_runner_skips_after_failure(monkeypatch):
                 headers=[],
                 text="ok",
                 request_id=aiohttp_action.request.request_id,
+                response_completed=datetime.now(UTC).isoformat(),
             )
 
     monkeypatch.setattr(runner, "_make_request", fake_make_request)
