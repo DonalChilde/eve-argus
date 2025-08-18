@@ -53,7 +53,7 @@ class AiohttpResponse:
     """The response body as a string."""
     response_completed: str
     """The datetime the response completed, in UTC, in ISO Format."""
-
+    real_url: str
     uuid: UUID = field(default_factory=uuid4)
     request_id: UUID | None = None
 
@@ -137,6 +137,7 @@ class SimpleAiohttpActionRunner:
                         text=await response.text(),
                         request_id=aiohttp_action.request.request_id,
                         response_completed=datetime.now(UTC).isoformat(),
+                        real_url=str(response.real_url),
                     )
                     aiohttp_action.request_status.current_state = RequestState.FINISHED
                     logger.info(
