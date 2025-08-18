@@ -104,3 +104,18 @@ def system_cost_indices(
         actions=actions, cache_results=cache_results, override_cached=override_cached
     )
     return DI.system_cost_indices(action)
+
+
+def market_types(
+    esi_client: EsiClientProtocol,
+    region_id: int,
+    cache_results=True,
+    override_cached=False,
+) -> EAM.RegionalMarketTypes:
+    """Get market types for a specific region."""
+    action = EsiAction(request=RB.market_types(region_id))
+    actions = {action.request.request_id: action}
+    esi_client.get_operations(
+        actions=actions, cache_results=cache_results, override_cached=override_cached
+    )
+    return DI.market_types(action)

@@ -24,7 +24,7 @@ def market_history_batch(
     return requests
 
 
-def market_history(region_id: int, type_id: int, etag: str = "") -> EsiRequest:
+def market_history(region_id: int, type_id: int) -> EsiRequest:
     """Get the market history for a specific item in a specific region."""
     request = EsiRequest(
         request_id=uuid4(),
@@ -33,7 +33,7 @@ def market_history(region_id: int, type_id: int, etag: str = "") -> EsiRequest:
         path_params={"region_id": region_id},
         query_params={"type_id": type_id},
     )
-    _inject_etag(request, etag)
+
     return request
 
 
@@ -72,4 +72,15 @@ def system_cost_indices(etag: str = "") -> EsiRequest:
         query_params={},
     )
     _inject_etag(request, etag)
+    return request
+
+
+def market_types(region_id: int) -> EsiRequest:
+    """Get the market types for a specific region."""
+    request = EsiRequest(
+        request_id=uuid4(),
+        op_id="GetMarketsRegionIdTypes",
+        method="GET",
+        path_params={"region_id": region_id},
+    )
     return request

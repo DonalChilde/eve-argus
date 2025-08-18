@@ -147,7 +147,7 @@ class ArgusAiohttpClient(EsiClientProtocol):
         }
         if action.cache_metadata and not override_cached:
             headers["If-None-Match"] = action.cache_metadata.etag
-        return AiohttpAction(
+        aiohttp_action = AiohttpAction(
             AiohttpRequest(
                 method=action.request.method,
                 url=url,
@@ -159,6 +159,7 @@ class ArgusAiohttpClient(EsiClientProtocol):
             ),
             request_status=AiohttpRequestStatus(),
         )
+        return aiohttp_action
 
     def get_operations(
         self,
@@ -202,8 +203,8 @@ class ArgusAiohttpClient(EsiClientProtocol):
                     # external cache metadata is not expired
                     actions[key].response_source = ResponseDataSource.EXTERNAL
                     continue
-        # No external cache metadata provided, so we need to check the API.
-        unresolved_keys.append(key)
+            # No external cache metadata provided, so we need to check the API.
+            unresolved_keys.append(key)
         return unresolved_keys
 
     def resolve_for_cache(
@@ -329,7 +330,7 @@ class ArgusAiohttpClient(EsiClientProtocol):
         cache_key = self._compile_cache_key(esi_action)
         cache_metadata = self.get_cache_metadata(aiohttp_action, cache_key)
         response = EsiResponse(
-            request_url=aiohttp_action.request.url,
+            request_url=aiohttp_action.response.real_url,
             cache_key=cache_key,
             text=[aiohttp_action.response.text],
         )

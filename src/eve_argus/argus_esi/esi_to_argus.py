@@ -326,10 +326,44 @@ def system_cost_indices(action: EsiAction) -> EAM.SystemCostIndices:
         description="System cost indices for manufacturing, research, and reactions",
         data={},
     )
-    json_data = json.loads(response.text[0] if response else "{}")
-    for sci in json_data:
-        system_id = sci["solar_system_id"]
-        result.data[system_id] = EAM.SystemCostIndex(system_id=system_id, **sci)
+    for text_line in response.text if response else []:
+        json_data = json.loads(text_line)
+        for sci in json_data:
+            system_id = sci["solar_system_id"]
+            result.data[system_id] = EAM.SystemCostIndex(system_id=system_id, **sci)
+    return result
+
+
+def market_types(
+    action: EsiAction,
+) -> EAM.RegionalMarketTypes:
+    """Import market types for a specific region from esi response.
+
+    ```python
+    response_schema = {
+        "MarketsRegionIdTypesGet": {
+            "items": {
+                "format": "int64",
+                "type": "integer",
+            },
+            "type": "array",
+        }
+    }
+    ```
+    """
+    _validate_action(action)
+    meta_dict = extract_metadata(action)
+    region_id = int(action.request.path_params["region_id"])
+    result = EAM.RegionalMarketTypes(
+        **meta_dict,
+        data_set_id=uuid4(),
+        description=f"Market types for region {region_id}",
+        region_id=region_id,
+        type_ids=set(),
+    )
+    for text_line in action.response.text if action.response else []:
+        json_data = json.loads(text_line)
+        result.type_ids.update(json_data)
     return result
 
 
