@@ -52,7 +52,7 @@ def market_history(
     override_cached=False,
 ) -> EAM.MarketHistory:
     """Get market history for a specific region and type."""
-    action = EsiAction(request=RB.market_history(region_id, type_id, etag))
+    action = EsiAction(request=RB.market_history(region_id, type_id))
     actions = {action.request.request_id: action}
     esi_client.get_operations(
         actions=actions, cache_results=cache_results, override_cached=override_cached

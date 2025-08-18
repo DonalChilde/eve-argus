@@ -126,6 +126,7 @@ def test_simple_aiohttp_action_runner_limits_workers(monkeypatch):
             text="ok",
             request_id=aiohttp_action.request.request_id,
             response_completed=datetime.now(UTC).isoformat(),
+            real_url=aiohttp_action.request.url,
         )
         # allow overlap
         import asyncio
@@ -170,6 +171,7 @@ def test_simple_aiohttp_action_runner_skips_after_failure(monkeypatch):
                 text="bad",
                 request_id=aiohttp_action.request.request_id,
                 response_completed=datetime.now(UTC).isoformat(),
+                real_url=aiohttp_action.request.url,
             )
         else:
             # Would succeed, but we expect skip logic in worker to prevent calling this branch
@@ -183,6 +185,7 @@ def test_simple_aiohttp_action_runner_skips_after_failure(monkeypatch):
                 text="ok",
                 request_id=aiohttp_action.request.request_id,
                 response_completed=datetime.now(UTC).isoformat(),
+                real_url=aiohttp_action.request.url,
             )
 
     monkeypatch.setattr(runner, "_make_request", fake_make_request)
