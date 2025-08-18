@@ -289,6 +289,24 @@ class ArgusFileReader:
     #     )
     #     return result
 
+    def regional_market_history(self, region_id: int) -> EAM.RegionalMarketHistory:
+        """Load regional market history from JSON."""
+        start = perf_counter()
+        path_in = (
+            self.argus_path
+            / ArgusFilePaths.ESI_DATA
+            / Template(ArgusFilePaths.REGIONAL_MARKET_HISTORY).substitute(
+                region_id=region_id
+            )
+        )
+        result = EAM.RegionalMarketHistory.model_validate_json(path_in.read_text())
+        logger.info(
+            "Loaded data from %s in %s seconds",
+            path_in,
+            f"{perf_counter() - start:.6f}",
+        )
+        return result
+
     def regional_market_orders(self, region_id: int) -> EAM.RegionalMarketOrders:
         """Load market orders for a specific region from JSON.
 

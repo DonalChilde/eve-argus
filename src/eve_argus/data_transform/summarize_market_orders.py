@@ -252,7 +252,6 @@ def calculate_order_summaries(
         data_set_id=uuid4(),
         last_modified=regional_orders.last_modified,
         description=f"Market order summaries for {location_spec} {location_id}",
-        data_type=EAM.DataTypes.MarketOrderSummaries,
         data_source=regional_orders.data_set_id,
         location_spec=location_spec,
         location_id=location_id,

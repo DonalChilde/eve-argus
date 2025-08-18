@@ -2,13 +2,17 @@
 
 from collections.abc import Iterable, Sequence
 from datetime import date
+from uuid import uuid4
 
 from eve_argus.models import argus as EAM
 from eve_argus.snippets.datetime.date_range import date_range_days
 
+# TODO re think how multiple summary periods might work.
+# Given keeping the raw data is kinda feasible, it is more practical to generate summaries one at a time.
+
 
 def summarize_regional_market_history(
-    histories: EAM.MarketHistories,
+    histories: EAM.RegionalMarketHistory,
     type_ids: Iterable[int] | None = None,
     periods: Sequence[int] = (10, 30, 60, 90),
 ) -> EAM.RegionalMarketHistorySummaries:
@@ -26,6 +30,7 @@ def summarize_regional_market_history(
         type_ids = histories.data.keys()
     region_id = histories.region_id
     summaries = EAM.RegionalMarketHistorySummaries(
+        data_set_id=uuid4(),
         region_id=region_id,
         data={},
     )
@@ -41,7 +46,8 @@ def summarize_regional_market_history(
             data=market_history.data,
             periods=periods,
         )
-        summaries.data[type_id] = summary
+        first_period = periods[0]
+        summaries.data[type_id] = summary[first_period]
     return summaries
 
 
@@ -94,7 +100,6 @@ def summarize_market_history_by_dates(
     Returns:
         EAM.MarketHistorySummary: The summarized market history.
     """
-
     missing = average = highest = lowest = order_count = volume = 0
     count = len(dates)
     for key in dates:
@@ -119,5 +124,6 @@ def summarize_market_history_by_dates(
         lowest=lowest / volume,
         order_count=int(order_count / count),
         volume=volume / count,
+        last_modified="",
     )
     return result
