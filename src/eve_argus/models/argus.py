@@ -208,6 +208,12 @@ class RegionalMarketHistorySummaries(TopLevelDataSet):
 
 
 class Activity_Name(Enum):
+    """Enum for activity names in Eve Argus.
+
+    Keep this data, not sure where is offical source is.
+    Found this on fuzzworks.
+    """
+
     manufacturing = 1
     research_time = 3
     research_material = 4
