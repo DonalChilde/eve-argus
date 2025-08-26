@@ -6,8 +6,8 @@ from typing import Annotated
 import typer
 
 from eve_argus import CONFIG
-from eve_argus.argus_esi.cli.esi import app as esi_app
 from eve_argus.argus_sde.cli.sde import app as sde_app
+from eve_argus.eve_argus_esi.cli.esi import app as esi_app
 
 # from eve_argus.cli.data_exports import app as exports_app
 # from eve_argus.cli.data_imports import app as imports_app
