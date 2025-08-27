@@ -7,7 +7,7 @@ fresh copy from the ESI API.
 import json
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel
@@ -45,7 +45,7 @@ class SchemaStore:
         self.schema_url = schema_url
         self._esi_schema = None
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         """Enter the runtime context related to this object.
 
         Loads the ESI schema from file if available.
