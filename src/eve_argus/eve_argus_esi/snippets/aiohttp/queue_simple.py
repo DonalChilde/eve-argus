@@ -28,6 +28,14 @@ logger.addHandler(logging.NullHandler())
 # TODO refactor this so that the worker function can be easily customized.
 
 
+def _short_uuid(u: UUID | None) -> str:
+    """Return a short, human-friendly form of a UUID for logging/repr."""
+    if u is None:
+        return "None"
+    # first segment is typically enough to disambiguate in logs
+    return str(u).split("-", 1)[0]
+
+
 @dataclass(slots=True)
 class AiohttpRequest:
     """Aiohttp request data class."""
@@ -43,6 +51,19 @@ class AiohttpRequest:
     external_id: UUID | None = None
     """A UUID used to match an AiohttpRequest with an external request."""
 
+    def __repr__(self) -> str:  # pragma: no cover - simple formatting
+        """Return a concise representation for debugging/logging."""
+        return (
+            "AiohttpRequest("
+            f"method={self.method!r}, url={self.url!r}, "
+            f"query_params={self.query_params!r}, headers={self.headers!r}, "
+            f"kwargs={self.kwargs!r}, "
+            f"request_id={_short_uuid(self.request_id)}, "
+            f"parent_id={_short_uuid(self.parent_id)}, "
+            f"external_id={_short_uuid(self.external_id)}"
+            ")"
+        )
+
 
 @dataclass(slots=True)
 class AiohttpResponse:
@@ -51,11 +72,23 @@ class AiohttpResponse:
     headers: Sequence[tuple[str, str]]
     text: str
     """The response body as a string."""
-    response_completed: str
+    completed_on: str
     """The datetime the response completed, in UTC, in ISO Format."""
     real_url: str
-    uuid: UUID = field(default_factory=uuid4)
+    response_id: UUID = field(default_factory=uuid4)
     request_id: UUID | None = None
+
+    def __repr__(self) -> str:  # pragma: no cover - simple formatting
+        """Return a concise representation for debugging/logging."""
+        text_preview = self.text if len(self.text) <= 80 else self.text[:77] + "..."
+        return (
+            "AiohttpResponse("
+            f"status_code={self.status_code}, status_reason={self.status_reason!r}, "
+            f"headers={self.headers!r}, text={text_preview!r}, "
+            f"real_url={self.real_url!r}, completed_on={self.completed_on!r}, "
+            f"request_id={_short_uuid(self.request_id)}, response_id={_short_uuid(self.response_id)}"
+            ")"
+        )
 
 
 class RequestState(StrEnum):
@@ -74,12 +107,25 @@ class AiohttpRequestStatus:
     failure_count: int = 0
     current_state: RequestState = RequestState.NEW
 
+    def __repr__(self) -> str:
+        """Return a concise representation for debugging/logging."""
+        return (
+            "AiohttpRequestStatus("
+            f"requests={self.request_count}, success={self.success_count}, "
+            f"failure={self.failure_count}, state={self.current_state}"
+            ")"
+        )
+
 
 @dataclass(slots=True)
 class AiohttpAction:
     request: AiohttpRequest
     request_status: AiohttpRequestStatus
     response: AiohttpResponse | None = None
+
+    def __repr__(self) -> str:
+        """Return a concise representation for debugging/logging."""
+        return f"AiohttpAction(request={self.request!r}, response={self.response!r})"
 
 
 class Signals(StrEnum):
@@ -89,6 +135,7 @@ class Signals(StrEnum):
 
 class SimpleAiohttpActionRunner:
     def __init__(self, max_concurrent_requests: int = 50) -> None:
+        """Initialize the runner with a concurrency cap."""
         self.runner_status: Signals = Signals.NORMAL_OPERATIONS
         self.max_concurrent_requests = max_concurrent_requests
 
@@ -130,13 +177,13 @@ class SimpleAiohttpActionRunner:
                     # remaining tasks, which will be marked as skipped on next loop.
                 finally:
                     aiohttp_action.response = AiohttpResponse(
-                        uuid=aiohttp_action.request.request_id,
+                        response_id=aiohttp_action.request.request_id,
                         status_code=response.status,
                         status_reason=response.reason,
                         headers=list(response.headers.items()),
                         text=await response.text(),
                         request_id=aiohttp_action.request.request_id,
-                        response_completed=datetime.now(UTC).isoformat(),
+                        completed_on=datetime.now(UTC).isoformat(),
                         real_url=str(response.real_url),
                     )
                     aiohttp_action.request_status.current_state = RequestState.FINISHED

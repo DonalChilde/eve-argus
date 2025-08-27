@@ -119,13 +119,13 @@ def test_simple_aiohttp_action_runner_limits_workers(monkeypatch):
         aiohttp_action.request_status.request_count += 1
         aiohttp_action.request_status.success_count += 1
         aiohttp_action.response = AiohttpResponse(
-            uuid=aiohttp_action.request.request_id,
+            response_id=aiohttp_action.request.request_id,
             status_code=200,
             status_reason="OK",
             headers=[],
             text="ok",
             request_id=aiohttp_action.request.request_id,
-            response_completed=datetime.now(UTC).isoformat(),
+            completed_on=datetime.now(UTC).isoformat(),
             real_url=aiohttp_action.request.url,
         )
         # allow overlap
@@ -164,13 +164,13 @@ def test_simple_aiohttp_action_runner_skips_after_failure(monkeypatch):
             runner.runner_status = Signals.WORKER_SHUTDOWN
             # Simulate no response body available
             aiohttp_action.response = AiohttpResponse(
-                uuid=aiohttp_action.request.request_id,
+                response_id=aiohttp_action.request.request_id,
                 status_code=400,
                 status_reason="Bad Request",
                 headers=[],
                 text="bad",
                 request_id=aiohttp_action.request.request_id,
-                response_completed=datetime.now(UTC).isoformat(),
+                completed_on=datetime.now(UTC).isoformat(),
                 real_url=aiohttp_action.request.url,
             )
         else:
@@ -178,13 +178,13 @@ def test_simple_aiohttp_action_runner_skips_after_failure(monkeypatch):
             aiohttp_action.request_status.request_count += 1
             aiohttp_action.request_status.success_count += 1
             aiohttp_action.response = AiohttpResponse(
-                uuid=aiohttp_action.request.request_id,
+                response_id=aiohttp_action.request.request_id,
                 status_code=200,
                 status_reason="OK",
                 headers=[],
                 text="ok",
                 request_id=aiohttp_action.request.request_id,
-                response_completed=datetime.now(UTC).isoformat(),
+                completed_on=datetime.now(UTC).isoformat(),
                 real_url=aiohttp_action.request.url,
             )
 
