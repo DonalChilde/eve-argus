@@ -5,7 +5,13 @@ from copy import deepcopy
 from datetime import UTC, datetime
 from uuid import UUID
 
-from eve_argus.eve_argus_esi.esi_models import EsiCacheMetadata, EsiResponse
+from eve_argus.eve_argus_esi.esi_models import (
+    EsiCache,
+    EsiCachedResponse,
+    EsiCacheMetadata,
+    EsiResponse,
+)
+from eve_argus.eve_argus_esi.helpers.now_utc import now_utc
 
 from .esi_cache_protocol import CacheStatus, EsiCacheProtocol
 
@@ -17,53 +23,57 @@ class EsiMemoryCache(EsiCacheProtocol):
     """A simple in-memory cache for ESI responses."""
 
     def __init__(self) -> None:
-        self._cache: dict[UUID, EsiResponse] = {}
-        self._metadata: dict[UUID, EsiCacheMetadata] = {}
+        self._cached_responses: EsiCache = EsiCache()
 
-    def get(self, key: UUID) -> tuple[EsiCacheMetadata, EsiResponse]:
+    def get(self, key: UUID) -> EsiCachedResponse | None:
         """Retrieve a cached response by its key."""
-        cached_value = self.get_response(key)
-        metadata = self.get_cache_metadata(key)
+        cached_value = self._cached_responses.data.get(key)
+
         if cached_value:
             logger.info(f"Cache hit for key: {key}")
-        return (metadata, cached_value)
+        else:
+            logger.info(f"Cache miss for key: {key}")
+        return deepcopy(cached_value)
 
-    def get_response(self, key: UUID) -> EsiResponse:
+    def get_response(self, key: UUID) -> EsiResponse | None:
         """Retrieve a cached response by its key."""
-        cached_value = self._cache.get(key)
+        cached_value = self._cached_responses.data.get(key)
         if cached_value is None:
-            raise KeyError(f"No cached response found for key: {key}")
-        return cached_value
+            logger.info(f"Cache miss for key: {key}")
+            return None
+        return deepcopy(cached_value.response)
 
-    def get_cache_metadata(self, key: UUID) -> EsiCacheMetadata:
+    def get_cache_metadata(self, key: UUID) -> EsiCacheMetadata | None:
         """Retrieve cache metadata for a cached response by its key."""
-        metadata = self._metadata.get(key)
+        metadata = self._cached_responses.data.get(key)
         if metadata is None:
-            raise KeyError(f"No cache metadata found for key: {key}")
-        return metadata
+            logger.info(f"Cache miss for key: {key}")
+            return None
+        return deepcopy(metadata.metadata)
 
-    def set(self, cache_metadata: EsiCacheMetadata, value: EsiResponse) -> None:
+    def set(
+        self, cache_key: UUID, cache_metadata: EsiCacheMetadata, value: EsiResponse
+    ) -> None:
         """Store a response in the cache with its key."""
-        self._cache[cache_metadata.key] = deepcopy(value)
-        self._metadata[cache_metadata.key] = deepcopy(cache_metadata)
+        self._cached_responses.data[cache_key] = EsiCachedResponse(
+            cache_key=cache_key,
+            response=deepcopy(value),
+            metadata=deepcopy(cache_metadata),
+        )
 
     def clear(self) -> None:
         """Clear the entire cache."""
-        self._cache.clear()
-        self._metadata.clear()
+        self._cached_responses.data.clear()
 
     def remove(self, key: UUID) -> None:
         """Remove a cached response by its key."""
-        self._cache.pop(key, None)
-        self._metadata.pop(key, None)
+        self._cached_responses.data.pop(key, None)
 
     def status(self, cache_key: UUID) -> CacheStatus:
         """Get the cache status of an EsiResponse."""
-        if cache_key in self._metadata:
-            metadata = self._metadata[cache_key]
-            if datetime.fromisoformat(metadata.expires).astimezone(UTC) > datetime.now(
-                UTC
-            ):
+        if cache_key in self._cached_responses.data:
+            metadata = self._cached_responses.data[cache_key].metadata
+            if datetime.fromisoformat(metadata.expires).astimezone(UTC) > now_utc():
                 return CacheStatus.HIT
             return CacheStatus.STALE
         return CacheStatus.MISS

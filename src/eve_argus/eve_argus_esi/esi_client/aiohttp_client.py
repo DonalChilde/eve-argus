@@ -215,14 +215,14 @@ class ArgusAiohttpClient(EsiClientProtocol):
         for key in subset:
             esi_action = actions[key]
             cache_key = self._compile_cache_key(esi_action)
-            cache_status = self.cache.status(cache_key)
-            if cache_status == CacheStatus.HIT:
-                esi_action.response = self.cache.get_response(cache_key)
-                esi_action.response_source = ResponseDataSource.CACHE
-                esi_action.cache_metadata = self.cache.get_cache_metadata(cache_key)
-                esi_action.metadata_source = CacheMetadataSource.CACHE
-            else:
+            cached_value = self.cache.get(cache_key)
+            if cached_value is None:
                 unresolved_keys.append(key)
+                continue
+            esi_action.response = cached_value.response
+            esi_action.response_source = ResponseDataSource.CACHE
+            esi_action.cache_metadata = cached_value.metadata
+            esi_action.metadata_source = CacheMetadataSource.CACHE
         return unresolved_keys
 
     def resolve_for_api(
@@ -273,7 +273,8 @@ class ArgusAiohttpClient(EsiClientProtocol):
         if esi_action.metadata_source is CacheMetadataSource.EXTERNAL:
             # There was an etag match from an external source.
             esi_action.response_source = ResponseDataSource.EXTERNAL
-            esi_action.cache_metadata = self.get_cache_metadata(
+            # TODO verify that a 304 returns the correct headers to update metadata.
+            esi_action.cache_metadata = self.make_cache_metadata(
                 aiohttp_action, cache_key=self._compile_cache_key(esi_action)
             )
             esi_action.metadata_source = CacheMetadataSource.API
@@ -281,9 +282,11 @@ class ArgusAiohttpClient(EsiClientProtocol):
         elif esi_action.metadata_source is CacheMetadataSource.CACHE:
             # There was an etag match from the esi client cache
             cache_key = self._compile_cache_key(esi_action)
-            new_cache_metadata = self.get_cache_metadata(aiohttp_action, cache_key)
+            new_cache_metadata = self.make_cache_metadata(aiohttp_action, cache_key)
             response = self.cache.get_response(cache_key)
-            self.cache.set(new_cache_metadata, response)
+            self.cache.set(
+                cache_key=cache_key, cache_metadata=new_cache_metadata, value=response
+            )
             esi_action.response_source = ResponseDataSource.CACHE
             esi_action.cache_metadata = new_cache_metadata
             esi_action.response = response
@@ -292,7 +295,7 @@ class ArgusAiohttpClient(EsiClientProtocol):
             logger.error("Metadata source missing from %r", esi_action)
             raise ValueError("Could not figure out cache metadata source.")
 
-    def get_cache_metadata(
+    def make_cache_metadata(
         self, aiohttp_action: AiohttpAction, cache_key: UUID
     ) -> EsiCacheMetadata:
         """Get the cache metadata for a given aiohttp action."""
@@ -307,11 +310,11 @@ class ArgusAiohttpClient(EsiClientProtocol):
         last_modified = headers.get("Last-Modified", "")
         last_modified = parse_esi_datetime(last_modified).isoformat()
         return EsiCacheMetadata(
-            key=cache_key,
+            cache_key=cache_key,
             expires=expires,
             etag=etag,
             last_modified=last_modified,
-            last_checked=aiohttp_action.response.response_completed,
+            last_checked=aiohttp_action.response.completed_on,
         )
 
     def handle_200(
@@ -328,10 +331,11 @@ class ArgusAiohttpClient(EsiClientProtocol):
                 "Aiohttp action response is None or not 200, wrong handler!"
             )
         cache_key = self._compile_cache_key(esi_action)
-        cache_metadata = self.get_cache_metadata(aiohttp_action, cache_key)
+        cache_metadata = self.make_cache_metadata(aiohttp_action, cache_key)
         response = EsiResponse(
             request_url=aiohttp_action.response.real_url,
             cache_key=cache_key,
+            headers=tuple(aiohttp_action.response.headers),
             text=[aiohttp_action.response.text],
         )
         esi_action.response = response
@@ -344,14 +348,22 @@ class ArgusAiohttpClient(EsiClientProtocol):
             result_texts = self.handle_paged_responses(paged_actions)
             response.text.extend(result_texts)
         if cache_results:
-            self.cache.set(cache_metadata, response)
+            self.cache.set(
+                cache_key=cache_key, cache_metadata=cache_metadata, value=response
+            )
 
     def handle_paged_responses(self, actions: Sequence[AiohttpAction]) -> Sequence[str]:
         results: list[str] = []
         for action in actions:
             if action.response is None:
+                logger.error(
+                    f"Aiohttp action response is None, cannot process. {action.request!r}"
+                )
                 raise ValueError("Aiohttp action response is None, cannot process.")
             if action.response.status_code != 200:
+                logger.error(
+                    f"Aiohttp action response is not 200, cannot process. {action.request!r} response: {action.response!r}"
+                )
                 raise ValueError("Aiohttp action response is not 200, cannot process.")
             results.append(action.response.text)
         return results

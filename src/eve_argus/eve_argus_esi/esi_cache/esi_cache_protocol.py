@@ -4,7 +4,11 @@ from enum import StrEnum
 from typing import Protocol
 from uuid import UUID
 
-from eve_argus.eve_argus_esi.esi_models import EsiCacheMetadata, EsiResponse
+from eve_argus.eve_argus_esi.esi_models import (
+    EsiCachedResponse,
+    EsiCacheMetadata,
+    EsiResponse,
+)
 
 
 class CacheStatus(StrEnum):
@@ -21,7 +25,7 @@ class CacheStatus(StrEnum):
 class EsiCacheProtocol(Protocol):
     """Protocol for ESI cache operations."""
 
-    def get(self, key: UUID) -> tuple[EsiCacheMetadata, EsiResponse]:
+    def get(self, key: UUID) -> EsiCachedResponse | None:
         """Get an EsiResponse from the cache."""
         ...
 
@@ -33,7 +37,9 @@ class EsiCacheProtocol(Protocol):
         """Get the cache key for an EsiResponse from the cache."""
         ...
 
-    def set(self, cache_metadata: EsiCacheMetadata, value: EsiResponse) -> None:
+    def set(
+        self, cache_key: UUID, cache_metadata: EsiCacheMetadata, value: EsiResponse
+    ) -> None:
         """Set an EsiResponse in the cache."""
         ...
 
