@@ -69,7 +69,7 @@ def extract_metadata(action: EsiAction) -> ExtractedMetadata:
         "etag": metadata.etag,
         "last_modified": metadata.last_modified,
         "last_checked": metadata.last_checked,
-        "data_source": metadata.key,
+        "data_source": metadata.cache_key,
     }
     return result
 

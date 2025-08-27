@@ -10,7 +10,7 @@ from pydantic import BaseModel
 class EsiCacheMetadata(BaseModel):
     """Represents a cache metadata for ESI GET requests/responses."""
 
-    key: UUID
+    cache_key: UUID
     """The cache key UUID, built from the get request url."""
     expires: str
     """The expiration time for the cache key in ISO 8601 format."""
@@ -45,8 +45,21 @@ class EsiResponse(BaseModel):
     request_url: str
     cache_key: UUID | None
     """The cache key for the GET request/response, if available."""
+    headers: tuple[tuple[str, str | None], ...] = ()
     text: list[str] = []
     """The response body as a list of strings to support paged requests."""
+
+
+class EsiCachedResponse(BaseModel):
+    """Represents a cached ESI response."""
+
+    cache_key: UUID
+    metadata: EsiCacheMetadata
+    response: EsiResponse
+
+
+class EsiCache(BaseModel):
+    data: dict[UUID, EsiCachedResponse] = {}
 
 
 class ResponseDataSource(StrEnum):
