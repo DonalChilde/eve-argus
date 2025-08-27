@@ -36,3 +36,7 @@ class EveOpenApiProtocol(Protocol):
     ) -> SplitParameters:
         """Split the parameters into their respective categories."""
         ...
+
+    def is_paged(self, op_id: str) -> bool:
+        """Check if the operation is paged."""
+        ...

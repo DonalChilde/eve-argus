@@ -1,4 +1,7 @@
-"""Code to interact with the Eve Esi openapi spec."""
+"""Code to interact with the Eve Esi openapi spec.
+
+https://swagger.io/specification/
+"""
 
 import json
 from collections.abc import Mapping
@@ -336,6 +339,17 @@ class EveOpenApi(EveOpenApiProtocol):
             return f"{resolved_url}?{query_string}" if query_string else resolved_url
 
         return resolved_url
+
+    def is_paged(self, op_id: str) -> bool:
+        """Check if the operation is paged."""
+        operation = self.by_op_id.get(op_id, {})
+        if not operation:
+            raise ValueError(f"Operation ID not found: {op_id}")
+        if "X-Pages" in operation.get("responses", {}).get("200", {}).get(
+            "headers", {}
+        ):
+            return True
+        return False
 
     def _collect_request_headers(self, op_id: str) -> dict[str, dict[str, Any]]:
         """Collect the headers for the given operation ID from the schema.
