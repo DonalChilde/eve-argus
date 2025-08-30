@@ -171,7 +171,6 @@ def esi_batch_query(
     cache: LinkCacheProtocol,
     schema: EveOpenApiProtocol,
     link: EsiLink,
-    page_query: bool = False,
 ) -> dict[UUID, QueryResponse]:
     paged_queries = {
         key: x for key, x in queries.items() if schema.is_paged(x["operation"])
@@ -234,4 +233,56 @@ def esi_batch_query(
         missing = set(queries.keys()) - set(results.keys())
         logger.error(f"Missing results for queries: {missing}")
         raise ValueError(f"Missing results for queries: {missing}")
+    return results
+
+
+def esi_batch_query_2(
+    queries: dict[UUID, EsiQuery],
+    cache: LinkCacheProtocol,
+    schema: EveOpenApiProtocol,
+    link: EsiLink,
+    fail_on_error: bool = False,
+) -> dict[UUID, QueryResponse]:
+    results: dict[UUID, QueryResponse] = {}
+    one_pass = set[UUID]()
+    for key, query in queries.items():
+        _validate_query(query, schema)
+        one_pass.add(key)
+        if schema.is_paged(query["operation"]):
+            results[key] = paged_query(
+                query=query,
+                cache=cache,
+                schema=schema,
+                link=link,
+            )
+            one_pass.remove(key)
+        if schema.is_cached(query["operation"]):
+            cache_key = _make_cache_key(query, schema)
+            cache_status = cache.get(cache_key)
+            if cache_status is CacheStatus.HIT:
+                results[key] = cache.get_response(cache_key)
+                one_pass.remove(key)
+            elif cache_status is CacheStatus.STALE:
+                # If the cache is stale, we need to revalidate it
+                _inject_etag(query, cache, schema)
+    responses = link.do_queries({k: queries[k] for k in one_pass})
+    for key, response in responses.items():
+        if schema.is_cached(queries[key]["operation"]):
+            if response.status_code == 304:
+                # If we get a 304 response, we can return the cached response
+                cache_key = _make_cache_key(queries[key], schema)
+                cache.update_304(cache_key, response)
+                response = cache.get_response(cache_key)
+            elif response.status_code == 200:
+                # If we get a 200 response, we need to update the cache
+                cache_key = _make_cache_key(queries[key], schema)
+                metadata = cache.build_metadata(response)
+                cache.set(cache_key, metadata, response)
+        results[key] = response
+        if response.status_code != 200 and response.status_code != 304:
+            logger.error(f"Bad response for {key}: {response!r}")
+            if fail_on_error:
+                raise ValueError(
+                    f"Unexpected status code: {response.status_code} for {key}"
+                )
     return results
