@@ -180,6 +180,9 @@ class EsiLink:
             await asyncio.gather(*tasks)
         return result
 
+    def _inject_compatability_date(self, headers):
+        pass
+
     async def _do_get_query(
         self,
         query: EsiQuery,
@@ -191,10 +194,12 @@ class EsiLink:
             query_params={},
             include_query=False,
         )
+        headers = query["headers"]
+        headers["X-Esi-Compatibility-Date"] = self._schema.compatibility_date
         async with session.request(
             method=self._schema.get_method(query["operation"]),
             url=url,
-            headers=query["headers"],
+            headers=headers,
             params=query["query_parameters"],
         ) as response:
             async with response:

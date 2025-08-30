@@ -35,3 +35,8 @@ def limit_remain(headers: HeadersType) -> int:
         if header[0].lower() == "x-esi-error-limit-remain":
             return int(header[1] or default)
     return default
+
+
+def inject_compatibility_date(headers: dict[str, str], compatibility_date: str) -> None:
+    """Inject the compatibility date into the request headers."""
+    headers["X-Esi-Compatibility-Date"] = compatibility_date
