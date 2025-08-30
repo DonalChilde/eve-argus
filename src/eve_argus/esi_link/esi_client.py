@@ -1,10 +1,20 @@
-"""Esi client for retrieving data from the Eve Online ESI API.
+"""ESI client utilities for retrieving and caching data from the Eve Online ESI API.
 
-Multiple query conditions must be handled.
-Get requests might be cached.
-Get and post requests might be paged.
-Given that some operations might involve 10000 queries, concurrent requests should be considered.
-For paged requests, only the first page is cached after collecting all pages and adding them to the first page response.
+This module provides functions for building, validating, and executing ESI queries,
+including support for caching, paging, and batch operations. It is designed to handle
+large numbers of concurrent requests efficiently and robustly.
+
+Functions:
+    _make_cache_key: Generate a cache key for a query.
+    _validate_query: Validate a query against the ESI schema.
+    _inject_etag: Inject ETag header from cache into a query.
+    _build_pages_queries: Build queries for all pages of a paged response.
+    paged_query: Execute a paged ESI query, handling cache and errors.
+    esi_batch_query: Execute a batch of ESI queries, handling cache, paging, and errors.
+
+Typical usage example:
+    response = paged_query(query, cache, schema, link)
+    results = esi_batch_query(queries, cache, schema, link)
 """
 
 import logging
@@ -22,6 +32,15 @@ logger.addHandler(logging.NullHandler())
 
 
 def _make_cache_key(query: EsiQuery, schema: EveOpenApiProtocol) -> UUID:
+    """Generate a unique cache key for the given query and schema.
+
+    Args:
+        query (EsiQuery): The ESI query.
+        schema (EveOpenApiProtocol): The ESI schema.
+
+    Returns:
+        UUID: The cache key for the query.
+    """
     url = schema.get_url(
         op_id=query["operation"],
         path_params=query["path_parameters"],
@@ -33,6 +52,15 @@ def _make_cache_key(query: EsiQuery, schema: EveOpenApiProtocol) -> UUID:
 
 
 def _validate_query(query: EsiQuery, schema: EveOpenApiProtocol) -> bool:
+    """Validate the query against the ESI schema.
+
+    Args:
+        query (EsiQuery): The ESI query.
+        schema (EveOpenApiProtocol): The ESI schema.
+
+    Returns:
+        bool: True if the query is valid, False otherwise.
+    """
     valid = schema.validate_operation(
         op_id=query["operation"],
         path_params=query["path_parameters"],
@@ -71,6 +99,21 @@ def paged_query(
     link: EsiLink,
     fail_on_error: bool = False,
 ) -> QueryResponse:
+    """Execute a paged ESI query, handling cache, paging, and errors.
+
+    Args:
+        query (EsiQuery): The ESI query.
+        cache (LinkCacheProtocol): The cache protocol.
+        schema (EveOpenApiProtocol): The ESI schema.
+        link (EsiLink): The ESI link for executing queries.
+        fail_on_error (bool, optional): Whether to raise on error. Defaults to False.
+
+    Returns:
+        QueryResponse: The combined response for all pages.
+
+    Raises:
+        ValueError: If an error occurs and fail_on_error is True.
+    """
     _validate_query(query, schema)
     response: QueryResponse | None = None
     if schema.is_cached(query["operation"]):
@@ -126,6 +169,21 @@ def esi_batch_query(
     link: EsiLink,
     fail_on_error: bool = False,
 ) -> dict[UUID, QueryResponse]:
+    """Execute a batch of ESI queries, handling cache, paging, and errors.
+
+    Args:
+        queries (dict[UUID, EsiQuery]): Dictionary of queries to execute.
+        cache (LinkCacheProtocol): The cache protocol.
+        schema (EveOpenApiProtocol): The ESI schema.
+        link (EsiLink): The ESI link for executing queries.
+        fail_on_error (bool, optional): Whether to raise on error. Defaults to False.
+
+    Returns:
+        dict[UUID, QueryResponse]: Dictionary of responses keyed by query ID.
+
+    Raises:
+        ValueError: If an error occurs and fail_on_error is True.
+    """
     results: dict[UUID, QueryResponse] = {}
     one_pass = set[UUID]()
     for key, query in queries.items():
