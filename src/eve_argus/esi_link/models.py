@@ -20,6 +20,7 @@ class QueryResponse(BaseModel):
     text: str
     paged_text: list[str] = []
     headers: tuple[tuple[str, str | None], ...] = ()
+    completed_on: str
 
 
 class LinkCacheMetadata(BaseModel):

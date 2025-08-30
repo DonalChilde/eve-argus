@@ -19,17 +19,19 @@ def last_modified(headers: HeadersType) -> str | None:
     return None
 
 
-def limit_reset(headers: HeadersType) -> int | None:
+def limit_reset(headers: HeadersType) -> int:
     """Get the seconds until the error limit resets from the response headers."""
+    default: int = -1
     for header in headers:
         if header[0].lower() == "x-esi-error-limit-reset":
-            return int(header[1] or 0)
-    return None
+            return int(header[1] or default)
+    return default
 
 
-def limit_remain(headers: HeadersType) -> int | None:
+def limit_remain(headers: HeadersType) -> int:
     """Get the errors remaining from the response headers."""
+    default: int = 100
     for header in headers:
         if header[0].lower() == "x-esi-error-limit-remain":
-            return int(header[1] or -1)
-    return None
+            return int(header[1] or default)
+    return default
