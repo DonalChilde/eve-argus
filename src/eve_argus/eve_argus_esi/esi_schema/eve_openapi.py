@@ -5,6 +5,7 @@ https://swagger.io/specification/
 
 import json
 from collections.abc import Mapping
+from datetime import datetime
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -12,6 +13,7 @@ from eve_argus.eve_argus_esi.esi_schema.eve_openapi_protocol import (
     EveOpenApiProtocol,
     SplitParameters,
 )
+from eve_argus.eve_argus_esi.esi_schema.schema_store import SchemaStore
 
 # FIXME decide on validation signalling. right now the functions return a bool, and throw an exception.
 # TODO output a table of operation_ids,paths, descriptions, and valid inputs.
@@ -24,16 +26,14 @@ class ByOpId(TypedDict):
     path: str
     operation: dict[str, Any]
 
-    # def validate_operation_headers(
-    #     self, op_id: str, headers: dict[str, str | None]
-    # ) -> bool:
-    #     """Validate the operation headers."""
-    #     ...
-
 
 class EveOpenApi(EveOpenApiProtocol):
     def __init__(
-        self, spec_path: Path | None = None, spec: dict[str, Any] | None = None
+        self,
+        compatibility_date: str,
+        spec_path: Path | None = None,
+        spec: dict[str, Any] | None = None,
+        base_url: str = "https://esi.evetech.net/latest",
     ) -> None:
         """Initialize the EveOpenApi client."""
         if spec_path is None and spec is None:
@@ -41,6 +41,20 @@ class EveOpenApi(EveOpenApiProtocol):
         self.spec_path = spec_path
         self.spec: dict[str, Any] = spec or self._load_spec()
         self.by_op_id: dict[str, ByOpId] = self._index_by_op_id()
+        self.compatibility_date = compatibility_date
+        self.base_url = base_url
+
+    @classmethod
+    def from_schema_store(cls, file_path: Path | None) -> "EveOpenApi":
+        """Create an EveOpenApi instance from a schema store file.
+
+        If file_path is None, SchemaStore will download the schema.
+        """
+        store = SchemaStore(store_path=file_path)
+        download_date = datetime.fromisoformat(store.download_date)
+        compatibility_date = download_date.date().isoformat()
+        spec = store.esi_schema
+        return cls(compatibility_date=compatibility_date, spec=spec)
 
     def _resolve_ref(self, reference: str) -> dict[str, Any]:
         """Resolve a JSON reference (RFC 6901) to its definition in the spec."""
@@ -292,6 +306,8 @@ class EveOpenApi(EveOpenApiProtocol):
         query_params: Mapping[str, str | int | float],
     ) -> bool:
         """Validate the operation parameters."""
+        if op_id not in self.by_op_id:
+            raise ValueError(f"Operation ID not found: {op_id}")
         valid = all(
             (
                 self._check_path_params(op_id=op_id, path_params=path_params),
@@ -302,7 +318,6 @@ class EveOpenApi(EveOpenApiProtocol):
 
     def get_url(
         self,
-        base_url: str,
         op_id: str,
         path_params: Mapping[str, str | int | float],
         query_params: Mapping[str, str | int | float],
@@ -311,9 +326,7 @@ class EveOpenApi(EveOpenApiProtocol):
         """Build a complete URL by combining the base URL, operation ID, path parameters, and query parameters.
 
         Args:
-            base_url (str): The base URL.
             op_id (str): The operation ID (path component).
-            operation (Literal["get", "put", "post", "delete"]): The HTTP operation type.
             path_params (dict[str, str]): A dictionary of path parameters to include in the URL.
             query_params (dict[str, str]): A dictionary of query parameters to include in the URL.
             include_query (bool): Whether to include the query parameters in the URL.
@@ -328,7 +341,7 @@ class EveOpenApi(EveOpenApiProtocol):
         path_template = self._collect_path(op_id)
         path = path_template.format(**path_params)
 
-        resolved_url = f"{base_url.strip('/')}/{path.strip('/')}"
+        resolved_url = f"{self.base_url.strip('/')}/{path.strip('/')}"
 
         if include_query:
             # Construct the query string from the query parameters
@@ -348,6 +361,16 @@ class EveOpenApi(EveOpenApiProtocol):
         if "X-Pages" in operation.get("responses", {}).get("200", {}).get(
             "headers", {}
         ):
+            return True
+        return False
+
+    def is_cached(self, op_id: str) -> bool:
+        """Check if the operation is cached."""
+        operation = self.by_op_id.get(op_id, {})
+        if not operation:
+            raise ValueError(f"Operation ID not found: {op_id}")
+        # TODO currently only get methods are cached. Figure out how and when to cache other methods.
+        if operation["method"].lower() == "get":
             return True
         return False
 

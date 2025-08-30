@@ -15,7 +15,9 @@ class SplitParameters(TypedDict):
 
 
 class EveOpenApiProtocol(Protocol):
-    base_url: str
+    base_url: str = "https://esi.evetech.net/latest"
+    compatibility_date: str
+    """The compatibility date for the API in YYYY-MM-DD format."""
 
     def get_url(
         self,
