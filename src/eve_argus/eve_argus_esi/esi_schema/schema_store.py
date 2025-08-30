@@ -16,6 +16,7 @@ Typical usage example:
 
 import json
 import logging
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
@@ -46,8 +47,14 @@ class SchemaStoreData(BaseModel):
 class SchemaStore:
     """Manages the ESI OpenAPI schema: download, save, load, and update.
 
+    When initialized with a file path, the schema is loaded from the file. Note that the
+    file must exist. To create a new schema store, use the class method
+    SchemaStore.from_download() instead. If no file path is provided, the schema also
+    cannot be saved. This only occurs when the instance is created without a file path
+    from the class method SchemaStore.from_download.
+
     Attributes:
-        _file_path (Path | None): Path to schema file, if used.
+        _store_path (Path | None): Path to store file, if used.
         _schema_url (str): URL to download schema from.
         _store_data (SchemaStoreData | None): Loaded schema data and metadata.
 
@@ -57,28 +64,126 @@ class SchemaStore:
 
     def __init__(
         self,
-        file_path: Path | None = None,
+        store_path: Path | None,
+        *,
         indent_on_save: int = 0,
         schema_url: str = "https://esi.evetech.net/meta/openapi.json",
     ) -> None:
         """Initialize SchemaStore, loading from file or downloading schema.
 
         Args:
-            file_path (Path | None): Path to schema file, or None to download.
+            store_path (Path | None): Path to schema file, or None to download.
             schema_url (str): URL to download schema from.
 
         Raises:
-            ValueError: If file_path is invalid or schema is invalid.
+            ValueError: If store_path is invalid or schema is invalid.
         """
-        self._file_path = file_path
+        self._store_path = store_path
         self._schema_url = schema_url
         self._store_data: SchemaStoreData | None = None
         self._indent_on_save = indent_on_save
 
-        if self._file_path is None:
-            self._update_store()
-        else:
+        if self._store_path is not None:
             self._store_data = self._load_store_data()
+
+    @classmethod
+    def from_download(
+        cls,
+        *,
+        store_path: Path | None,
+        schema_url: str = "https://esi.evetech.net/meta/openapi.json",
+        indent_on_save: int = 0,
+    ) -> "SchemaStore":
+        """Create a SchemaStore instance by downloading the schema.
+
+        Args:
+            store_path (Path | None): Path to store file, or None to not save.
+            schema_url (str): URL to download schema from.
+            indent_on_save (int): Indentation level for saving JSON.
+
+        Returns:
+            SchemaStore: A new SchemaStore instance.
+        """
+        instance = cls(
+            store_path=None, schema_url=schema_url, indent_on_save=indent_on_save
+        )
+        instance._update_store()
+        instance._store_path = store_path
+        if store_path:
+            instance._save_store_data()
+        return instance
+
+    @classmethod
+    def from_schema_file(
+        cls,
+        *,
+        schema_path: Path,
+        download_date: str,
+        store_path: Path | None,
+        indent_on_save: int = 0,
+    ) -> "SchemaStore":
+        """Create a SchemaStore instance by loading the schema from a file.
+
+        If <store_path> is provided, the schema will be saved to that path, but
+        will not overwrite any existing files.
+
+        Args:
+            schema_path (Path): Path to the schema file.
+            download_date (str): ISO 8601 UTC download date.
+            store_path (Path | None): Path to the store file, or None to not save.
+
+        Returns:
+            SchemaStore: A new SchemaStore instance.
+        """
+        schema_text = schema_path.read_text()
+        schema_json = json.loads(schema_text)
+        download_date_resolved = datetime.fromisoformat(download_date).astimezone(UTC)
+        if "openapi" not in schema_json:
+            raise ValueError("Invalid ESI schema: 'openapi' key not found.")
+        store_data = SchemaStoreData(
+            id_=uuid4(),
+            download_date=download_date_resolved.isoformat(),
+            schema_=schema_json,
+        )
+        instance = cls(None, indent_on_save=indent_on_save)
+        instance._store_data = store_data
+        instance._store_path = store_path
+        if store_path:
+            instance._save_store_data()
+        return instance
+
+    @classmethod
+    def from_obj(
+        cls,
+        *,
+        obj: dict[str, Any],
+        download_date: str,
+        store_path: Path | None,
+        indent_on_save: int = 0,
+    ) -> "SchemaStore":
+        """Create a SchemaStore instance from a dictionary object.
+
+        Args:
+            obj (dict[str, Any]): The dictionary object containing schema data.
+            download_date (str): ISO 8601 UTC download date.
+            store_path (Path | None): Path to the store file, or None to not save.
+
+        Returns:
+            SchemaStore: A new SchemaStore instance.
+        """
+        if "openapi" not in obj:
+            raise ValueError("Invalid ESI schema: 'openapi' key not found.")
+        download_date_resolved = datetime.fromisoformat(download_date).astimezone(UTC)
+        instance = cls(None, indent_on_save=indent_on_save)
+        instance._store_data = SchemaStoreData(
+            id_=uuid4(),
+            download_date=download_date_resolved.isoformat(),
+            schema_=obj,
+        )
+        instance._store_path = store_path
+        if store_path:
+            instance._save_store_data()
+        return instance
 
     def update(self, save_to_file: bool = True) -> None:
         """Download schema and update the store, optionally saving to file.
@@ -102,12 +207,13 @@ class SchemaStore:
         Raises:
             ValueError: If file is missing, invalid, or schema is invalid.
         """
-        if self._file_path is None:
+        if self._store_path is None:
             raise ValueError("SchemaStore file_path is not set.")
-        if not self._file_path.is_file():
-            raise ValueError(f"SchemaStore file not found at: {self._file_path}")
+        if not self._store_path.is_file():
+            raise ValueError(f"SchemaStore file not found at: {self._store_path}")
         try:
-            result = SchemaStoreData.model_validate_json(self._file_path.read_text())
+            text_input = self._store_path.read_text()
+            result = SchemaStoreData.model_validate_json(text_input)
             if "openapi" not in result.schema_:
                 raise ValueError("Invalid ESI schema: 'openapi' key not found.")
         except Exception as e:
@@ -118,13 +224,15 @@ class SchemaStore:
         """Save the store data to file.
 
         Raises:
-            ValueError: If schema is not loaded or file path is not set.
+            ValueError: If schema is not loaded or file path is not set
         """
         if self._store_data is None:
             raise ValueError("ESI schema is not loaded. Nothing to save.")
-        if self._file_path is None:
+        if self._store_path is None:
             raise ValueError("SchemaStore file_path is not set.")
-        self._file_path.write_text(
+        if not self._store_path.parent.exists():
+            self._store_path.parent.mkdir(parents=True, exist_ok=True)
+        self._store_path.write_text(
             self._store_data.model_dump_json(indent=self._indent_on_save)
         )
 
