@@ -4,7 +4,7 @@ from enum import StrEnum
 from typing import Protocol
 from uuid import UUID
 
-from eve_argus.eve_argus_esi.esi_models import (
+from .models import (
     EsiCachedResponse,
     EsiCacheMetadata,
     EsiResponse,
@@ -37,6 +37,10 @@ class EsiCacheProtocol(Protocol):
         """Get the cache key for an EsiResponse from the cache."""
         ...
 
+    def update_304(self, cache_key: UUID, response: EsiResponse) -> None:
+        """Update the cache metadata for a 304 response."""
+        ...
+
     def set(
         self, cache_key: UUID, cache_metadata: EsiCacheMetadata, value: EsiResponse
     ) -> None:
@@ -53,4 +57,8 @@ class EsiCacheProtocol(Protocol):
 
     def status(self, cache_key: UUID) -> CacheStatus:
         """Get the cache status of an EsiResponse."""
+        ...
+
+    def build_metadata(self, response: EsiResponse) -> EsiCacheMetadata:
+        """Build cache metadata for an EsiResponse."""
         ...

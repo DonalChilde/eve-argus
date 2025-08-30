@@ -15,7 +15,7 @@ from eve_argus.eve_argus_esi.esi_models import EsiCacheMetadata, EsiResponse
 
 def _mk_response(url: str, cache_key) -> EsiResponse:
     return EsiResponse(
-        request_url=url,
+        real_url=url,
         cache_key=cache_key,
         headers=(("Content-Type", "application/json"),),
         text=["body-1"],
@@ -51,7 +51,7 @@ def test_get_miss_then_set_and_get_hit() -> None:
     got = cache.get(key)
     assert got is not None
     assert got.cache_key == key
-    assert got.response.request_url == resp.request_url
+    assert got.response.real_url == resp.real_url
     assert got.metadata.cache_key == key
 
 
@@ -66,7 +66,7 @@ def test_get_response_and_get_cache_metadata() -> None:
     got_resp = cache.get_response(key)
     got_meta = cache.get_cache_metadata(key)
 
-    assert got_resp is not None and got_resp.request_url == resp.request_url
+    assert got_resp is not None and got_resp.real_url == resp.real_url
     assert got_meta is not None and got_meta.etag == "e2"
 
 

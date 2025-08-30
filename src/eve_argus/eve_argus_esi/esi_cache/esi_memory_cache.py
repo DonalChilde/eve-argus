@@ -5,15 +5,15 @@ from copy import deepcopy
 from datetime import UTC, datetime
 from uuid import UUID
 
-from eve_argus.eve_argus_esi.esi_models import (
+from eve_argus.eve_argus_esi.helpers.now_utc import now_utc
+
+from .esi_cache_protocol import CacheStatus, EsiCacheProtocol
+from .models import (
     EsiCache,
     EsiCachedResponse,
     EsiCacheMetadata,
     EsiResponse,
 )
-from eve_argus.eve_argus_esi.helpers.now_utc import now_utc
-
-from .esi_cache_protocol import CacheStatus, EsiCacheProtocol
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

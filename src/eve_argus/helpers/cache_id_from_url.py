@@ -5,8 +5,6 @@ The URL is canonicalized to ensure the same cache id regardless of the order of
 query parameters or case differences in scheme/host.
 """
 
-# from __future__ import annotations
-
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from uuid import NAMESPACE_URL, UUID, uuid5
 

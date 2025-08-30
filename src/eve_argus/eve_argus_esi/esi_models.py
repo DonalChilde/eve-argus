@@ -22,6 +22,13 @@ class EsiCacheMetadata(BaseModel):
     """The last time this ESI route was checked in ISO 8601 format."""
 
 
+class CacheEntry(BaseModel):
+    """Represents a cached entry."""
+
+    metadata: EsiCacheMetadata
+    response: str
+
+
 class EsiRequest(BaseModel):
     """Base class for ESI requests."""
 
@@ -35,6 +42,17 @@ class EsiRequest(BaseModel):
     """The parent request ID, if this is a sub-request."""
 
 
+class EsiPagedResponse(BaseModel):
+    real_url: str
+    headers: tuple[tuple[str, str | None], ...] = ()
+    status_code: int
+    status_reason: str
+    text: str
+    """The response body as a list of strings to support paged requests."""
+    completed_on: str
+    """The datetime the response completed, in UTC, in ISO Format."""
+
+
 class EsiResponse(BaseModel):
     """Base class for ESI responses.
 
@@ -42,12 +60,17 @@ class EsiResponse(BaseModel):
     The text field is a list to support paged requests.
     """
 
-    request_url: str
+    real_url: str
     cache_key: UUID | None
     """The cache key for the GET request/response, if available."""
     headers: tuple[tuple[str, str | None], ...] = ()
-    text: list[str] = []
-    """The response body as a list of strings to support paged requests."""
+    text: str
+    status_code: int
+    status_reason: str
+    completed_on: str
+    """The datetime the response completed, in UTC, in ISO Format."""
+    paged_responses: list[EsiPagedResponse] = []
+    """The paged responses, if any."""
 
 
 class EsiCachedResponse(BaseModel):

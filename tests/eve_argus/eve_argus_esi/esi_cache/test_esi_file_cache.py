@@ -16,7 +16,7 @@ from eve_argus.eve_argus_esi.esi_models import EsiCacheMetadata, EsiResponse
 
 def _mk_response(url: str, cache_key) -> EsiResponse:
     return EsiResponse(
-        request_url=url,
+        real_url=url,
         cache_key=cache_key,
         headers=(("Content-Type", "application/json"),),
         text=["body-1"],
@@ -51,14 +51,14 @@ def test_get_miss_then_set_and_get_hit_persisted(test_output_dir: Path) -> None:
         got = cache.get(key)
         assert got is not None
         assert got.cache_key == key
-        assert got.response.request_url == resp.request_url
+        assert got.response.real_url == resp.real_url
         assert got.metadata.cache_key == key
 
     # Second session: data persisted
     with EsiFileCache(cache_path) as cache2:
         got2 = cache2.get(key)
         assert got2 is not None
-        assert got2.response.request_url == resp.request_url
+        assert got2.response.real_url == resp.real_url
 
 
 def test_get_response_and_get_cache_metadata_file(test_output_dir: Path) -> None:
@@ -74,14 +74,14 @@ def test_get_response_and_get_cache_metadata_file(test_output_dir: Path) -> None
         got_resp = cache.get_response(key)
         got_meta = cache.get_cache_metadata(key)
 
-        assert got_resp is not None and got_resp.request_url == resp.request_url
+        assert got_resp is not None and got_resp.real_url == resp.real_url
         assert got_meta is not None and got_meta.etag == "e2"
 
     # Re-open and verify again
     with EsiFileCache(cache_path) as cache2:
         got_resp2 = cache2.get_response(key)
         got_meta2 = cache2.get_cache_metadata(key)
-        assert got_resp2 is not None and got_resp2.request_url == resp.request_url
+        assert got_resp2 is not None and got_resp2.real_url == resp.real_url
         assert got_meta2 is not None and got_meta2.etag == "e2"
 
 

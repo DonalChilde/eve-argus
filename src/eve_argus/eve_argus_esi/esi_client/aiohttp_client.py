@@ -234,7 +234,7 @@ class ArgusAiohttpClient(EsiClientProtocol):
     ) -> list[UUID]:
         """Check the API for valid data.
 
-        returns a list of keys for non-200 responses to requests.
+        returns a list of keys for non-200,304 responses to requests.
         """
         non_success_keys = []
         api_actions = {x: esi_actions[x] for x in subset}
@@ -333,10 +333,13 @@ class ArgusAiohttpClient(EsiClientProtocol):
         cache_key = self._compile_cache_key(esi_action)
         cache_metadata = self.make_cache_metadata(aiohttp_action, cache_key)
         response = EsiResponse(
-            request_url=aiohttp_action.response.real_url,
+            real_url=aiohttp_action.response.real_url,
             cache_key=cache_key,
+            status_code=aiohttp_action.response.status_code,
+            status_reason=aiohttp_action.response.status_reason,
+            completed_on=aiohttp_action.response.completed_on,
             headers=tuple(aiohttp_action.response.headers),
-            text=[aiohttp_action.response.text],
+            text=aiohttp_action.response.text,
         )
         esi_action.response = response
         esi_action.response_source = ResponseDataSource.API
