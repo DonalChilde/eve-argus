@@ -8,12 +8,14 @@ from typing import Any
 from typer import get_app_dir
 
 __author__ = "Chad Lowe"
-__email__ = "pfmsoft.dev@gmail.com"
+__author_email__ = "pfmsoft.dev@gmail.com"
 _app_name = "Eve Argus"
-# The short X.Y.Z version.
-__version__ = "0.0.0"
-# The full version, including alpha/beta/rc tags.
-__release__ = __version__
+__version__ = "0.1.0"
+__license__ = "MIT"
+__url__ = "https://github.com/DonalChilde/eve-argus"
+__description__ = (
+    "A terminal interface for Eve Online information gathering and management."
+)
 
 
 _config_dir = Path(get_app_dir(app_name=_app_name, force_posix=True))
