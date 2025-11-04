@@ -1,3 +1,6 @@
+"""Protocols for Argus data storage operations."""
+
+# FIXME Kept for reference during refactor, remove later
 from typing import Any, Protocol
 
 from eve_argus.models import argus as EAM
