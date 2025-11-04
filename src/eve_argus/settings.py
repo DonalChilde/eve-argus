@@ -35,3 +35,15 @@ class EveArgusSettings(BaseSettings):
         default=f"{DEFAULT_APP_DIR}/logs",
         description="The directory where log files are stored.",
     )
+    sde_base_url: str = Field(
+        default="https://developers.eveonline.com/static-data",
+        description="The base URL to download the latest SDE data.",
+    )
+    sde_latest_info: str = Field(
+        default="/tranquility/latest.jsonl",
+        description="The URL to get information about the latest SDE data.",
+    )
+    sde_file_template: str = Field(
+        default="/tranquility/eve-online-static-data-${build-number}-${variant}.zip",
+        description="The URL template to download the SDE data file. build-number can be any valid build number or latest. variant can be jsonl or yaml",
+    )
