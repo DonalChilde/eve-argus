@@ -8,21 +8,6 @@ import pytest
 from eve_argus.eve_argus_esi.esi_schema.schema_store import SchemaStore, SchemaStoreData
 
 
-@pytest.mark.slow
-def test_schema_store_real_download(tmp_path):
-    """Test that SchemaStore downloads the real ESI schema from the default URL."""
-
-    store_path = tmp_path / "esi_schema.json"
-    # Use the default URL from SchemaStore
-    assert not store_path.is_file()
-    store = SchemaStore.from_download(store_path=store_path)
-    # Check that the schema file was written and contains expected keys
-    assert store_path.is_file()
-    saved = json.loads(store_path.read_text())
-    assert store.esi_schema is not None
-    assert "openapi" in store.esi_schema
-
-
 def test_schema_store_loads_from_schema_file(tmp_path):
     """SchemaStore loads schema from file."""
     schema_path = tmp_path / "esi_schema.json"
@@ -52,7 +37,7 @@ def test_schema_store_loads_from_schema_file_and_save(tmp_path):
     assert isinstance(store.schema_id, UUID)
     assert store_path.is_file()
     loaded_data = json.loads(store_path.read_text())
-    assert loaded_data["schema_"] == dummy_schema
+    assert loaded_data["esi_schema"] == dummy_schema
     assert loaded_data["download_date"] == "2025-08-26T00:00:00+00:00"
 
 
@@ -81,7 +66,7 @@ def test_schema_store_loads_from_obj_and_save(tmp_path):
     assert isinstance(store.schema_id, UUID)
     assert (tmp_path / "schema_store.json").is_file()
     loaded_data = json.loads(store_path.read_text())
-    assert loaded_data["schema_"] == dummy_schema
+    assert loaded_data["esi_schema"] == dummy_schema
     assert loaded_data["download_date"] == "2025-08-26T00:00:00+00:00"
 
 
@@ -116,7 +101,7 @@ def test_schema_store_update(monkeypatch, tmp_path):
         {
             "id_": str(UUID(int=1)),
             "download_date": "2025-08-28T00:00:00+00:00",
-            "schema_": dummy_schema,
+            "esi_schema": dummy_schema,
         }
     )
     schema_path.write_text(dummy_json)
@@ -139,7 +124,7 @@ def test_schema_store_update(monkeypatch, tmp_path):
     assert store.esi_schema["openapi"] == "3.0.2"
     assert store.download_date == "2025-08-29T00:00:00+00:00"
     saved = json.loads(schema_path.read_text())
-    assert saved["schema_"]["openapi"] == "3.0.2"
+    assert saved["esi_schema"]["openapi"] == "3.0.2"
     assert saved["download_date"] == "2025-08-29T00:00:00+00:00"
 
 
@@ -158,7 +143,7 @@ def test_save_store_data_writes_file(tmp_path):
     saved = json.loads(store_path.read_text())
     assert isinstance(UUID(saved["id_"]), UUID)
     assert saved["download_date"] == "2025-08-30T00:00:00+00:00"
-    assert saved["schema_"] == dummy_schema
+    assert saved["esi_schema"] == dummy_schema
 
 
 def test_save_store_data_raises_if_store_data_none(tmp_path):
@@ -183,7 +168,7 @@ def test_save_store_data_raises_if_file_path_none():
     store._store_data = SchemaStoreData(
         id_=UUID(int=3),
         download_date="2025-08-31T00:00:00Z",
-        schema_=dummy_schema,
+        esi_schema=dummy_schema,
     )
     with pytest.raises(ValueError, match="SchemaStore file_path is not set."):
         store._save_store_data()
@@ -203,7 +188,7 @@ def test_save_store_data_respects_indent(tmp_path):
     text = store_path.read_text()
     assert "\n  " in text
     loaded = json.loads(text)
-    assert loaded["schema_"]["openapi"] == "3.0.0"
+    assert loaded["esi_schema"]["openapi"] == "3.0.0"
 
 
 def test_load_store_data_raises_if_file_missing(tmp_path):

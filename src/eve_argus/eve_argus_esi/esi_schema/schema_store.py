@@ -36,12 +36,12 @@ class SchemaStoreData(BaseModel):
     Attributes:
         id_ (UUID): Unique identifier for the schema.
         download_date (str): ISO 8601 UTC download date.
-        schema_ (dict[str, Any]): The ESI OpenAPI schema as a dictionary.
+        esi_schema (dict[str, Any]): The ESI OpenAPI schema as a dictionary.
     """
 
     id_: UUID
     download_date: str
-    schema_: dict[str, Any]
+    esi_schema: dict[str, Any]
 
 
 class SchemaStore:
@@ -66,7 +66,7 @@ class SchemaStore:
         self,
         store_path: Path | None,
         *,
-        indent_on_save: int = 0,
+        indent_on_save: int = 2,
         schema_url: str = "https://esi.evetech.net/meta/openapi.json",
     ) -> None:
         """Initialize SchemaStore, loading from file or downloading schema.
@@ -92,7 +92,7 @@ class SchemaStore:
         *,
         store_path: Path | None,
         schema_url: str = "https://esi.evetech.net/meta/openapi.json",
-        indent_on_save: int = 0,
+        indent_on_save: int = 2,
     ) -> "SchemaStore":
         """Create a SchemaStore instance by downloading the schema.
 
@@ -120,7 +120,7 @@ class SchemaStore:
         schema_path: Path,
         download_date: str,
         store_path: Path | None,
-        indent_on_save: int = 0,
+        indent_on_save: int = 2,
     ) -> "SchemaStore":
         """Create a SchemaStore instance by loading the schema from a file.
 
@@ -143,7 +143,7 @@ class SchemaStore:
         store_data = SchemaStoreData(
             id_=uuid4(),
             download_date=download_date_resolved.isoformat(),
-            schema_=schema_json,
+            esi_schema=schema_json,
         )
         instance = cls(None, indent_on_save=indent_on_save)
         instance._store_data = store_data
@@ -159,7 +159,7 @@ class SchemaStore:
         obj: dict[str, Any],
         download_date: str,
         store_path: Path | None,
-        indent_on_save: int = 0,
+        indent_on_save: int = 2,
     ) -> "SchemaStore":
         """Create a SchemaStore instance from a dictionary object.
 
@@ -178,7 +178,7 @@ class SchemaStore:
         instance._store_data = SchemaStoreData(
             id_=uuid4(),
             download_date=download_date_resolved.isoformat(),
-            schema_=obj,
+            esi_schema=obj,
         )
         instance._store_path = store_path
         if store_path:
@@ -214,7 +214,7 @@ class SchemaStore:
         try:
             text_input = self._store_path.read_text()
             result = SchemaStoreData.model_validate_json(text_input)
-            if "openapi" not in result.schema_:
+            if "openapi" not in result.esi_schema:
                 raise ValueError("Invalid ESI schema: 'openapi' key not found.")
         except Exception as e:
             raise ValueError(f"Failed to load ESI schema: {e}") from e
@@ -266,7 +266,7 @@ class SchemaStore:
             logger.error(f"Failed to update schema: {e}")
             raise e
         self._store_data = SchemaStoreData(
-            id_=uuid4(), download_date=now_utc().isoformat(), schema_=schema
+            id_=uuid4(), download_date=now_utc().isoformat(), esi_schema=schema
         )
 
     @property
@@ -281,7 +281,7 @@ class SchemaStore:
         """
         if self._store_data is None:
             raise ValueError("ESI schema is not loaded.")
-        return self._store_data.schema_
+        return self._store_data.esi_schema
 
     @property
     def schema_id(self) -> UUID:
