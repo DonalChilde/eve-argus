@@ -44,6 +44,11 @@ class EveArgusSettings(BaseSettings):
         description="The URL to get information about the latest SDE data.",
     )
     sde_file_template: str = Field(
-        default="/tranquility/eve-online-static-data-${build-number}-${variant}.zip",
+        default="/tranquility/eve-online-static-data-${build_number}-${variant}.zip",
         description="The URL template to download the SDE data file. build-number can be any valid build number or latest. variant can be jsonl or yaml",
     )
+
+
+def get_settings() -> EveArgusSettings:
+    """Get the Eve Argus settings."""
+    return EveArgusSettings()
