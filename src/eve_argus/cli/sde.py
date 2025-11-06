@@ -8,11 +8,13 @@ from typing import Annotated, Literal
 import typer
 from rich.console import Console
 
+from eve_argus.cli.sde_dev import app as sde_dev_app
 from eve_argus.helpers.simple_download_async import download_file, download_json
 from eve_argus.sde.raw_jsonl_access import RawJsonAccess, SdeFileNames
 from eve_argus.settings import get_settings
 
 app = typer.Typer(no_args_is_help=True)
+app.add_typer(sde_dev_app, name="dev", help="SDE development commands.")
 
 
 @app.command(name="info")

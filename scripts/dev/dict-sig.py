@@ -6,7 +6,7 @@ import typer
 from rich.console import Console
 
 from eve_argus.helpers.dict_diagnostics import collect_dict_keys_and_types_recursive
-from eve_argus.helpers.sde_dict_sigs_to_file import sde_dict_sigs_to_file
+from eve_argus.helpers.sde_dict_sigs import sde_dict_sigs_to_file
 from eve_argus.sde.raw_jsonl_access import RawJsonAccess, SdeFileNames
 
 app = typer.Typer(no_args_is_help=True)

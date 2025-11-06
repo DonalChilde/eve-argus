@@ -97,9 +97,15 @@ Source info: {source_info}.
     return f"{class_header}{'\n'.join(lines)}"
 
 
+class RecursiveKeyInfo(TypedDict):
+    dict_count: int
+    source_info: str
+    key_info: KeyInfo
+
+
 def collect_dict_keys_and_types_recursive(
     dict_data: Iterable[dict], source_info: str
-) -> KeyInfo:
+) -> RecursiveKeyInfo:
     """Recursively analyze dictionaries and return all keys with their associated value types.
 
     This function examines an iterable of dictionaries and recursively processes nested
@@ -108,6 +114,7 @@ def collect_dict_keys_and_types_recursive(
 
     Args:
         dict_data: An iterable of dictionaries to analyze recursively.
+        source_info: A string providing source information for the dataset.
 
     Returns:
         A dictionary where each key (from any nesting level) maps to a dictionary
@@ -155,7 +162,7 @@ def collect_dict_keys_and_types_recursive(
             dict_count += 1
             for key, value in entry.items():
                 process_value(key, value)
-    result = {
+    result: RecursiveKeyInfo = {
         "dict_count": dict_count,
         "source_info": source_info,
         "key_info": key_info,
