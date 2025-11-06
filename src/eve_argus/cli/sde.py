@@ -127,6 +127,8 @@ def print_sde(
     ],
 ):
     """Print SDE data to the console."""
+    # TODO implement printing specific SDE data by line or range of lines
+    # -l line number (repeatable) -s start range -e end range?
     console = Console()
     console.print("[bold green]Printing SDE Data...[/bold green]")
     access = RawJsonAccess(sde_directory=sde_directory)

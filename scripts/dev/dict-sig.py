@@ -1,20 +1,13 @@
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated
 
 import typer
 from rich.console import Console
 
-from eve_argus.helpers.dict_diagnostics import (
-    collect_dict_keys_and_types,
-    make_typed_dict_definition,
-)
-from eve_argus.helpers.sde_typed_dicts_to_file import sde_typed_dicts_to_file
+from eve_argus.helpers.dict_diagnostics import collect_dict_keys_and_types_recursive
 from eve_argus.sde.raw_jsonl_access import RawJsonAccess, SdeFileNames
 
 app = typer.Typer(no_args_is_help=True)
-
-# typer ./scripts/dev/generate-typed-dict.py  run ~/projects/tmp/sde-download-test/sde-3081406-jsonl/ -f ~/projects/tmp/typed_dicts.py -n type_materials
-# typer ./scripts/dev/generate-typed-dict.py  run ~/projects/tmp/sde-download-test/sde-3081406-jsonl/ -f ~/projects/tmp/sde-download-test/typed_dicts_3081406.py -b 3081406
 
 
 @app.command()
@@ -45,30 +38,30 @@ def generate(
         [SdeFileNames[sde_file.upper()]] if sde_file != "ALL" else list(SdeFileNames)
     )
     access = RawJsonAccess(sde_directory=sde_directory)
-    if output_file:
-        console.print(f"[bold green]Output file: {output_file}[/bold green]")
-        try:
-            sde_typed_dicts_to_file(
-                sde_directory=sde_directory,
-                output_file=output_file,
-                build_number=build_number,
-            )
-        except Exception as e:
-            console.print(f"[bold red]Error: {e}[/bold red]")
-            raise typer.Exit(code=1) from e
-        return
+    # if output_file:
+    #     console.print(f"[bold green]Output file: {output_file}[/bold green]")
+    #     try:
+    #         sde_typed_dicts_to_file(
+    #             sde_directory=sde_directory,
+    #             output_file=output_file,
+    #             build_number=build_number,
+    #         )
+    #     except Exception as e:
+    #         console.print(f"[bold red]Error: {e}[/bold red]")
+    #         raise typer.Exit(code=1) from e
+    #     return
     for file_name_enum in files:
         data_iter = access.jsonl_iter(file_name_enum)
-        key_info = collect_dict_keys_and_types(data_iter)
+        key_info = collect_dict_keys_and_types_recursive(data_iter)
         dict_name = (
             f"{file_name_enum.name.replace('_', ' ').title().replace(' ', '')}Dict"
         )
-        typed_dict_def = make_typed_dict_definition(
-            dict_name=dict_name,
-            key_info=key_info,
-            source_info=f"SDE file: {file_name_enum}, build: {build_number}",
-        )
+        # typed_dict_def = make_typed_dict_definition(
+        #     dict_name=dict_name,
+        #     key_info=key_info,
+        #     source_info=f"SDE file: {file_name_enum}, build: {build_number}",
+        # )
 
         console.print(f"[bold blue]TypedDict for {file_name_enum}:[/bold blue]")
-        print(typed_dict_def)
+        console.print(key_info)
         console.print("\n")
