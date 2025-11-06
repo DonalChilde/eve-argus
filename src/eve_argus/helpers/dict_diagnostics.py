@@ -97,7 +97,9 @@ Source info: {source_info}.
     return f"{class_header}{'\n'.join(lines)}"
 
 
-def collect_dict_keys_and_types_recursive(dict_data: Iterable[dict]) -> KeyInfo:
+def collect_dict_keys_and_types_recursive(
+    dict_data: Iterable[dict], source_info: str
+) -> KeyInfo:
     """Recursively analyze dictionaries and return all keys with their associated value types.
 
     This function examines an iterable of dictionaries and recursively processes nested
@@ -113,6 +115,7 @@ def collect_dict_keys_and_types_recursive(dict_data: Iterable[dict]) -> KeyInfo:
         with dot notation (e.g., "parent.child.grandchild").
     """
     key_info: KeyInfo = {}
+    dict_count = 0
 
     def process_value(key_path: str, value: object) -> None:
         """Process a single value and update key_info recursively.
@@ -149,10 +152,16 @@ def collect_dict_keys_and_types_recursive(dict_data: Iterable[dict]) -> KeyInfo:
     # Process each dictionary in the input iterable
     for entry in dict_data:
         if isinstance(entry, dict):
+            dict_count += 1
             for key, value in entry.items():
                 process_value(key, value)
+    result = {
+        "dict_count": dict_count,
+        "source_info": source_info,
+        "key_info": key_info,
+    }
 
-    return key_info
+    return result
 
 
 prompt = """
