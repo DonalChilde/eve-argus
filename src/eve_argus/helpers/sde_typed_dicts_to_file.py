@@ -147,11 +147,21 @@ class ActivitiesDict(TypedDict):
     research_time: NotRequired[ActivityDict]
 
 
-class BlueprintActivitiesDict(TypedDict):
-    _key: int
-    blueprintTypeID: int
-    maxProductionLimit: int
-    activities: ActivitiesDict
+class ColorDict(TypedDict):
+    b: float
+    g: float
+    r: float
+
+
+class MaterialsMateritalsDict(TypedDict):
+    """TypeDict definition for MaterialsMateritalsDict.
+
+    This type is used by TypeMaterialsDict. I expect the naming to be fixed in future
+    SDE versions, be the same as MaterialsDict.
+    """
+
+    materialTypeID: int
+    quantity: int
 
 # ------------------------------------------------------------------------------
 # File level TypedDict definitions.
