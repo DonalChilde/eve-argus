@@ -1,4 +1,5 @@
-import json
+"""Access the SDE stored as raw JSONL files."""
+
 from collections.abc import Iterable
 from enum import StrEnum
 from pathlib import Path
@@ -65,6 +66,7 @@ class SdeFileNames(StrEnum):
 
 class RawJsonAccess(SdeAccessProtocol):
     def __init__(self, sde_directory: Path) -> None:
+        """Initialize the RawJsonAccess with the SDE directory."""
         self.sde_directory = sde_directory
 
     def jsonl_iter(self, sde_file: SdeFileNames) -> Iterable[dict[str, Any]]:

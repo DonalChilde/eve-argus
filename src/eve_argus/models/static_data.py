@@ -9,7 +9,7 @@ This is an incomplete set of models, added as needed.
 As much as possible, match naming conventions from the sde models in static_data_td.py.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from ..models import static_data_td
 
@@ -355,3 +355,16 @@ class Types(BaseModel):
             variationParentTypeID=td.get("variationParentTypeID"),
             factionID=td.get("factionID"),
         )
+
+
+class ArgusStaticData(BaseModel):
+    """Model for all static data used by Eve Argus."""
+
+    sde_info: SdeInfo
+    blueprints: dict[int, Blueprint]
+    categories: dict[int, Category]
+    groups: dict[int, Group]
+    market_groups: dict[int, MarketGroup]
+    meta_groups: dict[int, MetaGroup]
+    type_materials: dict[int, TypeMaterials]
+    types: dict[int, Types]
