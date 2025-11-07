@@ -147,11 +147,11 @@ class AncestriesDict(TypedDict):
     _key: int
     bloodlineID: int
     charisma: int
-    description: dict
+    description: LocalizedStringDict
     iconID: NotRequired[int]
     intelligence: int
     memory: int
-    name: dict
+    name: LocalizedStringDict
     perception: int
     shortDescription: NotRequired[str]
     willpower: int
@@ -198,11 +198,11 @@ class BloodlinesDict(TypedDict):
     _key: int
     charisma: int
     corporationID: int
-    description: dict
+    description: LocalizedStringDict
     iconID: NotRequired[int]
     intelligence: int
     memory: int
-    name: dict
+    name: LocalizedStringDict
     perception: int
     raceID: int
     willpower: int
@@ -314,7 +314,7 @@ class CategoriesDict(TypedDict):
     """
 
     _key: int
-    name: dict
+    name: LocalizedStringDict
     published: bool
     iconID: NotRequired[int]
 
@@ -359,9 +359,9 @@ class CertificatesDict(TypedDict):
     """
 
     _key: int
-    description: dict
+    description: LocalizedStringDict
     groupID: int
-    name: dict
+    name: LocalizedStringDict
     recommendedFor: NotRequired[list]
     skillTypes: Union[list, dict]
 
@@ -394,7 +394,7 @@ class CharacterAttributesDict(TypedDict):
     _key: int
     description: str
     iconID: int
-    name: dict
+    name: LocalizedStringDict
     notes: str
     shortDescription: str
 
@@ -465,7 +465,7 @@ class CorporationActivitiesDict(TypedDict):
     """
 
     _key: int
-    name: dict
+    name: LocalizedStringDict
 
 
 class DebuffCollectionsDict(TypedDict):
@@ -512,7 +512,7 @@ class DebuffCollectionsDict(TypedDict):
     locationRequiredSkillModifiers: NotRequired[Union[list, dict]]
     operationName: str
     showOutputValueInUI: str
-    displayName: NotRequired[dict]
+    displayName: NotRequired[LocalizedStringDict]
 
 
 class DogmaAttributeCategoriesDict(TypedDict):
@@ -597,10 +597,10 @@ class DogmaAttributesDict(TypedDict):
     name: str
     published: bool
     stackable: bool
-    displayName: NotRequired[dict]
+    displayName: NotRequired[LocalizedStringDict]
     iconID: NotRequired[int]
-    tooltipDescription: NotRequired[dict]
-    tooltipTitle: NotRequired[dict]
+    tooltipDescription: NotRequired[LocalizedStringDict]
+    tooltipTitle: NotRequired[LocalizedStringDict]
     unitID: NotRequired[int]
     chargeRechargeTimeID: NotRequired[int]
     maxAttributeID: NotRequired[int]
@@ -686,8 +686,8 @@ class DogmaEffectsDict(TypedDict):
     falloffAttributeID: NotRequired[int]
     rangeAttributeID: NotRequired[int]
     trackingSpeedAttributeID: NotRequired[int]
-    description: NotRequired[dict]
-    displayName: NotRequired[dict]
+    description: NotRequired[LocalizedStringDict]
+    displayName: NotRequired[LocalizedStringDict]
     iconID: NotRequired[int]
     modifierInfo: Union[list, dict]
     npcUsageChanceAttributeID: NotRequired[int]
@@ -728,8 +728,8 @@ class DogmaUnitsDict(TypedDict):
     """
 
     _key: int
-    description: NotRequired[dict]
-    displayName: NotRequired[dict]
+    description: NotRequired[LocalizedStringDict]
+    displayName: NotRequired[LocalizedStringDict]
     name: str
 
 
@@ -808,14 +808,14 @@ class FactionsDict(TypedDict):
 
     _key: int
     corporationID: NotRequired[int]
-    description: dict
+    description: LocalizedStringDict
     flatLogo: NotRequired[str]
     flatLogoWithName: NotRequired[str]
     iconID: int
     memberRaces: list
     militiaCorporationID: NotRequired[int]
-    name: dict
-    shortDescription: NotRequired[dict]
+    name: LocalizedStringDict
+    shortDescription: NotRequired[LocalizedStringDict]
     sizeFactor: float
     solarSystemID: int
     uniqueName: bool
@@ -883,7 +883,7 @@ class GroupsDict(TypedDict):
     anchored: bool
     categoryID: int
     fittableNonSingleton: bool
-    name: dict
+    name: LocalizedStringDict
     published: bool
     useBasePrice: bool
     iconID: NotRequired[int]
@@ -942,8 +942,8 @@ class LandmarksDict(TypedDict):
     """
 
     _key: int
-    description: dict
-    name: dict
+    description: LocalizedStringDict
+    name: LocalizedStringDict
     position: dict
     iconID: NotRequired[int]
     locationID: NotRequired[int]
@@ -1002,7 +1002,7 @@ class MapAsteroidBeltsDict(TypedDict):
     solarSystemID: int
     statistics: NotRequired[dict]
     typeID: int
-    uniqueName: NotRequired[dict]
+    uniqueName: NotRequired[LocalizedStringDict]
 
 
 class MapConstellationsDict(TypedDict):
@@ -1036,7 +1036,7 @@ class MapConstellationsDict(TypedDict):
 
     _key: int
     factionID: NotRequired[int]
-    name: dict
+    name: LocalizedStringDict
     position: dict
     regionID: int
     solarSystemIDs: list
@@ -1104,7 +1104,7 @@ class MapMoonsDict(TypedDict):
     statistics: NotRequired[dict]
     typeID: int
     npcStationIDs: NotRequired[list]
-    uniqueName: NotRequired[dict]
+    uniqueName: NotRequired[LocalizedStringDict]
 
 
 class MapPlanetsDict(TypedDict):
@@ -1171,7 +1171,7 @@ class MapPlanetsDict(TypedDict):
     statistics: dict
     typeID: int
     npcStationIDs: NotRequired[list]
-    uniqueName: NotRequired[dict]
+    uniqueName: NotRequired[LocalizedStringDict]
 
 
 class MapRegionsDict(TypedDict):
@@ -1214,9 +1214,9 @@ class MapRegionsDict(TypedDict):
 
     _key: int
     constellationIDs: list
-    description: NotRequired[dict]
+    description: NotRequired[LocalizedStringDict]
     factionID: NotRequired[int]
-    name: dict
+    name: LocalizedStringDict
     nebulaID: int
     position: dict
     wormholeClassID: NotRequired[int]
@@ -1273,7 +1273,7 @@ class MapSolarSystemsDict(TypedDict):
     hub: NotRequired[bool]
     international: NotRequired[bool]
     luminosity: NotRequired[float]
-    name: dict
+    name: LocalizedStringDict
     planetIDs: NotRequired[list]
     position: dict
     radius: float
@@ -1382,10 +1382,10 @@ class MarketGroupsDict(TypedDict):
     """
 
     _key: int
-    description: NotRequired[dict]
+    description: NotRequired[LocalizedStringDict]
     hasTypes: bool
     iconID: NotRequired[int]
-    name: dict
+    name: LocalizedStringDict
     parentGroupID: NotRequired[int]
 
 
@@ -1446,10 +1446,10 @@ class MetaGroupsDict(TypedDict):
 
     _key: int
     color: NotRequired[dict]
-    name: dict
+    name: LocalizedStringDict
     iconID: NotRequired[int]
     iconSuffix: NotRequired[str]
-    description: NotRequired[dict]
+    description: NotRequired[LocalizedStringDict]
 
 
 class NpcCharactersDict(TypedDict):
@@ -1499,7 +1499,7 @@ class NpcCharactersDict(TypedDict):
     corporationID: int
     gender: bool
     locationID: NotRequired[int]
-    name: dict
+    name: LocalizedStringDict
     raceID: int
     startDate: NotRequired[str]
     uniqueName: bool
@@ -1556,9 +1556,9 @@ class NpcCorporationDivisionsDict(TypedDict):
     _key: int
     displayName: NotRequired[str]
     internalName: str
-    leaderTypeName: dict
-    name: dict
-    description: NotRequired[dict]
+    leaderTypeName: LocalizedStringDict
+    name: LocalizedStringDict
+    description: NotRequired[LocalizedStringDict]
 
 
 class NpcCorporationsDict(TypedDict):
@@ -1634,14 +1634,14 @@ class NpcCorporationsDict(TypedDict):
     _key: int
     ceoID: NotRequired[int]
     deleted: bool
-    description: NotRequired[dict]
+    description: NotRequired[LocalizedStringDict]
     extent: str
     hasPlayerPersonnelManager: bool
     initialPrice: int
     memberLimit: int
     minSecurity: float
     minimumJoinStanding: int
-    name: dict
+    name: LocalizedStringDict
     sendCharTerminationMessage: bool
     shares: int
     size: str
@@ -1770,7 +1770,7 @@ class PlanetSchematicsDict(TypedDict):
 
     _key: int
     cycleTime: int
-    name: dict
+    name: LocalizedStringDict
     pins: list
     types: Union[list, dict]
 
@@ -1811,9 +1811,9 @@ class RacesDict(TypedDict):
     """
 
     _key: int
-    description: NotRequired[dict]
+    description: NotRequired[LocalizedStringDict]
     iconID: NotRequired[int]
-    name: dict
+    name: LocalizedStringDict
     shipTypeID: NotRequired[int]
     skills: Union[list, dict]
 
@@ -1883,7 +1883,7 @@ class SkinMaterialsDict(TypedDict):
     """
 
     _key: int
-    displayName: NotRequired[dict]
+    displayName: NotRequired[LocalizedStringDict]
     materialSetID: int
 
 
@@ -1923,7 +1923,7 @@ class SkinsDict(TypedDict):
     visibleSerenity: bool
     visibleTranquility: bool
     isStructureSkin: NotRequired[bool]
-    skinDescription: NotRequired[dict]
+    skinDescription: NotRequired[LocalizedStringDict]
 
 
 class SovereigntyUpgradesDict(TypedDict):
@@ -1999,11 +1999,11 @@ class StationOperationsDict(TypedDict):
     activityID: int
     border: float
     corridor: float
-    description: NotRequired[dict]
+    description: NotRequired[LocalizedStringDict]
     fringe: float
     hub: float
     manufacturingFactor: float
-    operationName: dict
+    operationName: LocalizedStringDict
     ratio: float
     researchFactor: float
     services: list
@@ -2041,8 +2041,8 @@ class StationServicesDict(TypedDict):
     """
 
     _key: int
-    serviceName: dict
-    description: NotRequired[dict]
+    serviceName: LocalizedStringDict
+    description: NotRequired[LocalizedStringDict]
 
 
 class TranslationLanguagesDict(TypedDict):
@@ -2214,12 +2214,12 @@ class TypesDict(TypedDict):
     _key: int
     groupID: int
     mass: NotRequired[float]
-    name: dict
+    name: LocalizedStringDict
     portionSize: int
     published: bool
     volume: NotRequired[float]
     radius: NotRequired[float]
-    description: NotRequired[dict]
+    description: NotRequired[LocalizedStringDict]
     graphicID: NotRequired[int]
     soundID: NotRequired[int]
     iconID: NotRequired[int]
