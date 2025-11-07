@@ -1,6 +1,6 @@
 """Auto-generated TypedDict definitions for SDE build 3081406."""
 
-from typing import NotRequired, TypedDict, Union
+from typing import NotRequired, TypedDict
 
 # ------------------------------------------------------------------------------
 # Sub-level TypedDict definitions.
@@ -55,11 +55,28 @@ class ActivitiesDict(TypedDict):
     research_time: NotRequired[ActivityDict]
 
 
-class BlueprintActivitiesDict(TypedDict):
-    _key: int
-    blueprintTypeID: int
-    maxProductionLimit: int
-    activities: ActivitiesDict
+# class BlueprintActivitiesDict(TypedDict):
+#     _key: int
+#     blueprintTypeID: int
+#     maxProductionLimit: int
+#     activities: ActivitiesDict
+
+
+class ColorDict(TypedDict):
+    b: float
+    g: float
+    r: float
+
+
+class MaterialsMateritalsDict(TypedDict):
+    """TypeDict definition for MaterialsMateritalsDict.
+
+    This type is used by TypeMaterialsDict. I expect the naming to be fixed in future
+    SDE versions, be the same as MaterialsDict.
+    """
+
+    materialTypeID: int
+    quantity: int
 
 
 # ------------------------------------------------------------------------------
@@ -285,7 +302,7 @@ class BlueprintsDict(TypedDict):
     """
 
     _key: int
-    activities: dict
+    activities: ActivitiesDict
     blueprintTypeID: int
     maxProductionLimit: int
 
@@ -363,7 +380,7 @@ class CertificatesDict(TypedDict):
     groupID: int
     name: LocalizedStringDict
     recommendedFor: NotRequired[list]
-    skillTypes: Union[list, dict]
+    skillTypes: list | dict
 
 
 class CharacterAttributesDict(TypedDict):
@@ -418,7 +435,7 @@ class ContrabandTypesDict(TypedDict):
     """
 
     _key: int
-    factions: Union[list, dict]
+    factions: list | dict
 
 
 class ControlTowerResourcesDict(TypedDict):
@@ -440,7 +457,7 @@ class ControlTowerResourcesDict(TypedDict):
     """
 
     _key: int
-    resources: Union[list, dict]
+    resources: list | dict
 
 
 class CorporationActivitiesDict(TypedDict):
@@ -506,10 +523,10 @@ class DebuffCollectionsDict(TypedDict):
     _key: int
     aggregateMode: str
     developerDescription: str
-    itemModifiers: Union[list, dict]
-    locationGroupModifiers: NotRequired[Union[list, dict]]
-    locationModifiers: NotRequired[Union[list, dict]]
-    locationRequiredSkillModifiers: NotRequired[Union[list, dict]]
+    itemModifiers: list | dict
+    locationGroupModifiers: NotRequired[list | dict]
+    locationModifiers: NotRequired[list | dict]
+    locationRequiredSkillModifiers: NotRequired[list | dict]
     operationName: str
     showOutputValueInUI: str
     displayName: NotRequired[LocalizedStringDict]
@@ -689,7 +706,7 @@ class DogmaEffectsDict(TypedDict):
     description: NotRequired[LocalizedStringDict]
     displayName: NotRequired[LocalizedStringDict]
     iconID: NotRequired[int]
-    modifierInfo: Union[list, dict]
+    modifierInfo: list | dict
     npcUsageChanceAttributeID: NotRequired[int]
     npcActivationChanceAttributeID: NotRequired[int]
     fittingUsageChanceAttributeID: NotRequired[int]
@@ -754,8 +771,8 @@ class DynamicItemAttributesDict(TypedDict):
     """
 
     _key: int
-    attributeIDs: Union[list, dict]
-    inputOutputMapping: Union[list, dict]
+    attributeIDs: list | dict
+    inputOutputMapping: list | dict
 
 
 class FactionsDict(TypedDict):
@@ -1405,7 +1422,7 @@ class MasteriesDict(TypedDict):
     """
 
     _key: int
-    _value: Union[list, dict]
+    _value: list | dict
 
 
 class MetaGroupsDict(TypedDict):
@@ -1445,7 +1462,7 @@ class MetaGroupsDict(TypedDict):
     """
 
     _key: int
-    color: NotRequired[dict]
+    color: NotRequired[ColorDict]
     name: LocalizedStringDict
     iconID: NotRequired[int]
     iconSuffix: NotRequired[str]
@@ -1503,7 +1520,7 @@ class NpcCharactersDict(TypedDict):
     raceID: int
     startDate: NotRequired[str]
     uniqueName: bool
-    skills: NotRequired[Union[list, dict]]
+    skills: NotRequired[list | dict]
     ancestryID: NotRequired[int]
     careerID: NotRequired[int]
     schoolID: NotRequired[int]
@@ -1650,20 +1667,20 @@ class NpcCorporationsDict(TypedDict):
     tickerName: str
     uniqueName: bool
     allowedMemberRaces: NotRequired[list]
-    corporationTrades: Union[list, dict]
-    divisions: Union[list, dict]
+    corporationTrades: list | dict
+    divisions: list | dict
     enemyID: NotRequired[int]
     factionID: NotRequired[int]
     friendID: NotRequired[int]
     iconID: NotRequired[int]
-    investors: Union[list, dict]
+    investors: list | dict
     lpOfferTables: NotRequired[list]
     mainActivityID: NotRequired[int]
     raceID: NotRequired[int]
     sizeFactor: NotRequired[float]
     solarSystemID: NotRequired[int]
     secondaryActivityID: NotRequired[int]
-    exchangeRates: NotRequired[Union[list, dict]]
+    exchangeRates: NotRequired[list | dict]
 
 
 class NpcStationsDict(TypedDict):
@@ -1772,7 +1789,7 @@ class PlanetSchematicsDict(TypedDict):
     cycleTime: int
     name: LocalizedStringDict
     pins: list
-    types: Union[list, dict]
+    types: list | dict
 
 
 class RacesDict(TypedDict):
@@ -1815,7 +1832,7 @@ class RacesDict(TypedDict):
     iconID: NotRequired[int]
     name: LocalizedStringDict
     shipTypeID: NotRequired[int]
-    skills: Union[list, dict]
+    skills: list | dict
 
 
 class SdeInfoDict(TypedDict):
@@ -2007,7 +2024,7 @@ class StationOperationsDict(TypedDict):
     ratio: float
     researchFactor: float
     services: list
-    stationTypes: Union[list, dict]
+    stationTypes: list | dict
 
 
 class StationServicesDict(TypedDict):
@@ -2117,10 +2134,10 @@ class TypeBonusDict(TypedDict):
     """
 
     _key: int
-    roleBonuses: Union[list, dict]
-    types: Union[list, dict]
+    roleBonuses: list | dict
+    types: list | dict
     iconID: NotRequired[int]
-    miscBonuses: NotRequired[Union[list, dict]]
+    miscBonuses: NotRequired[list | dict]
 
 
 class TypeDogmaDict(TypedDict):
@@ -2142,8 +2159,8 @@ class TypeDogmaDict(TypedDict):
     """
 
     _key: int
-    dogmaAttributes: Union[list, dict]
-    dogmaEffects: Union[list, dict]
+    dogmaAttributes: list | dict
+    dogmaEffects: list | dict
 
 
 class TypeMaterialsDict(TypedDict):
@@ -2162,7 +2179,7 @@ class TypeMaterialsDict(TypedDict):
     """
 
     _key: int
-    materials: Union[list, dict]
+    materials: list[MaterialsMateritalsDict]
 
 
 class TypesDict(TypedDict):
