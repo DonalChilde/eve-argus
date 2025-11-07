@@ -47,6 +47,10 @@ class EveArgusSettings(BaseSettings):
         default="/tranquility/eve-online-static-data-${build_number}-${variant}.zip",
         description="The URL template to download the SDE data file. build-number can be any valid build number or latest. variant can be jsonl or yaml",
     )
+    sde_schema_changelog_url: str = Field(
+        default="https://developers.eveonline.com/static-data/tranquility/schema-changelog.yaml",
+        description="The URL to get the SDE schema changelog.",
+    )
 
 
 def get_settings() -> EveArgusSettings:
