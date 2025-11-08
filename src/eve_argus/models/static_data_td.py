@@ -55,13 +55,6 @@ class ActivitiesDict(TypedDict):
     research_time: NotRequired[ActivityDict]
 
 
-# class BlueprintActivitiesDict(TypedDict):
-#     _key: int
-#     blueprintTypeID: int
-#     maxProductionLimit: int
-#     activities: ActivitiesDict
-
-
 class ColorDict(TypedDict):
     b: float
     g: float
@@ -77,6 +70,259 @@ class MaterialsMateritalsDict(TypedDict):
 
     materialTypeID: int
     quantity: int
+
+
+class SkillTypeDict(TypedDict):
+    """TypeDict definition for SkillTypeDict.
+
+    This type is used by CertificatesDict.
+    """
+
+    _key: int
+    basic: int
+    standard: int
+    improved: int
+    advanced: int
+    elite: int
+
+
+class ContrabandFactionDict(TypedDict):
+    """TypeDict definition for ContrabandFactionDict.
+
+    This type is used by ContrabandTypesDict.
+    """
+
+    _key: int
+    attackMinSec: float
+    confiscateMinSec: float
+    fineByValue: float
+    standingLoss: float
+
+
+class CTResourceDict(TypedDict):
+    """TypeDict definition for CTResourceDict.
+
+    This type is used by ControlTowerResourcesDict.
+    """
+
+    factionID: NotRequired[int]
+    minSecurityLevel: NotRequired[float]
+    purpose: int
+    quantity: int
+    resourceTypeID: int
+
+
+class LocationGroupModifierDict(TypedDict):
+    """TypeDict definition for LocationGroupModifierDict.
+
+    This type is used by DebuffCollectionsDict.
+    """
+
+    dogmaAttributeID: int
+    groupID: int
+
+
+class LocationModifierDict(TypedDict):
+    """TypeDict definition for LocationModifierDict.
+
+    This type is used by DebuffCollectionsDict.
+    """
+
+    dogmaAttributeID: int
+
+
+class LocationRequiredSkillModifierDict(TypedDict):
+    """TypeDict definition for LocationRequiredSkillModifierDict.
+
+    This type is used by DebuffCollectionsDict.
+    """
+
+    dogmaAttributeID: int
+    skillID: int
+
+
+class DogmaEffectModifierInfoDict(TypedDict):
+    """TypeDict definition for DogmaEffectModifierInfoDict.
+
+    This type is used by DogmaEffectsDict.
+    """
+
+    domain: str
+    effectID: NotRequired[int]
+    func: str
+    groupID: NotRequired[int]
+    modifiedAttributeID: int
+    modifyingAttributeID: int
+    operation: int
+    skillTypeID: NotRequired[int]
+
+
+class AttributeIDDict(TypedDict):
+    """TypeDict definition for AttributeIDDict.
+
+    This type is used by DynamicItemAttributesDict.
+    """
+
+    _key: int
+    highIsGood: NotRequired[bool]
+    max: float
+    min: float
+
+
+class InputOutputMappingDict(TypedDict):
+    """TypeDict definition for InputOutputMappingDict.
+
+    This type is used by DynamicItemAttributesDict.
+    """
+
+    applicableTypes: list[int]
+    resultingType: int
+
+
+class PositionDict(TypedDict):
+    """TypeDict definition for PositionDict."""
+
+    x: float
+    y: float
+    z: float
+
+
+class AsteroidBeltStatisticsDict(TypedDict):
+    """TypeDict definition for AsteroidBeltStatisticsDict.
+
+    This type is used by MapAsteroidBeltsDict.
+    """
+
+    density: float
+    eccentricity: float
+    escapeVelocity: float
+    locked: bool
+    massDust: float
+    massGas: float
+    orbitPeriod: float
+    orbitRadius: float
+    spectralClass: str
+    surfaceGravity: float
+    temperature: float
+
+
+class MoonAttributesDict(TypedDict):
+    """TypeDict definition for MoonAttributesDict.
+
+    This type is used by MapMoonsDict.
+    """
+
+    heightMap1: int
+    heightMap2: int
+    shaderPreset: int
+
+
+class MoonStatisticsDict(TypedDict):
+    """TypeDict definition for MoonStatisticsDict.
+
+    This type is used by MapMoonsDict.
+    """
+
+    density: float
+    eccentricity: float
+    escapeVelocity: float
+    locked: bool
+    massDust: float
+    massGas: float
+    orbitPeriod: float
+    orbitRadius: float
+    pressure: float
+    rotationRate: float
+    spectralClass: str
+    surfaceGravity: float
+    temperature: float
+
+
+class PlanetAttributesDict(TypedDict):
+    """TypeDict definition for PlanetAttributesDict.
+
+    This type is used by MapPlanetsDict.
+    """
+
+    heightMap1: int
+    heightMap2: int
+    population: bool
+    shaderPreset: int
+
+
+class PlanetStatisticsDict(TypedDict):
+    """TypeDict definition for PlanetStatisticsDict.
+
+    This type is used by MapPlanetsDict.
+    """
+
+    density: float
+    eccentricity: float
+    escapeVelocity: float
+    locked: bool
+    massDust: float
+    massGas: float
+    orbitPeriod: float
+    orbitRadius: float
+    pressure: float
+    rotationRate: float
+    spectralClass: str
+    surfaceGravity: float
+    temperature: float
+
+
+class StargateDestinationDict(TypedDict):
+    """TypeDict definition for StargateDestinationDict.
+
+    This type is used by MapStargatesDict.
+    """
+
+    solarSystemID: int
+    stargateID: int
+
+
+class StarStatisticsDict(TypedDict):
+    """TypeDict definition for StarStatisticsDict.
+
+    This type is used by MapStarsDict.
+    """
+
+    age: float
+    life: float
+    luminosity: float
+    spectralClass: str
+    temperature: float
+
+
+class MasteriesValueDict(TypedDict):
+    """TypeDict definition for MasteriesValueDict.
+
+    This type is used by MasteriesDict.
+    """
+
+    _key: int
+    _value: list[int]
+
+
+class NpcCharacterSkillsDict(TypedDict):
+    """TypeDict definition for NpcCharacterSkillsDict.
+
+    This type is used by NpcCharactersDict.
+    """
+
+    typeID: int
+
+
+class NpcCharacterAgentDict(TypedDict):
+    """TypeDict definition for NpcCharacterAgentDict.
+
+    This type is used by NpcCharactersDict.
+    """
+
+    agentTypeID: int
+    divisionID: int
+    isLocator: bool
+    level: int
 
 
 # ------------------------------------------------------------------------------
@@ -379,8 +625,8 @@ class CertificatesDict(TypedDict):
     description: LocalizedStringDict
     groupID: int
     name: LocalizedStringDict
-    recommendedFor: NotRequired[list]
-    skillTypes: list | dict
+    recommendedFor: NotRequired[list[int]]
+    skillTypes: list[SkillTypeDict]
 
 
 class CharacterAttributesDict(TypedDict):
@@ -435,7 +681,7 @@ class ContrabandTypesDict(TypedDict):
     """
 
     _key: int
-    factions: list | dict
+    factions: list[ContrabandFactionDict]
 
 
 class ControlTowerResourcesDict(TypedDict):
@@ -457,7 +703,7 @@ class ControlTowerResourcesDict(TypedDict):
     """
 
     _key: int
-    resources: list | dict
+    resources: list[CTResourceDict]
 
 
 class CorporationActivitiesDict(TypedDict):
@@ -524,9 +770,9 @@ class DebuffCollectionsDict(TypedDict):
     aggregateMode: str
     developerDescription: str
     itemModifiers: list | dict
-    locationGroupModifiers: NotRequired[list | dict]
-    locationModifiers: NotRequired[list | dict]
-    locationRequiredSkillModifiers: NotRequired[list | dict]
+    locationGroupModifiers: NotRequired[list[LocationGroupModifierDict]]
+    locationModifiers: NotRequired[list[LocationModifierDict]]
+    locationRequiredSkillModifiers: NotRequired[list[LocationRequiredSkillModifierDict]]
     operationName: str
     showOutputValueInUI: str
     displayName: NotRequired[LocalizedStringDict]
@@ -706,7 +952,7 @@ class DogmaEffectsDict(TypedDict):
     description: NotRequired[LocalizedStringDict]
     displayName: NotRequired[LocalizedStringDict]
     iconID: NotRequired[int]
-    modifierInfo: list | dict
+    modifierInfo: NotRequired[list[DogmaEffectModifierInfoDict]]
     npcUsageChanceAttributeID: NotRequired[int]
     npcActivationChanceAttributeID: NotRequired[int]
     fittingUsageChanceAttributeID: NotRequired[int]
@@ -771,8 +1017,8 @@ class DynamicItemAttributesDict(TypedDict):
     """
 
     _key: int
-    attributeIDs: list | dict
-    inputOutputMapping: list | dict
+    attributeIDs: list[AttributeIDDict]
+    inputOutputMapping: list[InputOutputMappingDict]
 
 
 class FactionsDict(TypedDict):
@@ -829,7 +1075,7 @@ class FactionsDict(TypedDict):
     flatLogo: NotRequired[str]
     flatLogoWithName: NotRequired[str]
     iconID: int
-    memberRaces: list
+    memberRaces: list[int]
     militiaCorporationID: NotRequired[int]
     name: LocalizedStringDict
     shortDescription: NotRequired[LocalizedStringDict]
@@ -864,7 +1110,7 @@ class GraphicsDict(TypedDict):
     sofHullName: NotRequired[str]
     sofRaceName: NotRequired[str]
     sofMaterialSetID: NotRequired[int]
-    sofLayout: NotRequired[list]
+    sofLayout: NotRequired[list[str]]
 
 
 class GroupsDict(TypedDict):
@@ -961,7 +1207,7 @@ class LandmarksDict(TypedDict):
     _key: int
     description: LocalizedStringDict
     name: LocalizedStringDict
-    position: dict
+    position: PositionDict
     iconID: NotRequired[int]
     locationID: NotRequired[int]
 
@@ -1014,10 +1260,10 @@ class MapAsteroidBeltsDict(TypedDict):
     celestialIndex: int
     orbitID: int
     orbitIndex: int
-    position: dict
+    position: PositionDict
     radius: NotRequired[float]
     solarSystemID: int
-    statistics: NotRequired[dict]
+    statistics: NotRequired[AsteroidBeltStatisticsDict]
     typeID: int
     uniqueName: NotRequired[LocalizedStringDict]
 
@@ -1054,9 +1300,9 @@ class MapConstellationsDict(TypedDict):
     _key: int
     factionID: NotRequired[int]
     name: LocalizedStringDict
-    position: dict
+    position: PositionDict
     regionID: int
-    solarSystemIDs: list
+    solarSystemIDs: list[int]
     wormholeClassID: NotRequired[int]
 
 
@@ -1111,16 +1357,16 @@ class MapMoonsDict(TypedDict):
     """
 
     _key: int
-    attributes: dict
+    attributes: MoonAttributesDict
     celestialIndex: int
     orbitID: int
     orbitIndex: int
-    position: dict
+    position: PositionDict
     radius: float
     solarSystemID: int
-    statistics: NotRequired[dict]
+    statistics: NotRequired[MoonStatisticsDict]
     typeID: int
-    npcStationIDs: NotRequired[list]
+    npcStationIDs: NotRequired[list[int]]
     uniqueName: NotRequired[LocalizedStringDict]
 
 
@@ -1177,17 +1423,17 @@ class MapPlanetsDict(TypedDict):
     """
 
     _key: int
-    asteroidBeltIDs: NotRequired[list]
-    attributes: dict
+    asteroidBeltIDs: NotRequired[list[int]]
+    attributes: PlanetAttributesDict
     celestialIndex: int
-    moonIDs: NotRequired[list]
+    moonIDs: NotRequired[list[int]]
     orbitID: int
     position: dict
     radius: int
     solarSystemID: int
-    statistics: dict
+    statistics: NotRequired[PlanetStatisticsDict]
     typeID: int
-    npcStationIDs: NotRequired[list]
+    npcStationIDs: NotRequired[list[int]]
     uniqueName: NotRequired[LocalizedStringDict]
 
 
@@ -1235,7 +1481,7 @@ class MapRegionsDict(TypedDict):
     factionID: NotRequired[int]
     name: LocalizedStringDict
     nebulaID: int
-    position: dict
+    position: PositionDict
     wormholeClassID: NotRequired[int]
 
 
@@ -1291,21 +1537,21 @@ class MapSolarSystemsDict(TypedDict):
     international: NotRequired[bool]
     luminosity: NotRequired[float]
     name: LocalizedStringDict
-    planetIDs: NotRequired[list]
-    position: dict
+    planetIDs: NotRequired[list[int]]
+    position: PositionDict
     radius: float
     regionID: int
     regional: NotRequired[bool]
     securityClass: NotRequired[str]
     securityStatus: float
     starID: NotRequired[int]
-    stargateIDs: NotRequired[list]
+    stargateIDs: NotRequired[list[int]]
     corridor: NotRequired[bool]
     fringe: NotRequired[bool]
     wormholeClassID: NotRequired[int]
     visualEffect: NotRequired[str]
-    disallowedAnchorCategories: NotRequired[list]
-    disallowedAnchorGroups: NotRequired[list]
+    disallowedAnchorCategories: NotRequired[list[int]]
+    disallowedAnchorGroups: NotRequired[list[int]]
     factionID: NotRequired[int]
 
 
@@ -1331,8 +1577,8 @@ class MapStargatesDict(TypedDict):
     """
 
     _key: int
-    destination: dict
-    position: dict
+    destination: StargateDestinationDict
+    position: PositionDict
     solarSystemID: int
     typeID: int
 
@@ -1361,7 +1607,7 @@ class MapStarsDict(TypedDict):
     _key: int
     radius: int
     solarSystemID: int
-    statistics: dict
+    statistics: StarStatisticsDict
     typeID: int
 
 
@@ -1422,7 +1668,7 @@ class MasteriesDict(TypedDict):
     """
 
     _key: int
-    _value: list | dict
+    _value: list[MasteriesValueDict]
 
 
 class MetaGroupsDict(TypedDict):
@@ -1520,12 +1766,12 @@ class NpcCharactersDict(TypedDict):
     raceID: int
     startDate: NotRequired[str]
     uniqueName: bool
-    skills: NotRequired[list | dict]
+    skills: NotRequired[list[NpcCharacterSkillsDict]]
     ancestryID: NotRequired[int]
     careerID: NotRequired[int]
     schoolID: NotRequired[int]
     specialityID: NotRequired[int]
-    agent: NotRequired[dict]
+    agent: NotRequired[NpcCharacterAgentDict]
     description: NotRequired[str]
 
 
