@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from eve_argus import DEFAULT_APP_DIR, __app_name__, __description__, __version__
 
-_app_env_prefix = "PFMSOFT_EVE_LINK_"
+_app_env_prefix = "PFMSOFT_EVE_ARGUS_"
 
 
 class EveArgusSettings(BaseSettings):
