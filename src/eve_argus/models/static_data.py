@@ -9,11 +9,10 @@ This is an incomplete set of models, added as needed.
 As much as possible, match naming conventions from the sde models in static_data_td.py.
 """
 
+from eve_static_data.models import static_data_td
 from pydantic import BaseModel
 
-from ..models import static_data_td
-
-_ = static_data_td  # Ensure TypedDicts are imported
+# _ = static_data_td  # Ensure TypedDicts are imported
 
 
 def localize_string_dict(

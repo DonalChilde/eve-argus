@@ -2,12 +2,13 @@
 
 from typing import cast
 
+from eve_static_data.models import static_data_td as SDTD
+from eve_static_data.sde_access_protocol import SdeAccessProtocol, SdeFileNames
+
 from eve_argus.models import static_data as SD
-from eve_argus.models import static_data_td as SDTD
-from eve_argus.sde.raw_jsonl_access import RawJsonAccess, SdeFileNames
 
 
-def collect_blueprints(access: RawJsonAccess) -> dict[int, SD.Blueprint]:
+def collect_blueprints(access: SdeAccessProtocol) -> dict[int, SD.Blueprint]:
     """Collect all blueprints from the static data.
 
     Returns:
@@ -22,7 +23,7 @@ def collect_blueprints(access: RawJsonAccess) -> dict[int, SD.Blueprint]:
 
 
 def collect_categories(
-    access: RawJsonAccess, *, language: str, only_published: bool
+    access: SdeAccessProtocol, *, language: str, only_published: bool
 ) -> dict[int, SD.Category]:
     """Collect all categories from the static data.
 
@@ -40,7 +41,7 @@ def collect_categories(
 
 
 def collect_groups(
-    access: RawJsonAccess, *, language: str, only_published: bool
+    access: SdeAccessProtocol, *, language: str, only_published: bool
 ) -> dict[int, SD.Group]:
     """Collect all groups from the static data.
 
@@ -58,7 +59,7 @@ def collect_groups(
 
 
 def collect_market_groups(
-    access: RawJsonAccess, *, language: str
+    access: SdeAccessProtocol, *, language: str
 ) -> dict[int, SD.MarketGroup]:
     """Collect all market groups from the static data.
 
@@ -74,7 +75,7 @@ def collect_market_groups(
 
 
 def collect_meta_groups(
-    access: RawJsonAccess, *, language: str
+    access: SdeAccessProtocol, *, language: str
 ) -> dict[int, SD.MetaGroup]:
     """Collect all meta groups from the static data.
 
@@ -89,7 +90,7 @@ def collect_meta_groups(
     return meta_groups
 
 
-def collect_sde_info(access: RawJsonAccess) -> SD.SdeInfo:
+def collect_sde_info(access: SdeAccessProtocol) -> SD.SdeInfo:
     """Collect the SDE info from the static data.
 
     Returns:
@@ -101,7 +102,7 @@ def collect_sde_info(access: RawJsonAccess) -> SD.SdeInfo:
     return sde_info
 
 
-def collect_type_materials(access: RawJsonAccess) -> dict[int, SD.TypeMaterials]:
+def collect_type_materials(access: SdeAccessProtocol) -> dict[int, SD.TypeMaterials]:
     """Collect all type materials from the static data.
 
     Returns:
@@ -116,7 +117,7 @@ def collect_type_materials(access: RawJsonAccess) -> dict[int, SD.TypeMaterials]
 
 
 def collect_types(
-    access: RawJsonAccess, *, language: str, only_published: bool
+    access: SdeAccessProtocol, *, language: str, only_published: bool
 ) -> dict[int, SD.Types]:
     """Collect all types from the static data.
 
@@ -134,7 +135,7 @@ def collect_types(
 
 
 def collect_argus_static_data(
-    access: RawJsonAccess, *, language: str = "en", only_published: bool = True
+    access: SdeAccessProtocol, *, language: str = "en", only_published: bool = True
 ) -> SD.ArgusStaticData:
     """Collect all static data used by Eve Argus.
 
