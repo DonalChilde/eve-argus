@@ -7,6 +7,8 @@ from typing import Any
 
 import aiohttp
 
+from .expand_multidict import ExpandedHeaders, expand_multi_dict
+
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
@@ -18,8 +20,8 @@ async def _download_text(
     headers: dict[str, str] | None = None,
     json: dict[str, Any] | None = None,
     session: aiohttp.ClientSession | None = None,
-) -> str:
-    """Download a text file from a URL and return its content as a string."""
+) -> tuple[str, ExpandedHeaders]:
+    """Download a text file from a URL and return its content as a string, along with response headers."""
     logger.info(f"Downloading text from {url}")
     start = perf_counter()
     if session is None:
@@ -37,11 +39,12 @@ async def _download_text(
         logger.debug(f"Response headers: {response.headers}")
         response.raise_for_status()
         text = await response.text()
+        response_headers = expand_multi_dict(response.headers)
         await asyncio.sleep(0)  # allow other tasks to run
         logger.info(
             f"Downloaded text from {url} in {perf_counter() - start:.2f} seconds"
         )
-        return text
+        return text, response_headers
 
 
 def download_text(
@@ -51,8 +54,8 @@ def download_text(
     headers: dict[str, str] | None = None,
     json: dict[str, Any] | None = None,
     session: aiohttp.ClientSession | None = None,
-) -> str:
-    """Download a text file from a URL and return its content as a string."""
+) -> tuple[str, ExpandedHeaders]:
+    """Download a text file from a URL and return its content as a string, along with response headers."""
     return asyncio.run(
         _download_text(url, params=params, headers=headers, json=json, session=session)
     )
@@ -65,8 +68,8 @@ async def _download_json(
     headers: dict[str, str] | None = None,
     json: dict[str, Any] | None = None,
     session: aiohttp.ClientSession | None = None,
-) -> Any:
-    """Download a JSON file from a URL."""
+) -> tuple[Any, ExpandedHeaders]:
+    """Download a JSON file from a URL, along with response headers."""
     logger.info(f"Downloading JSON from {url}")
     start = perf_counter()
     if session is None:
@@ -84,11 +87,12 @@ async def _download_json(
         logger.debug(f"Response headers: {response.headers}")
         response.raise_for_status()
         json_data = await response.json()
+        response_headers = expand_multi_dict(response.headers)
         await asyncio.sleep(0)  # allow other tasks to run
         logger.info(
             f"Downloaded json from {url} in {perf_counter() - start:.2f} seconds"
         )
-        return json_data
+        return json_data, response_headers
 
 
 def download_json(
@@ -98,8 +102,8 @@ def download_json(
     headers: dict[str, str] | None = None,
     json: dict[str, Any] | None = None,
     session: aiohttp.ClientSession | None = None,
-) -> Any:
-    """Download a JSON file from a URL."""
+) -> tuple[Any, ExpandedHeaders]:
+    """Download a JSON file from a URL, along with response headers."""
     return asyncio.run(
         _download_json(url, params=params, headers=headers, json=json, session=session)
     )
