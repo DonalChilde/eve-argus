@@ -1,12 +1,15 @@
 """Helper function to expand a CIMultiDict into key-value pairs."""
 
-from multidict import MultiDict
+from multidict import CIMultiDict, CIMultiDictProxy, MultiDict, MultiDictProxy
 
 type ExpandedHeaders = tuple[tuple[str, str], ...]
 
 
 def expand_multi_dict(
-    multidict: MultiDict[str],
+    multidict: MultiDict[str]
+    | MultiDictProxy[str]
+    | CIMultiDict[str]
+    | CIMultiDictProxy[str],
 ) -> ExpandedHeaders:
     """Expand a CIMultiDict into a tuple of key-value pairs."""
     keys = multidict.keys()
