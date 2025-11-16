@@ -2,12 +2,13 @@
 
 from pydantic import BaseModel
 
-from . import static_data as SD
-from .helpers import BaseModelToDisk
-from .market_path import (
+from eve_argus.calculations.sde_queries import (
     get_market_path_int,
     get_market_path_string,
 )
+
+from . import static_data as SD
+from .helpers import BaseModelToDisk
 
 
 class MarketGroupArgus(BaseModel):
@@ -49,19 +50,24 @@ class MarketGroupsArgus(BaseModelToDisk):
         return result
 
 
-class ArgusType(BaseModel):
-    """Model for an Eve type in the Argus app."""
+# class ArgusType(BaseModel):
+#     """Model for an Eve type in the Argus app."""
 
-    ...
+#     ...
 
 
-class ArgusTypes(BaseModelToDisk):
-    """Model for a collection of Eve types in the Argus app."""
+# class ArgusTypes(BaseModelToDisk):
+#     """Model for a collection of Eve types in the Argus app."""
 
-    data: dict[int, ArgusType]
-    info: SD.SdeInfo
+#     data: dict[int, ArgusType]
+#     info: SD.SdeInfo
 
-    @classmethod
-    def from_static_data(cls, static_data: SD.EveTypes) -> "ArgusTypes":
-        """Create an ArgusTypes model from the static data EveTypes model."""
-        ...
+#     @classmethod
+#     def from_static_data(cls, static_data: SD.EveTypes) -> "ArgusTypes":
+#         """Create an ArgusTypes model from the static data EveTypes model."""
+#         ...
+
+# class MarketType(BaseModel):
+#     """Model for a market type in the Argus app."""
+
+#     ...

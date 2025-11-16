@@ -1,9 +1,11 @@
-"""Functions to resolve the market path."""
+"""Functions get data from the EVE SDE."""
 
-from .static_data import MarketGroups
+from eve_argus.models import static_data as SD
 
 
-def get_market_path_int(market_group_id: int, market_groups: MarketGroups) -> list[int]:
+def get_market_path_int(
+    market_group_id: int, market_groups: SD.MarketGroups
+) -> list[int]:
     """Get the market path as a list of integers for a given market group ID.
 
     Starting from the given market group ID, traverse up the parentGroupIDs
@@ -34,7 +36,7 @@ def get_market_path_int(market_group_id: int, market_groups: MarketGroups) -> li
 
 
 def get_market_path_string(
-    market_path: list[int], market_groups: MarketGroups, separator: str = "/"
+    market_path: list[int], market_groups: SD.MarketGroups, separator: str = "/"
 ) -> str:
     """Get the market path as a string for a given market path list of integers."""
     names = []
