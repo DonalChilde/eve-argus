@@ -13,7 +13,10 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-async def _download_text(
+# TODO: Spread this updated helper to other projects.
+
+
+async def get_text_async(
     url: str,
     *,
     params: dict[str, str] | None = None,
@@ -47,7 +50,7 @@ async def _download_text(
         return text, response_headers
 
 
-def download_text(
+def get_text(
     url: str,
     *,
     params: dict[str, str] | None = None,
@@ -57,11 +60,11 @@ def download_text(
 ) -> tuple[str, ExpandedHeaders]:
     """Download a text file from a URL and return its content as a string, along with response headers."""
     return asyncio.run(
-        _download_text(url, params=params, headers=headers, json=json, session=session)
+        get_text_async(url, params=params, headers=headers, json=json, session=session)
     )
 
 
-async def _download_json(
+async def get_json_async(
     url: str,
     *,
     params: dict[str, str] | None = None,
@@ -95,7 +98,7 @@ async def _download_json(
         return json_data, response_headers
 
 
-def download_json(
+def get_json(
     url: str,
     *,
     params: dict[str, str] | None = None,
@@ -105,5 +108,5 @@ def download_json(
 ) -> tuple[Any, ExpandedHeaders]:
     """Download a JSON file from a URL, along with response headers."""
     return asyncio.run(
-        _download_json(url, params=params, headers=headers, json=json, session=session)
+        get_json_async(url, params=params, headers=headers, json=json, session=session)
     )

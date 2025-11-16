@@ -5,7 +5,7 @@ import asyncio
 import typer
 from rich.console import Console
 
-from eve_argus.helpers.download_file import download_json
+from eve_argus.helpers.download_file import get_json_async
 from eve_argus.settings import get_settings
 
 app = typer.Typer(no_args_is_help=True)
@@ -29,7 +29,7 @@ def latest():
     settings = get_settings()
     url = settings.sde_base_url + settings.sde_latest_info
     console.print(f"The latest SDE data can be found at: {url}")
-    info, headers = asyncio.run(download_json(url=url, headers={}))
+    info, headers = asyncio.run(get_json_async(url=url, headers={}))
     console.print(info)
 
 
