@@ -50,6 +50,24 @@ class MarketGroupsArgus(BaseModelToDisk):
         return result
 
 
+class MarketHistorySummary(BaseModel):
+    """Market history summary data model."""
+
+    region_id: int
+    type_id: int
+    period: int
+    start: str
+    end: str
+    missing: int
+    highest: float
+    average: float
+    lowest: float
+    order_count: int
+    volume: float
+    last_modified: str
+    """The UTC datetime that is the last_modified of the source data, in ISO 8601 format."""
+
+
 # class ArgusType(BaseModel):
 #     """Model for an Eve type in the Argus app."""
 

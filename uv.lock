@@ -380,7 +380,7 @@ dependencies = [
 [[package]]
 name = "esi-link"
 version = "0.1.0"
-source = { git = "https://github.com/DonalChilde/esi-link?branch=main#1488d86d9d737e1996fd89aa889e831f0adf0dd0" }
+source = { git = "https://github.com/DonalChilde/esi-link?branch=main#e671b5a773386c0ba5adf4d1ad4ae62c806c14bd" }
 dependencies = [
     { name = "aiohttp" },
     { name = "aiolimiter" },
