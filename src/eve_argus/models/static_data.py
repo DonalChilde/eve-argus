@@ -1,4 +1,4 @@
-"""Static data models for Eve Online SDE data.
+"""Models derived from data from the Eve Online SDE data.
 
 Because these models are for internal use by eve-argus, they are different from the
 TypedDict models in static_data_td.py. Notably, international string fields are
@@ -20,8 +20,6 @@ from pydantic import BaseModel, RootModel
 from .helpers import BaseModelToDisk, RootModelToDisk
 
 logger = logging.getLogger(__name__)
-
-# _ = static_data_td  # Ensure TypedDicts are imported
 
 
 def localize_string_dict(
@@ -386,8 +384,6 @@ class MarketGroup(BaseModel):
     iconID: int | None
     name: str
     parentGroupID: int | None
-    market_path_string: str | None = None
-    market_path_int: list[int] | None = None
 
     @classmethod
     def from_td(
@@ -408,6 +404,8 @@ class MarketGroups(BaseModelToDisk):
     data: dict[int, MarketGroup]
     info: SdeInfo
     source_name: str
+    _market_path_ids: dict[int, list[int]]
+    _market_path_names: dict[int, str]
 
     @classmethod
     def from_static_data(
@@ -418,9 +416,20 @@ class MarketGroups(BaseModelToDisk):
         source_name: str,
     ) -> "MarketGroups":
         """Create a MarketGroups model from an iterable of MarketGroups models."""
-        result = cls(data={}, info=sde_info, source_name=source_name)
+        result = cls(
+            data={},
+            info=sde_info,
+            source_name=source_name,
+            _market_path_ids={},
+            _market_path_names={},
+        )
         for mg in static_data:
             result.data[mg["_key"]] = MarketGroup.from_td(mg, localized=localized)
+        for mg_id in result.data:
+            result._market_path_ids[mg_id] = get_market_path_int(mg_id, result.data)
+            result._market_path_names[mg_id] = get_market_path_string(
+                result._market_path_ids[mg_id], result.data
+            )
         return result
 
     @classmethod
@@ -437,6 +446,22 @@ class MarketGroups(BaseModelToDisk):
             sde_info=sde_info,
             source_name=SdeFileNames.MARKET_GROUPS,
         )
+
+    def get_market_path_ids(self, market_group_id: int) -> list[int]:
+        """Get the market path as a list of integers for a given market group ID."""
+        if market_group_id not in self._market_path_ids:
+            raise ValueError(
+                f"Market group ID {market_group_id} not found in market groups."
+            )
+        return self._market_path_ids[market_group_id]
+
+    def get_market_path_names(self, market_group_id: int) -> str:
+        """Get the market path as a string for a given market group ID."""
+        if market_group_id not in self._market_path_names:
+            raise ValueError(
+                f"Market group ID {market_group_id} not found in market groups."
+            )
+        return self._market_path_names[market_group_id]
 
 
 class MetaGroup(BaseModel):
@@ -650,3 +675,50 @@ class ArgusStaticData(BaseModelToDisk):
     meta_groups: dict[int, MetaGroup]
     type_materials: dict[int, TypeMaterial]
     eve_types: dict[int, EveType]
+
+
+def get_market_path_int(
+    market_group_id: int, market_groups: dict[int, MarketGroup]
+) -> list[int]:
+    """Get the market path as a list of integers for a given market group ID.
+
+    Starting from the given market group ID, traverse up the parentGroupIDs
+    to build the full path to the root market group. Path is returned as a list
+    of integers representing market group IDs from root to the specified market group.
+    """
+    if market_group_id not in market_groups:
+        raise ValueError(
+            f"Market group ID {market_group_id} not found in market groups."
+        )
+
+    def get_path(market_group_id: int) -> list[int]:
+        path = []
+        current = market_groups.get(market_group_id)
+        while current:
+            path.append(current._key)
+            if current.parentGroupID is None:
+                break
+            current = market_groups.get(current.parentGroupID)
+        return path
+
+    path = get_path(market_group_id)
+    if not path:
+        raise ValueError(
+            f"Market group ID {market_group_id} not found in market groups."
+        )
+    return list(reversed(path))
+
+
+def get_market_path_string(
+    market_path: list[int],
+    market_groups: dict[int, MarketGroup],
+    separator: str = "/",
+) -> str:
+    """Get the market path as a string for a given market path list of integers."""
+    names = []
+    for mg_id in market_path:
+        market_group = market_groups.get(mg_id)
+        if market_group is None:
+            raise ValueError(f"Market group ID {mg_id} not found in market groups.")
+        names.append(market_group.name)
+    return separator.join(names)
