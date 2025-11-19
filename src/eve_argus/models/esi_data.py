@@ -1,6 +1,7 @@
 """Models derived from data from the EVE Esi."""
 
 from datetime import date
+from enum import Enum
 from typing import Any
 
 from esi_link.models import EsiResponse
@@ -13,6 +14,22 @@ from .helpers import BaseModelToDisk
 type RegionId = int
 type TypeId = int
 type Period = int
+type SolarSystemId = int
+
+
+class Activity_Name(Enum):
+    """Enum for activity names in Eve Argus.
+
+    Keep this data, not sure where is offical source is.
+    Found this on fuzzworks.
+    """
+
+    manufacturing = 1
+    research_time = 3
+    research_material = 4
+    copying = 5
+    invention = 8
+    reaction = 11
 
 
 def get_source_info_from_esi_response(response: EsiResponse) -> dict[str, Instant]:
@@ -79,7 +96,7 @@ class MarketHistoryDetail(BaseModel):
 class MarketHistory(SourcedFromESI):
     region_id: RegionId
     type_id: TypeId
-    data: list[MarketHistoryDetail]
+    data: dict[date, MarketHistoryDetail]
 
     @classmethod
     def from_esi_response(cls, response: EsiResponse) -> "MarketHistory":
@@ -108,43 +125,115 @@ class MarketHistory(SourcedFromESI):
         if region_id is None or type_id is None:
             msg = f"Missing region_id {region_id} or type_id {type_id} in ESI response to create MarketHistory"
             raise ValueError(msg)
-
-        data = [
-            MarketHistoryDetail.from_json(item)
-            for item in response.http_response.json_data
-        ]
+        data: dict[date, MarketHistoryDetail] = {}
+        for item in response.http_response.json_data:
+            detail = MarketHistoryDetail.from_json(item)
+            data[detail.date] = detail
+        sorted_by_date = sorted(data.items(), reverse=True)
         result = cls(
             last_modified=metadata["last_modified"],
             expires=metadata["expires"],
             retrieved=metadata["retrieved"],
             region_id=int(region_id),
             type_id=int(type_id),
+            data=dict(sorted_by_date),
+        )
+        return result
+
+
+class SystemCostIndexDetail(BaseModel):
+    """System cost index data model."""
+
+    system_id: int
+    """The solar system ID."""
+    copying: float
+    """The copying cost index."""
+    duplicating: float
+    """The duplicating cost index."""
+    invention: float
+    """The invention cost index."""
+    manufacturing: float
+    """The manufacturing cost index."""
+    reaction: float
+    """The reaction cost index."""
+    researching_material_efficiency: float
+    """The research material efficiency cost index."""
+    researching_technology: float
+    """The research technology cost index."""
+    researching_time_efficiency: float
+    """The research time efficiency cost index."""
+    reverse_engineering: float
+    """The reverse engineering cost index."""
+
+
+class SystemCostIndices(SourcedFromESI):
+    """System cost index model."""
+
+    data: dict[SolarSystemId, SystemCostIndexDetail]
+    """The system cost index details keyed by system ID."""
+
+    @classmethod
+    def from_esi_response(cls, response: EsiResponse) -> "SystemCostIndices":
+        """Create a SystemCostIndices instance from an ESI API response.
+
+        The response data is in the form of dict[solar_system_id: int, cost_indices: list[dict[str, float]]].
+
+        Args:
+            response (EsiResponse): The ESI API response containing system cost index data.
+                Must include an http_response with json_data.
+
+        Returns:
+            SystemCostIndex: A new SystemCostIndex instance populated with data from the
+                ESI response, including metadata (last_modified, expires, retrieved)
+                and system cost index details.
+
+        Raises:
+            ValueError: If the response has no HTTP response.
+        """
+        if response.http_response is None:
+            raise ValueError(
+                "No HTTP response in ESI response to create SystemCostIndex"
+            )
+        metadata = get_source_info_from_esi_response(response)
+        data: dict[SolarSystemId, SystemCostIndexDetail] = {}
+        for item in response.http_response.json_data:
+            values = {
+                "copying": 0.0,
+                "duplicating": 0.0,
+                "invention": 0.0,
+                "manufacturing": 0.0,
+                "reaction": 0.0,
+                "researching_material_efficiency": 0.0,
+                "researching_technology": 0.0,
+                "researching_time_efficiency": 0.0,
+                "reverse_engineering": 0.0,
+            }
+            for value in item.get("cost_indices", []):
+                values.update(value)
+            detail = SystemCostIndexDetail(system_id=item["solar_system_id"], **values)
+            data[detail.system_id] = detail
+        result = cls(
+            last_modified=metadata["last_modified"],
+            expires=metadata["expires"],
+            retrieved=metadata["retrieved"],
             data=data,
         )
         return result
 
 
-class MarketHistorySummary(BaseModel):
-    """Market history summary data model."""
+class UniverseMarketPriceDetail(BaseModel):
+    """Universe Market prices data model."""
 
-    region_id: int
     type_id: int
-    period: int
-    start: str
-    end: str
-    missing: int
-    highest: float
-    average: float
-    lowest: float
-    order_count: int
-    volume: float
-    last_modified: str
-    """The UTC datetime that is the last_modified of the source data, in ISO 8601 format."""
+    """The type ID of the item."""
+    adjusted_price: float
+    """The adjusted price of the item, -1.0 if not available."""
+    average_price: float
+    """The average price of the item, -1.0 if not available."""
 
 
-class MarketHistorySummmaries(BaseModelToDisk):
-    """Collection of market history summaries."""
+class UniverseMarketPrices(SourcedFromESI):
+    """A collection of universe pricing."""
 
-    # Consider the best way to collect these. There is also date to consider.
-    data: dict[tuple[RegionId, TypeId, Period], MarketHistorySummary]
-    # info: SD.SdeInfo
+    data: dict[TypeId, UniverseMarketPriceDetail]
+    """A dictionary mapping type IDs to adjusted and average market prices for the universe."""

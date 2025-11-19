@@ -4,12 +4,12 @@ from collections.abc import Iterable, Sequence
 from datetime import date
 from uuid import uuid4
 
-from esi_link.esi_types.esi_types import (
-    MarketsRegionIdHistoryGet,
-    MarketsRegionIdHistoryGetItem,
+from eve_argus.models.esi_data import (
+    MarketHistory,
+    MarketHistoryDetail,
+    MarketHistorySummaryDetail,
+    MarketHistorySummmary,
 )
-
-from eve_argus.models.argus_data import MarketHistorySummary
 from eve_argus.snippets.datetime.date_range import date_range_days
 
 # TODO re think how multiple summary periods might work.
@@ -21,7 +21,7 @@ def summarize_regional_market_history(
     type_id: int,
     region_id: int,
     period: int,
-) -> MarketHistorySummary:
+) -> MarketHistorySummaryDetail:
     """Summarize market history by type and period of days.
 
     Args:
@@ -95,16 +95,17 @@ def summarize_market_history_by_periods(
 
 
 def summarize_market_history_by_dates(
-    dates: Sequence[date], data: dict[date, EAM.MarketHistoryDetail]
-) -> EAM.MarketHistorySummary:
+    start_date: date, end_date: date, data: dict[date, MarketHistoryDetail]
+) -> MarketHistorySummaryDetail:
     """Summarize market history by dates.
 
     Args:
-        dates (Sequence[date]): The dates to summarize.
+        start_date (date): The start date to summarize.
+        end_date (date): The end date to summarize.
         data (dict[date, EAM.MarketHistoryDetail]): The market history data keyed by date.
 
     Returns:
-        EAM.MarketHistorySummary: The summarized market history.
+        EAM.MarketHistorySummaryDetail: The summarized market history.
     """
     missing = average = highest = lowest = order_count = volume = 0
     count = len(dates)
@@ -118,18 +119,17 @@ def summarize_market_history_by_dates(
         lowest = lowest + (item.lowest * item.volume)
         order_count = order_count + item.order_count
         volume = volume + item.volume
-    result = EAM.MarketHistorySummary(
+    result = MarketHistorySummaryDetail(
         region_id=0,
         type_id=0,
         period=0,
-        start="",
-        end="",
+        start=start_date,
+        end=end_date,
         missing=missing,
         highest=highest / volume,
         average=average / volume,
         lowest=lowest / volume,
         order_count=int(order_count / count),
         volume=volume / count,
-        last_modified="",
     )
     return result
