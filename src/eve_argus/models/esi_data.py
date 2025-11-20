@@ -13,8 +13,12 @@ from .helpers import BaseModelToDisk
 # Use type aliases for better readability IN TYPE HINTS.
 type RegionId = int
 type TypeId = int
-type Period = int
+type Period = int  # TODO: consider using Days for name clarity
 type SolarSystemId = int
+type CharacterId = int
+type CorporationId = int
+type AllianceId = int
+type LocationId = int
 
 
 class Activity_Name(Enum):
@@ -102,6 +106,8 @@ class MarketHistory(SourcedFromESI):
     def from_esi_response(cls, response: EsiResponse) -> "MarketHistory":
         """Create a MarketHistory instance from an ESI API response.
 
+        operation_id: GetMarketsRegionIdHistory
+
         Args:
             response (EsiResponse): The ESI API response containing market history data.
                 Must include an http_response with json_data, and request parameters
@@ -165,6 +171,39 @@ class SystemCostIndexDetail(BaseModel):
     reverse_engineering: float
     """The reverse engineering cost index."""
 
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> "SystemCostIndexDetail":
+        """Create a SystemCostIndexDetail instance from JSON data.
+
+        Args:
+            data: A dictionary containing system cost index data with the following keys:
+                - system_id: The solar system ID
+                - copying: The copying cost index
+                - duplicating: The duplicating cost index
+                - invention: The invention cost index
+                - manufacturing: The manufacturing cost index
+                - reaction: The reaction cost index
+                - researching_material_efficiency: The research material efficiency cost index
+                - researching_technology: The research technology cost index
+                - researching_time_efficiency: The research time efficiency cost index
+                - reverse_engineering: The reverse engineering cost index
+        """
+        values = {
+            "copying": 0.0,
+            "duplicating": 0.0,
+            "invention": 0.0,
+            "manufacturing": 0.0,
+            "reaction": 0.0,
+            "researching_material_efficiency": 0.0,
+            "researching_technology": 0.0,
+            "researching_time_efficiency": 0.0,
+            "reverse_engineering": 0.0,
+        }
+        for value in data.get("cost_indices", []):
+            values.update(value)
+        values.update(data)
+        return cls(system_id=data["solar_system_id"], **values)
+
 
 class SystemCostIndices(SourcedFromESI):
     """System cost index model."""
@@ -176,6 +215,7 @@ class SystemCostIndices(SourcedFromESI):
     def from_esi_response(cls, response: EsiResponse) -> "SystemCostIndices":
         """Create a SystemCostIndices instance from an ESI API response.
 
+        operation_id: GetIndustrySystems
         The response data is in the form of dict[solar_system_id: int, cost_indices: list[dict[str, float]]].
 
         Args:
@@ -197,20 +237,7 @@ class SystemCostIndices(SourcedFromESI):
         metadata = get_source_info_from_esi_response(response)
         data: dict[SolarSystemId, SystemCostIndexDetail] = {}
         for item in response.http_response.json_data:
-            values = {
-                "copying": 0.0,
-                "duplicating": 0.0,
-                "invention": 0.0,
-                "manufacturing": 0.0,
-                "reaction": 0.0,
-                "researching_material_efficiency": 0.0,
-                "researching_technology": 0.0,
-                "researching_time_efficiency": 0.0,
-                "reverse_engineering": 0.0,
-            }
-            for value in item.get("cost_indices", []):
-                values.update(value)
-            detail = SystemCostIndexDetail(system_id=item["solar_system_id"], **values)
+            detail = SystemCostIndexDetail.from_json(item)
             data[detail.system_id] = detail
         result = cls(
             last_modified=metadata["last_modified"],
@@ -231,9 +258,260 @@ class UniverseMarketPriceDetail(BaseModel):
     average_price: float
     """The average price of the item, -1.0 if not available."""
 
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> "UniverseMarketPriceDetail":
+        """Create a UniverseMarketPriceDetail instance from JSON data.
+
+        Args:
+            data: A dictionary containing universe market price data with the following keys:
+                - type_id: The type ID of the item
+                - adjusted_price: The adjusted price of the item
+                - average_price: The average price of the item
+        """
+        return cls(
+            type_id=data["type_id"],
+            adjusted_price=data["adjusted_price"],
+            average_price=data["average_price"],
+        )
+
 
 class UniverseMarketPrices(SourcedFromESI):
     """A collection of universe pricing."""
 
     data: dict[TypeId, UniverseMarketPriceDetail]
     """A dictionary mapping type IDs to adjusted and average market prices for the universe."""
+
+    @classmethod
+    def from_esi_response(cls, response: EsiResponse) -> "UniverseMarketPrices":
+        """Create a UniverseMarketPrices instance from an ESI API response.
+
+        operation_id: GetMarketsPrices
+        Args:
+            response (EsiResponse): The ESI API response containing universe market prices data.
+                Must include an http_response with json_data.
+
+        Returns:
+            UniverseMarketPrices: A new UniverseMarketPrices instance populated with data from the
+                ESI response, including metadata (last_modified, expires, retrieved)
+                and universe market price details.
+
+        Raises:
+            ValueError: If the response has no HTTP response.
+        """
+        if response.http_response is None:
+            raise ValueError(
+                "No HTTP response in ESI response to create UniverseMarketPrices"
+            )
+        metadata = get_source_info_from_esi_response(response)
+        data: dict[TypeId, UniverseMarketPriceDetail] = {}
+        for item in response.http_response.json_data:
+            detail = UniverseMarketPriceDetail.from_json(item)
+            data[detail.type_id] = detail
+        result = cls(
+            last_modified=metadata["last_modified"],
+            expires=metadata["expires"],
+            retrieved=metadata["retrieved"],
+            data=data,
+        )
+        return result
+
+
+class RegionalMarketTypes(SourcedFromESI):
+    """A list of type IDs that have active orders in the region, for efficient market indexing."""
+
+    region_id: RegionId
+    """The region ID for which the market types are listed."""
+    type_ids: set[TypeId]
+    """A set of type IDs available in the specified region."""
+
+    @classmethod
+    def from_esi_response(cls, response: EsiResponse) -> "RegionalMarketTypes":
+        """Create a RegionalMarketTypes instance from an ESI API response.
+
+        operation_id: GetMarketsRegionIdTypes
+
+        Args:
+            response (EsiResponse): The ESI API response containing regional market types data.
+                Must include an http_response with json_data and request parameters for region_id.
+
+        Returns:
+            RegionalMarketTypes: A new RegionalMarketTypes instance populated with data from the
+                ESI response, including metadata (last_modified, expires, retrieved)
+                and the list of type IDs.
+
+        Raises:
+            ValueError: If the response has no HTTP response or if region_id is missing from the request parameters.
+        """
+        if response.http_response is None:
+            raise ValueError(
+                "No HTTP response in ESI response to create RegionalMarketTypes"
+            )
+        region_id = response.request.path_parameters.get("region_id", None)
+        metadata = get_source_info_from_esi_response(response)
+
+        if region_id is None:
+            msg = f"Missing region_id {region_id} in ESI response to create RegionalMarketTypes"
+            raise ValueError(msg)
+
+        type_ids = {int(type_id) for type_id in response.http_response.json_data}
+
+        result = cls(
+            last_modified=metadata["last_modified"],
+            expires=metadata["expires"],
+            retrieved=metadata["retrieved"],
+            region_id=int(region_id),
+            type_ids=type_ids,
+        )
+        return result
+
+
+class MarketOrderDetail(BaseModel):
+    order_id: int
+    type_id: TypeId
+    location_id: LocationId
+    volume_total: int
+    volume_remain: int
+    min_volume: int
+    price: float
+    is_buy_order: bool
+    issued: Instant
+    duration: int
+    range: str
+    system_id: SolarSystemId
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> "MarketOrderDetail":
+        """Create a MarketOrderDetail instance from JSON data.
+
+        Args:
+            data: A dictionary containing market order data with the following keys:
+                - order_id: The unique identifier for the market order
+                - type_id: The type ID of the item being bought or sold
+                - location_id: The location ID where the order is placed
+                - volume_total: The total volume of items in the order
+                - volume_remain: The remaining volume of items in the order
+                - min_volume: The minimum volume required to fulfill the order
+                - price: The price per unit for the order
+                - is_buy_order: A boolean indicating if the order is a buy order
+                - issued: The timestamp when the order was issued
+                - duration: The duration of the order in days
+                - range: The range of the order (e.g., "region", "solarsystem")
+                - system_id: The solar system ID where the order is located
+
+        Returns:
+            MarketOrderDetail: A new MarketOrderDetail instance populated with data from the JSON dictionary.
+        """
+        return cls(
+            order_id=data["order_id"],
+            type_id=data["type_id"],
+            location_id=data["location_id"],
+            volume_total=data["volume_total"],
+            volume_remain=data["volume_remain"],
+            min_volume=data["min_volume"],
+            price=data["price"],
+            is_buy_order=data["is_buy_order"],
+            issued=Instant.parse_iso(data["issued"]),
+            duration=data["duration"],
+            range=data["range"],
+            system_id=data["system_id"],
+        )
+
+
+class MarketOrders(BaseModel):
+    region_id: RegionId
+    type_id: TypeId
+    buy_orders: list[MarketOrderDetail]
+    sell_orders: list[MarketOrderDetail]
+
+
+class RegionalMarketOrders(SourcedFromESI):
+    """A collection of market orders in a region.
+
+    operation_id: GetMarketsRegionIdOrders
+    """
+
+    region_id: RegionId
+    data: dict[TypeId, MarketOrders]
+
+    @classmethod
+    def from_esi_response(cls, response: EsiResponse) -> "RegionalMarketOrders":
+        """Create a RegionalMarketOrders instance from an ESI API response.
+
+        Args:
+            response (EsiResponse): The ESI API response containing regional market orders data.
+                Must include an http_response with json_data and request parameters for region_id.
+
+        Returns:
+            RegionalMarketOrders: A new RegionalMarketOrders instance populated with data from the
+                ESI response, including metadata (last_modified, expires, retrieved)
+                and the list of market orders.
+
+        Raises:
+            ValueError: If the response has no HTTP response or if region_id is missing from the
+                request parameters.
+        """
+        if response.http_response is None:
+            raise ValueError(
+                "No HTTP response in ESI response to create RegionalMarketOrders"
+            )
+        region_id = response.request.path_parameters.get("region_id", None)
+        metadata = get_source_info_from_esi_response(response)
+
+        if region_id is None:
+            msg = f"Missing region_id {region_id} in ESI response to create RegionalMarketOrders"
+            raise ValueError(msg)
+
+        data: dict[TypeId, MarketOrders] = {}
+        for item in response.http_response.json_data:
+            detail = MarketOrderDetail.from_json(item)
+            if detail.type_id in data:
+                orders = data[detail.type_id]
+                if detail.is_buy_order:
+                    orders.buy_orders.append(detail)
+                else:
+                    orders.sell_orders.append(detail)
+            else:
+                orders = MarketOrders(
+                    region_id=int(region_id),
+                    type_id=detail.type_id,
+                    buy_orders=[detail] if detail.is_buy_order else [],
+                    sell_orders=[detail] if not detail.is_buy_order else [],
+                )
+            data[detail.type_id] = orders
+
+        result = cls(
+            last_modified=metadata["last_modified"],
+            expires=metadata["expires"],
+            retrieved=metadata["retrieved"],
+            region_id=int(region_id),
+            data=data,
+        )
+        return result
+
+    def buy_orders(self, type_id: TypeId) -> list[MarketOrderDetail]:
+        """Get buy orders for a specific type ID.
+
+        Args:
+            type_id (TypeId): The type ID to filter buy orders.
+
+        Returns:
+            list[MarketOrderDetail]: A list of buy orders for the specified type ID.
+        """
+        orders = self.data.get(type_id)
+        if orders is None:
+            return []
+        return self.data[type_id].buy_orders
+
+    def sell_orders(self, type_id: TypeId) -> list[MarketOrderDetail]:
+        """Get sell orders for a specific type ID.
+
+        Args:
+            type_id (TypeId): The type ID to filter sell orders.
+
+        Returns:
+            list[MarketOrderDetail]: A list of sell orders for the specified type ID.
+        """
+        orders = self.data.get(type_id)
+        if orders is None:
+            return []
+        return self.data[type_id].sell_orders
