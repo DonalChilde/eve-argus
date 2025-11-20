@@ -418,6 +418,8 @@ class MarketOrderDetail(BaseModel):
 
 
 class MarketOrders(BaseModel):
+    """A collection of orders for a specific type ID in a region."""
+
     region_id: RegionId
     type_id: TypeId
     buy_orders: list[MarketOrderDetail]
