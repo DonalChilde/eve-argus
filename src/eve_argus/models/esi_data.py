@@ -2,7 +2,7 @@
 
 from datetime import date
 from enum import Enum
-from typing import Any
+from typing import Any, Literal, Self
 
 from esi_link.models import EsiResponse
 from pydantic import BaseModel
@@ -68,7 +68,7 @@ class MarketHistoryDetail(BaseModel):
     volume: int
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "MarketHistoryDetail":
+    def from_json(cls, data: dict[str, Any]) -> Self:
         """Create a MarketHistoryDetail instance from JSON data.
 
         Args:
@@ -103,7 +103,7 @@ class MarketHistory(SourcedFromESI):
     data: dict[date, MarketHistoryDetail]
 
     @classmethod
-    def from_esi_response(cls, response: EsiResponse) -> "MarketHistory":
+    def from_esi_response(cls, response: EsiResponse) -> Self:
         """Create a MarketHistory instance from an ESI API response.
 
         operation_id: GetMarketsRegionIdHistory
@@ -172,7 +172,7 @@ class SystemCostIndexDetail(BaseModel):
     """The reverse engineering cost index."""
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "SystemCostIndexDetail":
+    def from_json(cls, data: dict[str, Any]) -> Self:
         """Create a SystemCostIndexDetail instance from JSON data.
 
         Args:
@@ -212,7 +212,7 @@ class SystemCostIndices(SourcedFromESI):
     """The system cost index details keyed by system ID."""
 
     @classmethod
-    def from_esi_response(cls, response: EsiResponse) -> "SystemCostIndices":
+    def from_esi_response(cls, response: EsiResponse) -> Self:
         """Create a SystemCostIndices instance from an ESI API response.
 
         operation_id: GetIndustrySystems
@@ -259,7 +259,7 @@ class UniverseMarketPriceDetail(BaseModel):
     """The average price of the item, -1.0 if not available."""
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "UniverseMarketPriceDetail":
+    def from_json(cls, data: dict[str, Any]) -> Self:
         """Create a UniverseMarketPriceDetail instance from JSON data.
 
         Args:
@@ -282,7 +282,7 @@ class UniverseMarketPrices(SourcedFromESI):
     """A dictionary mapping type IDs to adjusted and average market prices for the universe."""
 
     @classmethod
-    def from_esi_response(cls, response: EsiResponse) -> "UniverseMarketPrices":
+    def from_esi_response(cls, response: EsiResponse) -> Self:
         """Create a UniverseMarketPrices instance from an ESI API response.
 
         operation_id: GetMarketsPrices
@@ -325,7 +325,7 @@ class RegionalMarketTypes(SourcedFromESI):
     """A set of type IDs available in the specified region."""
 
     @classmethod
-    def from_esi_response(cls, response: EsiResponse) -> "RegionalMarketTypes":
+    def from_esi_response(cls, response: EsiResponse) -> Self:
         """Create a RegionalMarketTypes instance from an ESI API response.
 
         operation_id: GetMarketsRegionIdTypes
@@ -380,7 +380,7 @@ class MarketOrderDetail(BaseModel):
     system_id: SolarSystemId
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "MarketOrderDetail":
+    def from_json(cls, data: dict[str, Any]) -> Self:
         """Create a MarketOrderDetail instance from JSON data.
 
         Args:
@@ -425,6 +425,56 @@ class MarketOrders(BaseModel):
     buy_orders: list[MarketOrderDetail]
     sell_orders: list[MarketOrderDetail]
 
+    def filter_orders(
+        self,
+        is_buy_order: bool | None = None,
+        location_id: int | None = None,
+        location_spec: Literal["region", "system", "station"] = "region",
+    ) -> list[MarketOrderDetail]:
+        """Filter orders by is_buy_order.
+
+        Args:
+            is_buy_order (bool | None): If True, return only buy orders. If False, return only sell orders.
+                If None, return all orders.
+            location_id (int | None): The location ID to filter by. If None, do not filter by location.
+            location_spec (Literal["region", "system", "station"]): The location specification to filter by.
+                Defaults to "region".
+
+        Returns:
+            list[MarketOrderDetail]: The filtered list of market orders.
+        """
+        filtered_orders = []
+        match is_buy_order:
+            case True:
+                filtered_orders = list(self.buy_orders)
+            case False:
+                filtered_orders = list(self.sell_orders)
+            case None:
+                filtered_orders = self.buy_orders + self.sell_orders
+        if location_id is not None:
+            match location_spec:
+                case "region":
+                    pass  # No filtering needed for region
+                case "system":
+                    filtered_orders = [
+                        order
+                        for order in filtered_orders
+                        if order.system_id == location_id
+                    ]
+                case "station":
+                    filtered_orders = [
+                        order
+                        for order in filtered_orders
+                        if order.location_id == location_id
+                    ]
+                case _:
+                    msg = (
+                        f"Invalid location_spec: {location_spec}, do not filter by "
+                        f"location_id. Did you give an id without a spec?"
+                    )
+                    raise ValueError(msg)
+        return filtered_orders
+
 
 class RegionalMarketOrders(SourcedFromESI):
     """A collection of market orders in a region.
@@ -436,7 +486,7 @@ class RegionalMarketOrders(SourcedFromESI):
     data: dict[TypeId, MarketOrders]
 
     @classmethod
-    def from_esi_response(cls, response: EsiResponse) -> "RegionalMarketOrders":
+    def from_esi_response(cls, response: EsiResponse) -> Self:
         """Create a RegionalMarketOrders instance from an ESI API response.
 
         Args:
@@ -489,31 +539,3 @@ class RegionalMarketOrders(SourcedFromESI):
             data=data,
         )
         return result
-
-    def buy_orders(self, type_id: TypeId) -> list[MarketOrderDetail]:
-        """Get buy orders for a specific type ID.
-
-        Args:
-            type_id (TypeId): The type ID to filter buy orders.
-
-        Returns:
-            list[MarketOrderDetail]: A list of buy orders for the specified type ID.
-        """
-        orders = self.data.get(type_id)
-        if orders is None:
-            return []
-        return self.data[type_id].buy_orders
-
-    def sell_orders(self, type_id: TypeId) -> list[MarketOrderDetail]:
-        """Get sell orders for a specific type ID.
-
-        Args:
-            type_id (TypeId): The type ID to filter sell orders.
-
-        Returns:
-            list[MarketOrderDetail]: A list of sell orders for the specified type ID.
-        """
-        orders = self.data.get(type_id)
-        if orders is None:
-            return []
-        return self.data[type_id].sell_orders
