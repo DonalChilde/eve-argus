@@ -1,3 +1,10 @@
+"""Market history summary calculation module.
+
+This module provides functionality to calculate statistical summaries of market
+history data over specified time periods, including volume-weighted price averages
+and trading metrics.
+"""
+
 from datetime import date
 from typing import TypedDict
 
@@ -24,16 +31,44 @@ def calculate_history_summary(
     period: Period,
     start_date: date | None = None,
 ) -> HistorySummaryDict:
-    """Calculate a summary of a MarketHistory over a specified period.
+    """Calculate a summary of market history data over a specified period.
+
+    This function computes volume-weighted averages and other statistics for market
+    history data over a given time period. It handles missing data points and
+    calculates key metrics like price averages, order counts, and trading volumes.
 
     Args:
-        history (MarketHistory): The market history to summarize.
-        period (Period): The period in days for the summary.
-        start_date (date | None): The start date for the summary. If None,
-            the most recent date in the history will be used.
+        history: The market history object containing daily trading
+            data with region_id, type_id, and a dictionary of date-keyed market data.
+        period: The number of days to include in the summary calculation,
+            working backwards from the start_date.
+        start_date: The starting date for the summary period.
+            If None, uses the most recent date available in the history data.
+            Defaults to None.
 
     Returns:
-        HistorySummaryDict: The summarized market history data.
+        A dictionary containing the following keys:
+            - region_id: The region identifier from the input history
+            - type_id: The item type identifier from the input history
+            - period: The period length in days
+            - start: The start date of the summary period
+            - end: The end date of the summary period
+            - missing: Count of dates with no data in the period
+            - highest: Volume-weighted average of daily highest prices
+            - average: Volume-weighted average of daily average prices
+            - lowest: Volume-weighted average of daily lowest prices
+            - order_count: Average daily order count across the period
+            - volume: Average daily trading volume across the period
+
+    Raises:
+        ValueError: If the provided start_date is not present in the market history data.
+
+    Notes:
+        - Price averages (highest, average, lowest) are volume-weighted to give more
+          importance to high-volume trading days
+        - Order count and volume are simple averages across all days in the period
+        - Days with missing data are counted but excluded from calculations
+        - If total volume is zero, price averages default to 0.0
     """
     if start_date is None:
         start_date = next(iter(history.data.keys()))
