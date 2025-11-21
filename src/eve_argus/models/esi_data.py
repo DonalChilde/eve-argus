@@ -13,7 +13,7 @@ from .helpers import BaseModelToDisk
 # Use type aliases for better readability IN TYPE HINTS.
 type RegionId = int
 type TypeId = int
-type Period = int  # TODO: consider using Days for name clarity
+type Period = int  # days
 type SolarSystemId = int
 type CharacterId = int
 type CorporationId = int
