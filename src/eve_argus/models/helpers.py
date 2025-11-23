@@ -83,6 +83,7 @@ class BaseModelToDisk(BaseModel):
                 f"{file_path} already exists and overwrite is False. Unable to save file for Model {self.__class__.__name__}."
             )
         try:
+            file_path.parent.mkdir(parents=True, exist_ok=True)
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(self.model_dump_json(indent=2))
         except Exception as e:
