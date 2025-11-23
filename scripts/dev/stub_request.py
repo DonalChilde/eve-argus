@@ -14,7 +14,7 @@ from esi_link.logging_config import setup_logging
 from esi_link.models import EsiRequests, EsiResponses
 from rich.console import Console
 
-SCRIPT_NAME = "link_test"
+SCRIPT_NAME = "NOT_DEFINED"
 
 
 def main() -> None:
@@ -98,6 +98,7 @@ def build_requests() -> EsiRequests:
     Returns:
         EsiRequests: An object containing the constructed ESI requests.
     """
+    raise NotImplementedError()
     request = RF.status()
     requests = EsiRequests(requests_id=uuid4(), requests={request.request_id: request})
     return requests
