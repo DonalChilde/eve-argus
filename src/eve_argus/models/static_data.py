@@ -7,11 +7,19 @@ becomes `name: str`.
 
 This is an incomplete set of models, added as needed.
 As much as possible, match naming conventions from the sde models in static_data_td.py.
+Note that pydantic treats fields with a leading underscore specially, so `_key` is not a valid field name.
+
+Models are organized by SDE file. Each file-level model has a corresponding
+from_td() classmethod to create an instance from the corresponding TypedDict from
+static_data_td.py.
+
+Sub-models are named with an underscore, e.g., Blueprint_Activities.
+
 """
 
 import logging
 from collections.abc import Iterable
-from typing import cast
+from typing import Self, cast
 
 from eve_static_data.models import static_data_td_3081406 as static_data_td
 from eve_static_data.sde_access_protocol import SdeAccessProtocol, SdeFileNames
@@ -46,116 +54,10 @@ def localize_string_dict(
 # ------------------------------------------------------------------------------
 
 
-class MaterialsMaterials(BaseModel):
-    """Model for material requirements in typeMaterials.jsonl."""
-
-    materialTypeID: int
-    quantity: int
-
-    @classmethod
-    def from_td(
-        cls, td: static_data_td.MaterialsMateritalsDict
-    ) -> "MaterialsMaterials":
-        """Create a Materials model from a static_data_td.MaterialsMaterialsDict TypedDict."""
-        return cls(
-            materialTypeID=td["materialTypeID"],
-            quantity=td["quantity"],
-        )
-
-
-class Materials(BaseModel):
-    """Model for material requirements in blueprints.jsonl."""
-
-    typeID: int
-    quantity: int
-
-    @classmethod
-    def from_td(cls, td: static_data_td.MaterialsDict) -> "Materials":
-        """Create a Materials model from a static_data_td.MaterialsDict TypedDict."""
-        return cls(
-            typeID=td["typeID"],
-            quantity=td["quantity"],
-        )
-
-
-class Skills(BaseModel):
-    """Model for skill requirements in blueprints.jsonl."""
-
-    typeID: int
-    level: int
-
-    @classmethod
-    def from_td(cls, td: static_data_td.SkillsDict) -> "Skills":
-        """Create a Skills model from a static_data_td.SkillsDict TypedDict."""
-        return cls(
-            typeID=td["typeID"],
-            level=td["level"],
-        )
-
-
-class Products(BaseModel):
-    """Model for products in blueprints.jsonl."""
-
-    typeID: int
-    quantity: int
-    probability: float | None
-
-    @classmethod
-    def from_td(cls, td: static_data_td.ProductsDict) -> "Products":
-        """Create a Products model from a static_data_td.ProductsDict TypedDict."""
-        return cls(
-            typeID=td["typeID"],
-            quantity=td["quantity"],
-            probability=td.get("probability"),
-        )
-
-
-class Activity(BaseModel):
-    """Model for activities in blueprints.jsonl."""
-
-    materials: list[Materials]
-    skills: list[Skills]
-    time: int
-    products: list[Products] | None
-
-    @classmethod
-    def from_td(cls, td: static_data_td.ActivityDict) -> "Activity":
-        """Create an Activity model from a static_data_td.ActivityDict TypedDict."""
-        return cls(
-            materials=[Materials.from_td(m) for m in td["materials"]],
-            products=[Products.from_td(p) for p in td["products"]]
-            if "products" in td
-            else None,
-            skills=[Skills.from_td(s) for s in td["skills"]],
-            time=td["time"],
-        )
-
-
-class Activities(BaseModel):
-    """Model for activities in blueprints.jsonl."""
-
-    manufacturing: Activity | None
-    research_material: Activity | None
-    research_time: Activity | None
-    copying: Activity | None
-    invention: Activity | None
-
-    @classmethod
-    def from_td(cls, td: static_data_td.ActivitiesDict) -> "Activities":
-        """Create an Activities model from a static_data_td.ActivitiesDict TypedDict."""
-        return cls(
-            manufacturing=Activity.from_td(td["manufacturing"])
-            if "manufacturing" in td
-            else None,
-            research_material=Activity.from_td(td["researchMaterial"])
-            if "researchMaterial" in td
-            else None,
-            research_time=Activity.from_td(td["researchTime"])
-            if "researchTime" in td
-            else None,
-            copying=Activity.from_td(td["copying"]) if "copying" in td else None,
-            invention=Activity.from_td(td["invention"]) if "invention" in td else None,
-        )
+class Position(BaseModel):
+    x: float
+    y: float
+    z: float
 
 
 # ------------------------------------------------------------------------------
@@ -164,7 +66,7 @@ class Activities(BaseModel):
 class SdeInfo(BaseModelToDisk):
     """Model for SDE information."""
 
-    _key: str
+    key: str
     buildNumber: int
     releaseDate: str
 
@@ -172,7 +74,7 @@ class SdeInfo(BaseModelToDisk):
     def from_td(cls, td: static_data_td.SdeInfoDict) -> "SdeInfo":
         """Create an SdeInfo model from a static_data_td.SdeInfoDict TypedDict."""
         return cls(
-            _key=td["_key"],
+            key=td["_key"],
             buildNumber=td["buildNumber"],
             releaseDate=td["releaseDate"],
         )
@@ -185,29 +87,128 @@ class SdeInfo(BaseModelToDisk):
         return cls.from_td(info_td)
 
 
+class Blueprint_Materials(BaseModel):
+    """Model for material requirements in blueprints.jsonl."""
+
+    typeID: int
+    quantity: int
+
+    @classmethod
+    def from_td(cls, td: static_data_td.MaterialsDict) -> "Blueprint_Materials":
+        """Create a Materials model from a static_data_td.MaterialsDict TypedDict."""
+        return cls(
+            typeID=td["typeID"],
+            quantity=td["quantity"],
+        )
+
+
+class Blueprint_Skills(BaseModel):
+    """Model for skill requirements in blueprints.jsonl."""
+
+    typeID: int
+    level: int
+
+    @classmethod
+    def from_td(cls, td: static_data_td.SkillsDict) -> "Blueprint_Skills":
+        """Create a Skills model from a static_data_td.SkillsDict TypedDict."""
+        return cls(
+            typeID=td["typeID"],
+            level=td["level"],
+        )
+
+
+class Blueprint_Products(BaseModel):
+    """Model for products in blueprints.jsonl."""
+
+    typeID: int
+    quantity: int
+    probability: float | None
+
+    @classmethod
+    def from_td(cls, td: static_data_td.ProductsDict) -> "Blueprint_Products":
+        """Create a Products model from a static_data_td.ProductsDict TypedDict."""
+        return cls(
+            typeID=td["typeID"],
+            quantity=td["quantity"],
+            probability=td.get("probability"),
+        )
+
+
+class Blueprint_Activity(BaseModel):
+    """Model for activities in blueprints.jsonl."""
+
+    materials: list[Blueprint_Materials]
+    skills: list[Blueprint_Skills]
+    time: int
+    products: list[Blueprint_Products] | None
+
+    @classmethod
+    def from_td(cls, td: static_data_td.ActivityDict) -> "Blueprint_Activity":
+        """Create an Activity model from a static_data_td.ActivityDict TypedDict."""
+        return cls(
+            materials=[Blueprint_Materials.from_td(m) for m in td.get("materials", [])],
+            products=[Blueprint_Products.from_td(p) for p in td["products"]]
+            if "products" in td
+            else None,
+            skills=[Blueprint_Skills.from_td(s) for s in td.get("skills", [])],
+            time=td["time"],
+        )
+
+
+class Blueprint_Activities(BaseModel):
+    """Model for activities in blueprints.jsonl."""
+
+    manufacturing: Blueprint_Activity | None
+    research_material: Blueprint_Activity | None
+    research_time: Blueprint_Activity | None
+    copying: Blueprint_Activity | None
+    invention: Blueprint_Activity | None
+
+    @classmethod
+    def from_td(cls, td: static_data_td.ActivitiesDict) -> "Blueprint_Activities":
+        """Create an Activities model from a static_data_td.ActivitiesDict TypedDict."""
+        return cls(
+            manufacturing=Blueprint_Activity.from_td(td["manufacturing"])
+            if "manufacturing" in td
+            else None,
+            research_material=Blueprint_Activity.from_td(td["researchMaterial"])
+            if "researchMaterial" in td
+            else None,
+            research_time=Blueprint_Activity.from_td(td["researchTime"])
+            if "researchTime" in td
+            else None,
+            copying=Blueprint_Activity.from_td(td["copying"])
+            if "copying" in td
+            else None,
+            invention=Blueprint_Activity.from_td(td["invention"])
+            if "invention" in td
+            else None,
+        )
+
+
 class Blueprint(BaseModel):
     """Model for file blueprints.jsonl, as represented in static_data_td.BlueprintsDict."""
 
-    _key: int
+    key: int
     blueprintTypeID: int
     maxProductionLimit: int
-    activities: Activities
+    activities: Blueprint_Activities
 
     @classmethod
     def from_td(cls, td: static_data_td.BlueprintsDict) -> "Blueprint":
         """Create a Blueprint model from a static_data_td.BlueprintsDict TypedDict."""
         return cls(
-            _key=td["_key"],
+            key=td["_key"],
             blueprintTypeID=td["blueprintTypeID"],
             maxProductionLimit=td["maxProductionLimit"],
-            activities=Activities.from_td(td["activities"]),
+            activities=Blueprint_Activities.from_td(td["activities"]),
         )
 
 
 class Blueprints(BaseModelToDisk):
-    data: dict[int, Blueprint]
     info: SdeInfo
     source_name: str
+    data: dict[int, Blueprint]
 
     @classmethod
     def from_static_data(
@@ -244,7 +245,7 @@ class Blueprints(BaseModelToDisk):
 class Category(BaseModel):
     """Model for file categories.jsonl, as represented in static_data_td.CategoriesDict."""
 
-    _key: int
+    key: int
     name: str
     published: bool
     icon_id: int | None
@@ -255,7 +256,7 @@ class Category(BaseModel):
     ) -> "Category":
         """Create a Category model from a static_data_td.CategoriesDict TypedDict."""
         return cls(
-            _key=td["_key"],
+            key=td["_key"],
             name=localize_string_dict(td["name"], localized),
             published=td["published"],
             icon_id=td.get("icon_id"),
@@ -263,9 +264,9 @@ class Category(BaseModel):
 
 
 class Categories(BaseModelToDisk):
-    data: dict[int, Category]
     info: SdeInfo
     source_name: str
+    data: dict[int, Category]
 
     @classmethod
     def from_static_data(
@@ -306,7 +307,7 @@ class Categories(BaseModelToDisk):
 class Group(BaseModel):
     """Model for file groups.jsonl, as represented in static_data_td.GroupsDict."""
 
-    _key: int
+    key: int
     anchorable: bool
     anchored: bool
     categoryID: int
@@ -322,7 +323,7 @@ class Group(BaseModel):
     ) -> "Group":
         """Create a Group model from a static_data_td.GroupsDict TypedDict."""
         return cls(
-            _key=td["_key"],
+            key=td["_key"],
             anchorable=td["anchorable"],
             anchored=td["anchored"],
             categoryID=td["categoryID"],
@@ -335,9 +336,9 @@ class Group(BaseModel):
 
 
 class Groups(BaseModelToDisk):
-    data: dict[int, Group]
     info: SdeInfo
     source_name: str
+    data: dict[int, Group]
 
     @classmethod
     def from_static_data(
@@ -378,7 +379,7 @@ class Groups(BaseModelToDisk):
 class MarketGroup(BaseModel):
     """Model for file marketGroups.jsonl, as represented in static_data_td.MarketGroupsDict."""
 
-    _key: int
+    key: int
     description: str
     hasTypes: bool
     iconID: int | None
@@ -391,7 +392,7 @@ class MarketGroup(BaseModel):
     ) -> "MarketGroup":
         """Create a MarketGroup model from a static_data_td.MarketGroupsDict TypedDict."""
         return cls(
-            _key=td["_key"],
+            key=td["_key"],
             name=localize_string_dict(td["name"], localized),
             description=localize_string_dict(td.get("description"), localized),
             hasTypes=td["hasTypes"],
@@ -401,11 +402,11 @@ class MarketGroup(BaseModel):
 
 
 class MarketGroups(BaseModelToDisk):
-    data: dict[int, MarketGroup]
     info: SdeInfo
     source_name: str
-    _market_path_ids: dict[int, list[int]]
-    _market_path_names: dict[int, str]
+    data: dict[int, MarketGroup]
+    market_path_ids: dict[int, list[int]]
+    market_path_names: dict[int, str]
 
     @classmethod
     def from_static_data(
@@ -420,15 +421,15 @@ class MarketGroups(BaseModelToDisk):
             data={},
             info=sde_info,
             source_name=source_name,
-            _market_path_ids={},
-            _market_path_names={},
+            market_path_ids={},
+            market_path_names={},
         )
         for mg in static_data:
             result.data[mg["_key"]] = MarketGroup.from_td(mg, localized=localized)
         for mg_id in result.data:
-            result._market_path_ids[mg_id] = get_market_path_int(mg_id, result.data)
-            result._market_path_names[mg_id] = get_market_path_string(
-                result._market_path_ids[mg_id], result.data
+            result.market_path_ids[mg_id] = get_market_path_int(mg_id, result.data)
+            result.market_path_names[mg_id] = get_market_path_string(
+                result.market_path_ids[mg_id], result.data
             )
         return result
 
@@ -467,7 +468,7 @@ class MarketGroups(BaseModelToDisk):
 class MetaGroup(BaseModel):
     """Model for file metaGroups.jsonl, as represented in static_data_td.MetaGroupsDict."""
 
-    _key: int
+    key: int
     color: static_data_td.ColorDict | None
     name: str
     iconID: int | None
@@ -480,7 +481,7 @@ class MetaGroup(BaseModel):
     ) -> "MetaGroup":
         """Create a MetaGroup model from a static_data_td.MetaGroupsDict TypedDict."""
         return cls(
-            _key=td["_key"],
+            key=td["_key"],
             name=localize_string_dict(td["name"], localized),
             color=td.get("color"),
             iconID=td.get("iconID"),
@@ -490,9 +491,9 @@ class MetaGroup(BaseModel):
 
 
 class MetaGroups(BaseModelToDisk):
-    data: dict[int, MetaGroup]
     info: SdeInfo
     source_name: str
+    data: dict[int, MetaGroup]
 
     @classmethod
     def from_static_data(
@@ -524,25 +525,86 @@ class MetaGroups(BaseModelToDisk):
         )
 
 
+class TypeMaterials_Materials(BaseModel):
+    """Model for material requirements in typeMaterials.jsonl."""
+
+    materialTypeID: int
+    quantity: int
+
+    @classmethod
+    def from_td(
+        cls, td: static_data_td.MaterialsMateritalsDict
+    ) -> "TypeMaterials_Materials":
+        """Create a Materials model from a static_data_td.MaterialsMaterialsDict TypedDict."""
+        return cls(
+            materialTypeID=td["materialTypeID"],
+            quantity=td["quantity"],
+        )
+
+
+class TypeMaterials_RandomizedMaterials(BaseModel):
+    """Model for random material requirements in typeMaterials.jsonl.
+
+    {"_key": 90041, "randomizedMaterials": [{"materialTypeID": 34, "quantityMax": 496800, "quantityMin": 368000},]}
+    """
+
+    materialTypeID: int
+    quantityMax: int
+    quantityMin: int
+
+    @classmethod
+    def from_td(cls, td: dict[str, int]) -> Self:
+        """Create a RandomMaterials model from a static_data_td.MaterialsRandomMaterialsDict TypedDict."""
+        return cls(
+            materialTypeID=td["materialTypeID"],
+            quantityMax=td["quantityMax"],
+            quantityMin=td["quantityMin"],
+        )
+
+
 class TypeMaterial(BaseModel):
     """Model for file typeMaterials.jsonl, as represented in static_data_td.TypeMaterialsDict."""
 
-    _key: int
-    materials: list[MaterialsMaterials]
+    key: int
+    materials: list[TypeMaterials_Materials] | None = None
+    randomized_materials: list[TypeMaterials_RandomizedMaterials] | None = None
 
     @classmethod
     def from_td(cls, td: static_data_td.TypeMaterialsDict) -> "TypeMaterial":
         """Create a TypeMaterials model from a static_data_td.TypeMaterialsDict TypedDict."""
-        return cls(
-            _key=td["_key"],
-            materials=[MaterialsMaterials.from_td(m) for m in td["materials"]],
+        materials_td = td.get("materials")
+        randomized_materials_td = td.get("randomizedMaterials")
+        if materials_td and randomized_materials_td:
+            return cls(
+                key=td["_key"],
+                materials=[TypeMaterials_Materials.from_td(m) for m in materials_td],
+                randomized_materials=[
+                    TypeMaterials_RandomizedMaterials.from_td(m)
+                    for m in randomized_materials_td
+                ],
+            )
+        if materials_td:
+            return cls(
+                key=td["_key"],
+                materials=[TypeMaterials_Materials.from_td(m) for m in materials_td],
+            )
+        if randomized_materials_td:
+            return cls(
+                key=td["_key"],
+                randomized_materials=[
+                    TypeMaterials_RandomizedMaterials.from_td(m)
+                    for m in randomized_materials_td
+                ],
+            )
+        raise ValueError(
+            f"TypeMaterial with _key {td['_key']} has neither materials nor randomizedMaterials."
         )
 
 
 class TypeMaterials(BaseModelToDisk):
-    data: dict[int, TypeMaterial]
     info: SdeInfo
     source_name: str
+    data: dict[int, TypeMaterial]
 
     @classmethod
     def from_static_data(
@@ -575,7 +637,7 @@ class TypeMaterials(BaseModelToDisk):
 class EveType(BaseModel):
     """Model for file types.jsonl, as represented in static_data_td.TypesDict."""
 
-    _key: int
+    key: int
     groupID: int
     mass: float | None
     name: str
@@ -601,7 +663,7 @@ class EveType(BaseModel):
     ) -> "EveType":
         """Create a Types model from a static_data_td.TypesDict TypedDict."""
         return cls(
-            _key=td["_key"],
+            key=td["_key"],
             groupID=td["groupID"],
             name=localize_string_dict(td["name"], localized),
             description=localize_string_dict(td.get("description"), localized),
@@ -624,9 +686,9 @@ class EveType(BaseModel):
 
 
 class EveTypes(BaseModelToDisk):
-    data: dict[int, EveType]
     info: SdeInfo
     source_name: str
+    data: dict[int, EveType]
 
     @classmethod
     def from_static_data(
@@ -664,6 +726,77 @@ class EveTypes(BaseModelToDisk):
         )
 
 
+class Region(BaseModel):
+    key: int
+    name: str
+    constellationIDs: list[int]
+    description: str | None
+    factionID: int | None
+    nebulaID: int
+    position: Position
+    wormholeClassID: int | None
+
+    @classmethod
+    def from_td(
+        cls, td: static_data_td.MapRegionsDict, *, localized: str = "en"
+    ) -> "Region":
+        """Create a Region model from a static_data_td.RegionsDict TypedDict."""
+        position_td = td["position"]
+        return cls(
+            key=td["_key"],
+            name=localize_string_dict(td["name"], localized),
+            constellationIDs=list(td["constellationIDs"]),
+            description=localize_string_dict(td.get("description"), localized),
+            factionID=td.get("factionID"),
+            nebulaID=td["nebulaID"],
+            position=Position(
+                x=position_td["x"],
+                y=position_td["y"],
+                z=position_td["z"],
+            ),
+            wormholeClassID=td.get("wormholeClassID"),
+        )
+
+
+class Regions(BaseModelToDisk):
+    info: SdeInfo
+    source_name: str
+    data: dict[int, Region]
+
+    @classmethod
+    def from_static_data(
+        cls,
+        static_data: Iterable[static_data_td.MapRegionsDict],
+        sde_info: SdeInfo,
+        source_name: str,
+        localized: str = "en",
+    ) -> "Regions":
+        """Create a Regions model from an iterable of Regions models."""
+        result = cls(data={}, info=sde_info, source_name=source_name)
+        for region in static_data:
+            result.data[region["_key"]] = Region.from_td(region, localized=localized)
+        return result
+
+    @classmethod
+    def from_sap(cls, access: SdeAccessProtocol, localized: str) -> "Regions":
+        """Create a Regions model from an SdeAccessProtocol."""
+        sde_info = SdeInfo.from_sap(access)
+        regions_td = [
+            cast(static_data_td.MapRegionsDict, region_td)
+            for region_td in access.jsonl_iter(SdeFileNames.MAP_REGIONS)
+        ]
+        return cls.from_static_data(
+            static_data=regions_td,
+            sde_info=sde_info,
+            source_name=SdeFileNames.MAP_REGIONS,
+        )
+
+
+# --------------------------------------------------------------------------------------
+#
+# --------------------------------------------------------------------------------------
+
+
 class ArgusStaticData(BaseModelToDisk):
     """Model for all static data used by Eve Argus."""
 
@@ -692,10 +825,10 @@ def get_market_path_int(
         )
 
     def get_path(market_group_id: int) -> list[int]:
-        path = []
+        path: list[int] = []
         current = market_groups.get(market_group_id)
         while current:
-            path.append(current._key)
+            path.append(current.key)
             if current.parentGroupID is None:
                 break
             current = market_groups.get(current.parentGroupID)
@@ -715,7 +848,7 @@ def get_market_path_string(
     separator: str = "/",
 ) -> str:
     """Get the market path as a string for a given market path list of integers."""
-    names = []
+    names: list[str] = []
     for mg_id in market_path:
         market_group = market_groups.get(mg_id)
         if market_group is None:
