@@ -7,7 +7,6 @@ from pathlib import Path
 
 from esi_link.logging_config import setup_logging
 from eve_static_data.raw_jsonl_access import RawJsonFileAccess
-from eve_static_data.sde_access_protocol import SdeFileNames
 
 from eve_argus.models import static_data as SD
 
