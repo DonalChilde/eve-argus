@@ -2,13 +2,14 @@
 
 import logging
 from pathlib import Path
+from typing import Self
 
 from pydantic import BaseModel, RootModel
 
 logger = logging.getLogger(__name__)
 
 
-class RootModelToDisk(RootModel):
+class RootModelToDisk(RootModel):  # pyright: ignore[reportMissingTypeArgument]
     """Base class for RootModels that can be saved to disk as JSON."""
 
     def save_to_disk(self, file_path: Path, overwrite: bool = False) -> None:
@@ -37,7 +38,7 @@ class RootModelToDisk(RootModel):
             raise e
 
     @classmethod
-    def load_from_disk(cls, file_path: Path) -> "RootModelToDisk":
+    def load_from_disk(cls, file_path: Path) -> Self:
         """Load the model from disk as JSON."""
         if file_path.is_dir():
             logger.error(
@@ -93,7 +94,7 @@ class BaseModelToDisk(BaseModel):
             raise e
 
     @classmethod
-    def load_from_disk(cls, file_path: Path) -> "BaseModelToDisk":
+    def load_from_disk(cls, file_path: Path) -> Self:
         """Load the model from disk as JSON."""
         if file_path.is_dir():
             logger.error(
