@@ -1,11 +1,29 @@
 """Settings module for Eve Argus."""
 
+from typing import NotRequired, TypedDict
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from eve_argus import DEFAULT_APP_DIR, __app_name__, __description__, __version__
 
 _app_env_prefix = "PFMSOFT_EVE_ARGUS_"
+
+
+class ConfigDict(TypedDict):
+    """Configuration dictionary type for Eve Argus settings.
+
+    Use this dict when passing settings values through the get_settings() function.
+    This is useful for testing purposes, and for overriding settings in different environments.
+    e.g. Using the app from a third party package.
+    """
+
+    config_dir: NotRequired[str]
+    log_path: NotRequired[str]
+    sde_base_url: NotRequired[str]
+    sde_latest_info: NotRequired[str]
+    sde_file_template: NotRequired[str]
+    sde_schema_changelog_url: NotRequired[str]
 
 
 class EveArgusSettings(BaseSettings):
@@ -53,6 +71,37 @@ class EveArgusSettings(BaseSettings):
     )
 
 
-def get_settings() -> EveArgusSettings:
+def get_settings(config_dict: ConfigDict | None = None, **kwargs) -> EveArgusSettings:
+    """Get the Eve Argus settings with optional configuration overrides.
+
+    This function creates and returns an EveArgusSettings instance, optionally
+    merging configuration from a dictionary and keyword arguments.
+
+    Argumanets passed in via get_settings() take precedence over those in env files,
+    or the os env.
+
+    Args:
+        config_dict (ConfigDict | None, optional): A dictionary containing
+            configuration settings. If provided, these settings are used as
+            the base configuration. Defaults to None.
+        **kwargs: Additional keyword arguments that override or supplement
+            the config_dict settings. These take precedence over config_dict
+            values for duplicate keys.
+
+    Returns:
+        EveArgusSettings: An instance of EveArgusSettings configured with
+            the merged settings from config_dict and kwargs, or default
+            settings if neither is provided.
+
+    Examples:
+        >>> settings = get_settings()  # Use default settings
+        >>> settings = get_settings(config_dict={"key": "value"})
+        >>> settings = get_settings(key="value", another_key="another_value")
+        >>> settings = get_settings(config_dict={"key": "value"}, key="override")
+    """
     """Get the Eve Argus settings."""
+    combined_kwargs = config_dict.copy() if config_dict else {}
+    combined_kwargs.update(kwargs)
+    if combined_kwargs:
+        return EveArgusSettings(**combined_kwargs)
     return EveArgusSettings()
