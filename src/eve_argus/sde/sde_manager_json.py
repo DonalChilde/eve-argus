@@ -62,7 +62,7 @@ class SdeManagerJSON(SdeManagerProtocol):
         class initialized with the destination path.
 
         Args:
-            source (Path): The source directory path containing the SDE data to import.
+            source (Path): The source directory path containing the JSONL SDE data to import.
             destination (Path): The destination directory path where the imported data will be stored.
 
         Returns:
