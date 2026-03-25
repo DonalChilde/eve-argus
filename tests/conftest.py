@@ -39,7 +39,7 @@ def pytest_collection_modifyitems(
 
 
 @pytest.fixture(scope="session", name="test_output_dir")
-def test_output_dir_(tmp_path_factory) -> Path:
+def test_output_dir_(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """Make a temp directory for output data."""
     test_app_data_dir = tmp_path_factory.mktemp("eve-argus")
     return test_app_data_dir

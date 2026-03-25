@@ -13,7 +13,7 @@ from eve_argus.calculations.calculate_history_summary import (
     calculate_history_summary,
 )
 from eve_argus.calculations.calculate_order_summary import calculate_order_summary
-from eve_argus.models.esi_data import (
+from eve_argus.old_models.esi_data import (
     MarketHistory,
     MarketOrders,
     Period,

@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 from typing import TypedDict
 
-from eve_argus.models.esi_data import MarketOrderDetail
+from eve_argus.old_models.esi_data import MarketOrderDetail
 
 
 class OrderSummaryDict(TypedDict):

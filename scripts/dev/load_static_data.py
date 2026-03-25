@@ -8,7 +8,7 @@ from pathlib import Path
 from esi_link.logging_config import setup_logging
 from eve_static_data.raw_jsonl_access import RawJsonFileAccess
 
-from eve_argus.models import static_data as SD
+from eve_argus.old_models import static_data as SD
 
 SCRIPT_NAME = "stub_script"
 STATIC_DATA_DIR = Path.home() / "Downloads/eve-online-static-data-3110079-jsonl"

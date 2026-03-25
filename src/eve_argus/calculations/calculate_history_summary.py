@@ -8,8 +8,8 @@ and trading metrics.
 from datetime import date
 from typing import TypedDict
 
-from eve_argus.models.esi_data import MarketHistory, Period
-from eve_argus.snippets.datetime.date_range import date_range_days
+from eve_argus.old_models.esi_data import MarketHistory, Period
+from eve_argus.old_snippets.datetime.date_range import date_range_days
 
 
 class HistorySummaryDict(TypedDict):
