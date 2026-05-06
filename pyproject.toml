@@ -42,6 +42,9 @@ dependencies = [
 esi-link = { git = "https://github.com/DonalChilde/esi-link", branch = "main" }
 eve-static-data = { git = "https://github.com/DonalChilde/eve-static-data", branch = "main" }
 
+[tool.uv]
+exclude-newer = "1 week"
+
 [dependency-groups]
 # Dev dependencies
 # https://docs.astral.sh/uv/concepts/projects/dependencies/#development-dependencies
