@@ -35,7 +35,7 @@ dependencies = [
     "pyyaml>=6.0.3",
     "rich>=14.0.0",
     "typer>=0.20.0",
-    "whenever>=0.9.5",
+    "whenever>=0.10.0",
 ]
 
 [tool.uv.sources]
