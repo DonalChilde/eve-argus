@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+from esi_link.settings import EsiLinkSettings, EsiLinkSettingsPydantic
+from esi_link.settings import get_settings as get_esi_link_settings
 from eve_static_data import SdeYamlDatasetLoader
 from eve_static_data.settings import (
     EveStaticDataSettings,
@@ -12,9 +14,7 @@ from eve_static_data.settings import get_settings as get_esd_settings
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
-from esi_link.argus import DEFAULT_APP_DIR
-from esi_link.settings import EsiLinkSettings, EsiLinkSettingsPydantic
-from esi_link.settings import get_settings as get_esi_link_settings
+from eve_argus import DEFAULT_APP_DIR
 
 
 @dataclass
