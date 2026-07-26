@@ -31,6 +31,15 @@ RESEARCH_TIME_MULTIPLIER: list[float] = [
     4163 / 7,
     29660 / 21,
 ]
+"""List of research time multipliers for steps 1-10.
+
+These multipliers are used to calculate the research time for each step.
+0-1 is one, and 1-2 is 29/21, or about 1.380952381.
+The progression is 2**1.25, or about 2.3784 from lvl 2 onward. Math needs to be done to see if the 
+fractions, or the decimal, is more accurate. The fractions are from fuzzworks blueprint 
+calculator, and seem to be accurate. But the difference between the two methods is so 
+small that it would be hard to tell. Test in-game.
+"""
 
 
 class ActivityId(Enum):
